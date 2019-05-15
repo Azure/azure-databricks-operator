@@ -1,0 +1,50 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+trigger:
+  branches:
+    include:
+    - master
+  paths:
+    include:
+    - databricks-api/*
+
+variables:
+  WORKING_DIR: 'databricks-api'
+  IMAGE_NAME: 'microsoft.databricks.api:$(Build.SourceVersion)' 
+  #ACR_NAME - set this value in AzureDevops variables 
+  #AZURE_SUBSCRIPTION - set this value in AzureDevops variables
+pool:
+  vmImage: 'Ubuntu-16.04'
+
+steps:
+
+
+ 
+- task: UsePythonVersion@0
+  inputs:
+    versionSpec: '3.6'
+    architecture: 'x64'
+
+
+- script: echo $(IMAGE_NAME)
+
+- script: pip install -r requirements-dev.txt && pip install -r requirements.txt
+  workingDirectory: $(WORKING_DIR)
+  displayName: 'Install requirements'
+
+- script: flake8 
+  workingDirectory: $(WORKING_DIR)
+  displayName: 'Run lint tests'
+
+
+- task: AzureCLI@1
+  displayName: Push to Azure Container Registry [dbricks_client]  
+  inputs:
+    azureSubscription: $(AZURE_SUBSCRIPTION)
+    workingDirectory: $(WORKING_DIR) 
+    scriptLocation: inlineScript 
+    failOnStandardError: false
+    inlineScript: az acr build --registry $(ACR_NAME) --image $(IMAGE_NAME)  . 

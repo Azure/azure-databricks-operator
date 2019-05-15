@@ -1,0 +1,49 @@
+apiVersion: microsoft.k8s.io/v1beta1
+kind: NotebookJob
+metadata:
+  annotations:
+    microsoft.k8s.io/prd-id: 2ae31bc5-ad0a-447d-8c26-29ac2a6b4c39
+    microsoft.k8s.io/author: azkhojan@microsoft.com
+  name: sample1run1
+spec:
+  notebookTask:
+    notebookPath: "/notebooks/sample1"
+  timeoutSeconds: 500
+  notebookSpec:
+    "flag":  "true"
+  notebookSpecSecrets:
+    - secretName: "sourceeh"
+      mapping : 
+        - "secretKey": "eventHubName"
+          "outputKey": "SRC_CS_EVENTHUBNAME"
+        - "secretKey": "connectionString"
+          "outputKey": "SRC_CS_CONNECTIONSTRING"
+    - secretName: "desteh"
+      mapping : 
+        - "secretKey": "eventHubName"
+          "outputKey": "DestinationeventHubName"
+        - "secretKey": "connectionString"
+          "outputKey": "DestinationConnectionString"
+    - secretName: "dltest"
+      mapping : 
+        - "secretKey": "secretkey_dest_oauth2_clientid"
+          "outputKey": "DEST_OAUTH2_CLIENTID"
+        - "secretKey": "secretkey_dest_oauth2_clientsecret"
+          "outputKey": "DEST_OAUTH2_CLIENTSECRET"
+        - "secretKey": "secretkey_dest_oauth2_tenantid"
+          "outputKey": "DEST_OAUTH2_TENANTID"
+        - "secretKey": "secretkey_adl2_dest_name"
+          "outputKey": "ADL2_DEST_NAME"
+
+
+
+  notebookAdditionalLibraries: 
+    - type: "maven"
+      properties:
+        coordinates: "com.microsoft.azure:azure-eventhubs-spark_2.11:2.3.9"
+       
+
+  clusterSpec:
+    sparkVersion: "5.2.x-scala2.11"
+    nodeTypeId: "Standard_DS12_v2"
+    numWorkers: 1

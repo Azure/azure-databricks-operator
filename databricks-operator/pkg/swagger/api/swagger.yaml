@@ -1,0 +1,703 @@
+---
+swagger: "2.0"
+info:
+  description: "Manage Databricks"
+  version: "1.0"
+  title: "Databricks Controller"
+basePath: "/"
+tags:
+- name: "default"
+  description: "Default namespace"
+- name: "api/jobs/runs"
+  description: "Operations related to job management"
+consumes:
+- "application/json"
+produces:
+- "application/json"
+paths:
+  /api/jobs/runs/:
+    get:
+      tags:
+      - "api/jobs/runs"
+      summary: "List all runs"
+      operationId: "list_runs"
+      parameters:
+      - name: "X-Fields"
+        in: "header"
+        description: "An optional fields mask"
+        required: false
+        type: "string"
+        format: "mask"
+        x-exportParamName: "XFields"
+        x-optionalDataType: "String"
+      responses:
+        200:
+          description: "Success"
+          schema:
+            $ref: "#/definitions/List Runs Status"
+    post:
+      tags:
+      - "api/jobs/runs"
+      summary: "Create a new task"
+      operationId: "submit run"
+      parameters:
+      - in: "body"
+        name: "payload"
+        required: true
+        schema:
+          $ref: "#/definitions/Run definition"
+        x-exportParamName: "Payload"
+      - name: "X-Fields"
+        in: "header"
+        description: "An optional fields mask"
+        required: false
+        type: "string"
+        format: "mask"
+        x-exportParamName: "XFields"
+        x-optionalDataType: "String"
+      responses:
+        201:
+          description: "Success"
+          schema:
+            $ref: "#/definitions/Create Job Status"
+  /api/jobs/runs/{run_id}:
+    get:
+      tags:
+      - "api/jobs/runs"
+      operationId: "get run"
+      parameters:
+      - name: "run_id"
+        in: "path"
+        description: "The run identifier"
+        required: true
+        type: "integer"
+        x-exportParamName: "RunId"
+      responses:
+        404:
+          description: "run not found"
+    delete:
+      tags:
+      - "api/jobs/runs"
+      summary: "Delete a run given its identifier"
+      operationId: "delete run"
+      parameters:
+      - name: "run_id"
+        in: "path"
+        description: "The run identifier"
+        required: true
+        type: "integer"
+        x-exportParamName: "RunId"
+      responses:
+        404:
+          description: "run not found"
+  /status:
+    get:
+      tags:
+      - "default"
+      operationId: "get_status"
+      parameters: []
+      responses:
+        200:
+          description: "Success"
+definitions:
+  Run definition:
+    type: "object"
+    required:
+    - "run_name"
+    properties:
+      run_name:
+        type: "string"
+        example: "aztest1-uppercase"
+        description: "The name identifier of a job run"
+      notebook_spec_secrets:
+        type: "object"
+        example:
+          eventhub_source_cs: "Endpoint=sb://xxxx.servicebus.windows.net/;SharedAccessKeyName=xxxx;SharedAccessKey=xxxx=;EntityPath=sourceeh"
+          eventhub_destination_cs: "Endpoint=sb://xxxx.servicebus.windows.net/;SharedAccessKeyName=xxxx;SharedAccessKey=xxxx=;EntityPath=desteh"
+          adl2_destination_oauth2_clientid: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+          adl2_destination_oauth2_clientsecret: "xxxx="
+          adl2_destination_oauth2_tenantid: "xxxx="
+          adl2_destination_cs: "abfss://<file-system-name>@<storage-account-name>.dfs.core.windows.net/folder1"
+        properties: {}
+      notebook_spec:
+        type: "object"
+        example:
+          TryCount: 3
+          LogError: true
+        properties: {}
+      notebook_additional_libraries:
+        type: "object"
+        example:
+        - "t_uppercase"
+        - "t_lowercase"
+        - "t_append_a_to_attribute"
+        - "t_append_b_to_attribute"
+        properties: {}
+      new_cluster:
+        $ref: "#/definitions/new_cluster"
+      timeout_seconds:
+        type: "integer"
+        example: 3600
+        description: "timeout in seconds"
+      notebook_task:
+        $ref: "#/definitions/notebook_task"
+  new_cluster:
+    type: "object"
+    properties:
+      spark_version:
+        type: "string"
+      spark_conf:
+        type: "object"
+        properties: {}
+      node_type_id:
+        type: "string"
+      spark_env_vars:
+        type: "object"
+        properties: {}
+      enable_elastic_disk:
+        type: "boolean"
+      num_workers:
+        type: "integer"
+    example:
+      spark_conf: "{}"
+      enable_elastic_disk: true
+      spark_env_vars: "{}"
+      node_type_id: "node_type_id"
+      spark_version: "spark_version"
+      num_workers: 5
+  notebook_task:
+    type: "object"
+    properties:
+      notebook_path:
+        type: "string"
+  Create Job Status:
+    type: "object"
+    required:
+    - "run_name"
+    properties:
+      run_name:
+        type: "string"
+        example: "aztest1-uppercase"
+        description: "The name identifier of a job run"
+      result:
+        type: "array"
+        items:
+          $ref: "#/definitions/Create Job Result"
+    example:
+      result:
+      - run_id: 0
+      - run_id: 0
+      run_name: "aztest1-uppercase"
+  Create Job Result:
+    type: "object"
+    properties:
+      run_id:
+        type: "integer"
+    example:
+      run_id: 0
+  List Runs Status:
+    type: "object"
+    properties:
+      result:
+        type: "array"
+        items:
+          $ref: "#/definitions/List Runs Result"
+    example:
+      result:
+      - has_more: true
+        runs:
+        - number_in_job: 1
+          run_id: 6
+          cluster_instance:
+          - cluster_id: "cluster_id"
+          - cluster_id: "cluster_id"
+          run_page_url: "run_page_url"
+          cleanup_duration: 7
+          run_type: "run_type"
+          start_time: "{}"
+          task: "{}"
+          cluster_spec:
+          - new_cluster:
+            - spark_conf: "{}"
+              enable_elastic_disk: true
+              spark_env_vars: "{}"
+              node_type_id: "node_type_id"
+              spark_version: "spark_version"
+              num_workers: 5
+            - spark_conf: "{}"
+              enable_elastic_disk: true
+              spark_env_vars: "{}"
+              node_type_id: "node_type_id"
+              spark_version: "spark_version"
+              num_workers: 5
+            libraries:
+            - "{}"
+            - "{}"
+          - new_cluster:
+            - spark_conf: "{}"
+              enable_elastic_disk: true
+              spark_env_vars: "{}"
+              node_type_id: "node_type_id"
+              spark_version: "spark_version"
+              num_workers: 5
+            - spark_conf: "{}"
+              enable_elastic_disk: true
+              spark_env_vars: "{}"
+              node_type_id: "node_type_id"
+              spark_version: "spark_version"
+              num_workers: 5
+            libraries:
+            - "{}"
+            - "{}"
+          setup_duration: 5
+          execution_duration: 2
+          creator_user_name: "creator_user_name"
+          job_id: 0
+          state:
+          - life_cycle_state: "life_cycle_state"
+            result_state: "result_state"
+            state_message: "state_message"
+          - life_cycle_state: "life_cycle_state"
+            result_state: "result_state"
+            state_message: "state_message"
+          run_name: "run_name"
+        - number_in_job: 1
+          run_id: 6
+          cluster_instance:
+          - cluster_id: "cluster_id"
+          - cluster_id: "cluster_id"
+          run_page_url: "run_page_url"
+          cleanup_duration: 7
+          run_type: "run_type"
+          start_time: "{}"
+          task: "{}"
+          cluster_spec:
+          - new_cluster:
+            - spark_conf: "{}"
+              enable_elastic_disk: true
+              spark_env_vars: "{}"
+              node_type_id: "node_type_id"
+              spark_version: "spark_version"
+              num_workers: 5
+            - spark_conf: "{}"
+              enable_elastic_disk: true
+              spark_env_vars: "{}"
+              node_type_id: "node_type_id"
+              spark_version: "spark_version"
+              num_workers: 5
+            libraries:
+            - "{}"
+            - "{}"
+          - new_cluster:
+            - spark_conf: "{}"
+              enable_elastic_disk: true
+              spark_env_vars: "{}"
+              node_type_id: "node_type_id"
+              spark_version: "spark_version"
+              num_workers: 5
+            - spark_conf: "{}"
+              enable_elastic_disk: true
+              spark_env_vars: "{}"
+              node_type_id: "node_type_id"
+              spark_version: "spark_version"
+              num_workers: 5
+            libraries:
+            - "{}"
+            - "{}"
+          setup_duration: 5
+          execution_duration: 2
+          creator_user_name: "creator_user_name"
+          job_id: 0
+          state:
+          - life_cycle_state: "life_cycle_state"
+            result_state: "result_state"
+            state_message: "state_message"
+          - life_cycle_state: "life_cycle_state"
+            result_state: "result_state"
+            state_message: "state_message"
+          run_name: "run_name"
+      - has_more: true
+        runs:
+        - number_in_job: 1
+          run_id: 6
+          cluster_instance:
+          - cluster_id: "cluster_id"
+          - cluster_id: "cluster_id"
+          run_page_url: "run_page_url"
+          cleanup_duration: 7
+          run_type: "run_type"
+          start_time: "{}"
+          task: "{}"
+          cluster_spec:
+          - new_cluster:
+            - spark_conf: "{}"
+              enable_elastic_disk: true
+              spark_env_vars: "{}"
+              node_type_id: "node_type_id"
+              spark_version: "spark_version"
+              num_workers: 5
+            - spark_conf: "{}"
+              enable_elastic_disk: true
+              spark_env_vars: "{}"
+              node_type_id: "node_type_id"
+              spark_version: "spark_version"
+              num_workers: 5
+            libraries:
+            - "{}"
+            - "{}"
+          - new_cluster:
+            - spark_conf: "{}"
+              enable_elastic_disk: true
+              spark_env_vars: "{}"
+              node_type_id: "node_type_id"
+              spark_version: "spark_version"
+              num_workers: 5
+            - spark_conf: "{}"
+              enable_elastic_disk: true
+              spark_env_vars: "{}"
+              node_type_id: "node_type_id"
+              spark_version: "spark_version"
+              num_workers: 5
+            libraries:
+            - "{}"
+            - "{}"
+          setup_duration: 5
+          execution_duration: 2
+          creator_user_name: "creator_user_name"
+          job_id: 0
+          state:
+          - life_cycle_state: "life_cycle_state"
+            result_state: "result_state"
+            state_message: "state_message"
+          - life_cycle_state: "life_cycle_state"
+            result_state: "result_state"
+            state_message: "state_message"
+          run_name: "run_name"
+        - number_in_job: 1
+          run_id: 6
+          cluster_instance:
+          - cluster_id: "cluster_id"
+          - cluster_id: "cluster_id"
+          run_page_url: "run_page_url"
+          cleanup_duration: 7
+          run_type: "run_type"
+          start_time: "{}"
+          task: "{}"
+          cluster_spec:
+          - new_cluster:
+            - spark_conf: "{}"
+              enable_elastic_disk: true
+              spark_env_vars: "{}"
+              node_type_id: "node_type_id"
+              spark_version: "spark_version"
+              num_workers: 5
+            - spark_conf: "{}"
+              enable_elastic_disk: true
+              spark_env_vars: "{}"
+              node_type_id: "node_type_id"
+              spark_version: "spark_version"
+              num_workers: 5
+            libraries:
+            - "{}"
+            - "{}"
+          - new_cluster:
+            - spark_conf: "{}"
+              enable_elastic_disk: true
+              spark_env_vars: "{}"
+              node_type_id: "node_type_id"
+              spark_version: "spark_version"
+              num_workers: 5
+            - spark_conf: "{}"
+              enable_elastic_disk: true
+              spark_env_vars: "{}"
+              node_type_id: "node_type_id"
+              spark_version: "spark_version"
+              num_workers: 5
+            libraries:
+            - "{}"
+            - "{}"
+          setup_duration: 5
+          execution_duration: 2
+          creator_user_name: "creator_user_name"
+          job_id: 0
+          state:
+          - life_cycle_state: "life_cycle_state"
+            result_state: "result_state"
+            state_message: "state_message"
+          - life_cycle_state: "life_cycle_state"
+            result_state: "result_state"
+            state_message: "state_message"
+          run_name: "run_name"
+  List Runs Result:
+    type: "object"
+    properties:
+      runs:
+        type: "array"
+        items:
+          $ref: "#/definitions/Run"
+      has_more:
+        type: "boolean"
+    example:
+      has_more: true
+      runs:
+      - number_in_job: 1
+        run_id: 6
+        cluster_instance:
+        - cluster_id: "cluster_id"
+        - cluster_id: "cluster_id"
+        run_page_url: "run_page_url"
+        cleanup_duration: 7
+        run_type: "run_type"
+        start_time: "{}"
+        task: "{}"
+        cluster_spec:
+        - new_cluster:
+          - spark_conf: "{}"
+            enable_elastic_disk: true
+            spark_env_vars: "{}"
+            node_type_id: "node_type_id"
+            spark_version: "spark_version"
+            num_workers: 5
+          - spark_conf: "{}"
+            enable_elastic_disk: true
+            spark_env_vars: "{}"
+            node_type_id: "node_type_id"
+            spark_version: "spark_version"
+            num_workers: 5
+          libraries:
+          - "{}"
+          - "{}"
+        - new_cluster:
+          - spark_conf: "{}"
+            enable_elastic_disk: true
+            spark_env_vars: "{}"
+            node_type_id: "node_type_id"
+            spark_version: "spark_version"
+            num_workers: 5
+          - spark_conf: "{}"
+            enable_elastic_disk: true
+            spark_env_vars: "{}"
+            node_type_id: "node_type_id"
+            spark_version: "spark_version"
+            num_workers: 5
+          libraries:
+          - "{}"
+          - "{}"
+        setup_duration: 5
+        execution_duration: 2
+        creator_user_name: "creator_user_name"
+        job_id: 0
+        state:
+        - life_cycle_state: "life_cycle_state"
+          result_state: "result_state"
+          state_message: "state_message"
+        - life_cycle_state: "life_cycle_state"
+          result_state: "result_state"
+          state_message: "state_message"
+        run_name: "run_name"
+      - number_in_job: 1
+        run_id: 6
+        cluster_instance:
+        - cluster_id: "cluster_id"
+        - cluster_id: "cluster_id"
+        run_page_url: "run_page_url"
+        cleanup_duration: 7
+        run_type: "run_type"
+        start_time: "{}"
+        task: "{}"
+        cluster_spec:
+        - new_cluster:
+          - spark_conf: "{}"
+            enable_elastic_disk: true
+            spark_env_vars: "{}"
+            node_type_id: "node_type_id"
+            spark_version: "spark_version"
+            num_workers: 5
+          - spark_conf: "{}"
+            enable_elastic_disk: true
+            spark_env_vars: "{}"
+            node_type_id: "node_type_id"
+            spark_version: "spark_version"
+            num_workers: 5
+          libraries:
+          - "{}"
+          - "{}"
+        - new_cluster:
+          - spark_conf: "{}"
+            enable_elastic_disk: true
+            spark_env_vars: "{}"
+            node_type_id: "node_type_id"
+            spark_version: "spark_version"
+            num_workers: 5
+          - spark_conf: "{}"
+            enable_elastic_disk: true
+            spark_env_vars: "{}"
+            node_type_id: "node_type_id"
+            spark_version: "spark_version"
+            num_workers: 5
+          libraries:
+          - "{}"
+          - "{}"
+        setup_duration: 5
+        execution_duration: 2
+        creator_user_name: "creator_user_name"
+        job_id: 0
+        state:
+        - life_cycle_state: "life_cycle_state"
+          result_state: "result_state"
+          state_message: "state_message"
+        - life_cycle_state: "life_cycle_state"
+          result_state: "result_state"
+          state_message: "state_message"
+        run_name: "run_name"
+  Run:
+    type: "object"
+    properties:
+      job_id:
+        type: "integer"
+      run_id:
+        type: "integer"
+      number_in_job:
+        type: "integer"
+      task:
+        type: "object"
+        properties: {}
+      cluster_spec:
+        type: "array"
+        items:
+          $ref: "#/definitions/cluster_spec"
+      state:
+        type: "array"
+        items:
+          $ref: "#/definitions/state"
+      cluster_instance:
+        type: "array"
+        items:
+          $ref: "#/definitions/cluster_instance"
+      start_time:
+        type: "object"
+        properties: {}
+      setup_duration:
+        type: "integer"
+      execution_duration:
+        type: "integer"
+      cleanup_duration:
+        type: "integer"
+      creator_user_name:
+        type: "string"
+      run_name:
+        type: "string"
+      run_page_url:
+        type: "string"
+      run_type:
+        type: "string"
+    example:
+      number_in_job: 1
+      run_id: 6
+      cluster_instance:
+      - cluster_id: "cluster_id"
+      - cluster_id: "cluster_id"
+      run_page_url: "run_page_url"
+      cleanup_duration: 7
+      run_type: "run_type"
+      start_time: "{}"
+      task: "{}"
+      cluster_spec:
+      - new_cluster:
+        - spark_conf: "{}"
+          enable_elastic_disk: true
+          spark_env_vars: "{}"
+          node_type_id: "node_type_id"
+          spark_version: "spark_version"
+          num_workers: 5
+        - spark_conf: "{}"
+          enable_elastic_disk: true
+          spark_env_vars: "{}"
+          node_type_id: "node_type_id"
+          spark_version: "spark_version"
+          num_workers: 5
+        libraries:
+        - "{}"
+        - "{}"
+      - new_cluster:
+        - spark_conf: "{}"
+          enable_elastic_disk: true
+          spark_env_vars: "{}"
+          node_type_id: "node_type_id"
+          spark_version: "spark_version"
+          num_workers: 5
+        - spark_conf: "{}"
+          enable_elastic_disk: true
+          spark_env_vars: "{}"
+          node_type_id: "node_type_id"
+          spark_version: "spark_version"
+          num_workers: 5
+        libraries:
+        - "{}"
+        - "{}"
+      setup_duration: 5
+      execution_duration: 2
+      creator_user_name: "creator_user_name"
+      job_id: 0
+      state:
+      - life_cycle_state: "life_cycle_state"
+        result_state: "result_state"
+        state_message: "state_message"
+      - life_cycle_state: "life_cycle_state"
+        result_state: "result_state"
+        state_message: "state_message"
+      run_name: "run_name"
+  cluster_spec:
+    type: "object"
+    properties:
+      new_cluster:
+        type: "array"
+        items:
+          $ref: "#/definitions/new_cluster"
+      libraries:
+        type: "array"
+        items:
+          type: "object"
+          properties: {}
+    example:
+      new_cluster:
+      - spark_conf: "{}"
+        enable_elastic_disk: true
+        spark_env_vars: "{}"
+        node_type_id: "node_type_id"
+        spark_version: "spark_version"
+        num_workers: 5
+      - spark_conf: "{}"
+        enable_elastic_disk: true
+        spark_env_vars: "{}"
+        node_type_id: "node_type_id"
+        spark_version: "spark_version"
+        num_workers: 5
+      libraries:
+      - "{}"
+      - "{}"
+  state:
+    type: "object"
+    properties:
+      life_cycle_state:
+        type: "string"
+      result_state:
+        type: "string"
+      state_message:
+        type: "string"
+    example:
+      life_cycle_state: "life_cycle_state"
+      result_state: "result_state"
+      state_message: "state_message"
+  cluster_instance:
+    type: "object"
+    properties:
+      cluster_id:
+        type: "string"
+    example:
+      cluster_id: "cluster_id"
+responses:
+  MaskError:
+    description: "When any error occurs on mask"
+  ParseError:
+    description: "When a mask can't be parsed"
