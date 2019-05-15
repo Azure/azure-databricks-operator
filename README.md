@@ -55,8 +55,37 @@ https://devkimchi.com/2018/06/05/running-kubernetes-on-wsl/
 
 https://www.jamessturtevant.com/posts/Running-Kubernetes-Minikube-on-Windows-10-with-WSL/
 
-##
-    Docs and Samples are coming soon
+### How to use operator
+
+*Docs are work in progress*
+
+databricks-api:
+`docker build --no-cache  -t azadehkhojandi/databricks-api:1 -f databricks-api/Dockerfile databricks-api`
+
+Create .env file and set values of `DATABRICKS_HOST` and `DATABRICKS_TOKEN`
+
+```
+DATABRICKS_HOST=https://australiaeast.azuredatabricks.net
+DATABRICKS_TOKEN=xxxx
+```
+
+`docker run -it  --env-file ./.env -p 5000:5000  azadehkhojandi/databricks-api:1`
+
+databricks-operator:
+
+
+```
+make
+make docker-build IMG=mydockerid/genericdaemon
+make docker-push IMG=mydockerid/genericdaemon
+make deploy
+```
+make -C databricks-operator
+make docker-build IMG=azadehkhojandi/databricks-operator -C databricks-operator
+make docker-push IMG=azadehkhojandi/databricks-operator -C databricks-operator
+make deploy -C databricks-operator
+```  
+
 ## Main Contributors
 
 1. [Jordan Knight](https://www.linkedin.com/in/jakkaj/)
