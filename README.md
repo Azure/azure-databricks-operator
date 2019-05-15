@@ -4,7 +4,7 @@
 
 Azure Databricks operator contains two projects. This golang application is a Kubernetes controller that watches CRDs that defines a Databricks job (input, output, functions, transformers, etc) and Python Flask App that sends commands to Databricks.
 
-![alt text]docs/images/azure-databricks-operator.jpg "high level architecture")
+![alt text](docs/images/azure-databricks-operator.jpg "high level architecture")
 
 The project was built using
 
@@ -13,7 +13,7 @@ The project was built using
 3. [Flask-RESTPlus](http://flask-restplus.readthedocs.io)
 4. [Flask](http://flask.pocoo.org/)
 
-![alt text]docs/images/development-flow.jpg "development flow")
+![alt text](docs/images/development-flow.jpg "development flow")
 
 ### Prerequisites And Assumptions
 
