@@ -27,14 +27,13 @@ The project was built using
     > if you opt AKS, you can use: `az aks get-credentials --resource-group $RG_NAME --name $Cluster_NAME`
 #### Basic commands to check your cluster
 
-    ```shell
-
+```shell
     kubectl config get-contexts
     kubectl cluster-info
     kubectl version
     kubectl get pods -n kube-system
 
-    ```
+```
 
 #### Kubernetes on WSL
     
