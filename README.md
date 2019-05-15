@@ -75,11 +75,6 @@ databricks-operator:
 
 
 ```
-make
-make docker-build IMG=mydockerid/genericdaemon
-make docker-push IMG=mydockerid/genericdaemon
-make deploy
-```
 make -C databricks-operator
 make docker-build IMG=azadehkhojandi/databricks-operator -C databricks-operator
 make docker-push IMG=azadehkhojandi/databricks-operator -C databricks-operator
