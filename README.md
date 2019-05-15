@@ -2,7 +2,7 @@
 
 ## Introduction
 
-Azure Databricks operator contains two projects. This golang application is a Kubernetes controller that watches CRDs that defines a Databricks job (input, output, functions, transformers, etc) and Python Flask App that sends commands to Databricks.
+Azure Databricks operator contains two projects. The golang application is a Kubernetes controller that watches CRDs that defines a Databricks job (input, output, functions, transformers, etc) and The Python Flask App sends commands to the Databricks.
 
 ![alt text](docs/images/azure-databricks-operator.jpg "high level architecture")
 
