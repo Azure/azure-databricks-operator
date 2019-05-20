@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: controller-manager
+  namespace: system
+spec:
+  template:
+    spec:
+      containers:
+      # Change the value of image field below to your controller image URL
+      - image: azadehkhojandi/databricks-api:1
+        name: dbricks
+        ports:
+        - containerPort: 5000
+          protocol: TCP
+        env:
+          - name: DATABRICKS_HOST
+            valueFrom: 
+              secretKeyRef:
+                name: testdatabricks
+                key: DatabricksHost
+          - name: DATABRICKS_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: testdatabricks
+                key: DatabricksToken
+

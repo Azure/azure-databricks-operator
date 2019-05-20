@@ -25,14 +25,14 @@ The project was built using
 * Configure a Kubernetes cluster in your machine
     > You need to make sure a kubeconfig file is configured.
     > if you opt AKS, you can use: `az aks get-credentials --resource-group $RG_NAME --name $Cluster_NAME`
-#### Basic commands to check your cluster
+
+Basic commands to check your cluster
 
 ```shell
     kubectl config get-contexts
     kubectl cluster-info
     kubectl version
     kubectl get pods -n kube-system
-
 ```
 
 #### Kubernetes on WSL
@@ -59,9 +59,6 @@ https://www.jamessturtevant.com/posts/Running-Kubernetes-Minikube-on-Windows-10-
 
 *Docs are work in progress*
 
-databricks-api:
-`docker build --no-cache  -t azadehkhojandi/databricks-api:1 -f databricks-api/Dockerfile databricks-api`
-
 Create .env file and set values of `DATABRICKS_HOST` and `DATABRICKS_TOKEN`
 
 ```
@@ -69,25 +66,46 @@ DATABRICKS_HOST=https://australiaeast.azuredatabricks.net
 DATABRICKS_TOKEN=xxxx
 ```
 
-`docker run -it  --env-file ./.env -p 5000:5000  azadehkhojandi/databricks-api:1`
-
-databricks-operator:
-
+1. To install CRDs into a cluster : `kubectl apply -f databricks-operator/config/crds` or `make install -C databricks-operator`
+2. To deploy controller in the configured Kubernetes cluster in ~/.kube/config `kustomize build databricks-operator/config | kubectl apply -f -`
+3. Change NotebookJob name from `sample1run1` to your desired name and  Update the values in `microsoft_v1beta2_notebookjob.yaml`
 
 ```
+kubectl apply -f databricks-operator/config/samples/microsoft_v1beta2_notebookjob.yaml
+kubectl get notebookjob
+kubectl describe notebookjob kubectl sample1run1
+```
+
+Basic commands to check the new Notebookjob
+```
+kubectl get crd
+kubectl -n databricks-operator-system get svc
+kubectl -n databricks-operator-system get pod
+kubectl -n databricks-operator-system describe  pod databricks-operator-controller-manager-0
+kubectl -n databricks-operator-system logs  databricks-operator-controller-manager-0 -c dbricks -f
+```
+
+There is a also a Make file that you can use to install, test and deploy. 
+
+ ```
 make -C databricks-operator
 make docker-build IMG=azadehkhojandi/databricks-operator -C databricks-operator
 make docker-push IMG=azadehkhojandi/databricks-operator -C databricks-operator
 make deploy -C databricks-operator
-```  
+
+```
+
 
 ## Main Contributors
 
-1. [Jordan Knight](https://www.linkedin.com/in/jakkaj/)
-2. [Paul Bouwer](https://www.linkedin.com/in/pbouwer/)
-3. [Lace Lofranco](https://www.linkedin.com/in/lacelofranco/)
-4. [Allan Targino](https://www.linkedin.com/in/allan-targino//)
-5. [Azadeh Khojandi](https://www.linkedin.com/in/azadeh-khojandi-ba441b3/)
+1. Jordan Knight [Github](https://github.com/jakkaj), [Linkedin](https://www.linkedin.com/in/jakkaj/)
+2. Paul Bouwer [Github](https://github.com/paulbouwer), [Linkedin](https://www.linkedin.com/in/pbouwer/)
+3. Lace Lofranco [Github](https://github.com/devlace), [Linkedin](https://www.linkedin.com/in/lacelofranco/)
+4. Allan Targino [Github](https://github.com/allantargino), [Linkedin](https://www.linkedin.com/in/allan-targino//)
+5. Rian Finnegan [Github](https://github.com/xtellurian), [Linkedin](https://www.linkedin.com/in/rian-finnegan-97651b55/)
+6. Jason Goodselli [Github](https://github.com/JasonTheDeveloper), [Linkedin](https://www.linkedin.com/in/jason-goodsell-2505a3b2/)
+7. Craig Rodger [Github](https://github.com/crrodger), [Linkedin](https://www.linkedin.com/in/craigrodger/)
+8. Azadeh Khojandi [Github](https://github.com/Azadehkhojandi), [Linkedin](https://www.linkedin.com/in/azadeh-khojandi-ba441b3/)
 
 ## Contributing
 
