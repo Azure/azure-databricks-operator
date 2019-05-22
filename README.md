@@ -51,8 +51,8 @@ kubectl config set-context minikube --cluster=minikube --user=minikub
 
 More info:
 
-https://devkimchi.com/2018/06/05/running-kubernetes-on-wsl/
-https://www.jamessturtevant.com/posts/Running-Kubernetes-Minikube-on-Windows-10-with-WSL/
+1. https://devkimchi.com/2018/06/05/running-kubernetes-on-wsl/
+2. https://www.jamessturtevant.com/posts/Running-Kubernetes-Minikube-on-Windows-10-with-WSL/
 
 ### How to use operator
 
