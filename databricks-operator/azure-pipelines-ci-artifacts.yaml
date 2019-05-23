@@ -58,7 +58,7 @@ steps:
     ls $(modulePath)/databricks-operator
   workingDirectory: $(modulePath)/databricks-operator
   displayName: 'Get dependencies'
-  
+  continueOnError: 'false'
 - script: |
     go env
     echo 'modulePath'
