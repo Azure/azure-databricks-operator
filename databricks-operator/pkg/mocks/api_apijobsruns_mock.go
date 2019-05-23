@@ -3,7 +3,7 @@ package mock
 import (
 	"net/http"
 
-	swagger "azure-databricks-operator/databricks-operator/pkg/swagger"
+	swagger "microsoft/azure-databricks-operator/databricks-operator/pkg/swagger"
 
 	"golang.org/x/net/context"
 )
