@@ -13,12 +13,13 @@ variables:
   GOBIN:  '$(GOPATH)/bin' # Go binaries path
   GOROOT: '/usr/local/go1.12.1' # Go installation path
   GOPATH: '$(system.defaultWorkingDirectory)/gopath' # Go workspace path
-  modulePath: '$(GOPATH)/src/$(build.repository.name)/databricks-operator' # Path to the module's code
+  modulePath: '$(GOPATH)/src/$(build.repository.name)' # Path to the module's code
   IMAGE_NAME: 'public/k8s/azure-databricks/operator:$(Build.SourceVersion)' 
   #ACR_NAME - set this value in AzureDevops variables 
   #AZURE_SUBSCRIPTION - set this value in AzureDevops variables
 steps:
 - script: |
+    set -e
     mkdir -p '$(GOBIN)'
     mkdir -p '$(GOPATH)/pkg'
     mkdir -p '$(modulePath)'
