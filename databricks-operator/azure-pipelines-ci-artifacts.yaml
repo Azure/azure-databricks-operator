@@ -40,6 +40,28 @@ steps:
     echo $(modulePath)
   displayName: 'Set up the Go workspace'
 
+- script: |
+    go version
+    go env
+    # go get -v -t -d ./...
+    if [ -f Gopkg.toml ]; then
+        curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
+        dep ensure
+    fi
+    go get github.com/jstemmer/go-junit-report
+    go get github.com/axw/gocov/gocov
+    go get github.com/AlekSi/gocov-xml
+    go get -u gopkg.in/matm/v1/gocov-html
+  workingDirectory: '$(modulePath)'
+  displayName: 'Get dependencies'
+  
+- script: |
+    ls
+    echo $(modulePath)
+    make build
+  workingDirectory: $(modulePath)
+  continueOnError: 'false'
+  displayName: 'Build app'
 
 - script: |
     sudo rm -rf $HOME/.minikube/
@@ -58,30 +80,6 @@ steps:
   continueOnError: 'true'
   displayName: 'Set up the Kubernetes installation'
 
-
-
-- script: |
-    go version
-    go env
-    # go get -v -t -d ./...
-    if [ -f Gopkg.toml ]; then
-        curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
-        dep ensure
-    fi
-    go get github.com/jstemmer/go-junit-report
-    go get github.com/axw/gocov/gocov
-    go get github.com/AlekSi/gocov-xml
-    go get -u gopkg.in/matm/v1/gocov-html
-  workingDirectory: '$(modulePath)'
-  displayName: 'Get dependencies'
-  
-- script: |
-    ls
-    make build
-  workingDirectory: '$(modulePath)'
-  continueOnError: 'false'
-  displayName: 'Build app'
-  
 - script: |
     make install
     make test
