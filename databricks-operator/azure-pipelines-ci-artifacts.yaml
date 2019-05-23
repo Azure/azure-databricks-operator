@@ -41,6 +41,8 @@ steps:
   displayName: 'Set up the Go workspace'
 
 - script: |
+    echo 'ls $(modulePath)/databricks-operator'
+    ls $(modulePath)/databricks-operator
     go version
     go env
     # go get -v -t -d ./...
@@ -52,6 +54,8 @@ steps:
     go get github.com/axw/gocov/gocov
     go get github.com/AlekSi/gocov-xml
     go get -u gopkg.in/matm/v1/gocov-html
+    echo 'ls $(modulePath)/databricks-operator'
+    ls $(modulePath)/databricks-operator
   workingDirectory: $(modulePath)/databricks-operator
   displayName: 'Get dependencies'
   
