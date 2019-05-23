@@ -57,8 +57,9 @@ steps:
   
 - script: |
     ls
-    echo $(modulePath)
-    make build
+    echo 
+    ls $(modulePath)
+    make build -C databricks-operator
   workingDirectory: $(modulePath)
   continueOnError: 'false'
   displayName: 'Build app'
