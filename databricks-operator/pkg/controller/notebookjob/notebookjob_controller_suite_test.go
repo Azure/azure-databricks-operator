@@ -22,7 +22,7 @@ import (
 	"sync"
 	"testing"
 
-	"azure-databricks-operator/databricks-operator/pkg/apis"
+	"microsoft/azure-databricks-operator/databricks-operator/pkg/apis"
 
 	"github.com/onsi/gomega"
 	"k8s.io/client-go/kubernetes/scheme"
