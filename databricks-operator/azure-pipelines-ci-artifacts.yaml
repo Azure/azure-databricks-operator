@@ -76,9 +76,11 @@ steps:
   displayName: 'Get dependencies'
   
 - script: |
+    echo 'modulePath'
+    echo $(modulePath)
     ls
     make build
-  workingDirectory: '$(modulePath)'
+  workingDirectory: $(modulePath)
   continueOnError: 'false'
   displayName: 'Build app'
   
