@@ -13,7 +13,7 @@ variables:
   GOBIN:  '$(GOPATH)/bin' # Go binaries path
   GOROOT: '/usr/local/go1.12.1' # Go installation path
   GOPATH: '$(system.defaultWorkingDirectory)/gopath' # Go workspace path
-  modulePath: '$(GOPATH)/src/$(build.repository.name)/databricks-operator' # Path to the module's code
+  modulePath: '$(GOPATH)/src/$(build.repository.name)' # Path to the module's code
   IMAGE_NAME: 'public/k8s/azure-databricks/operator:$(Build.SourceVersion)' 
   #ACR_NAME - set this value in AzureDevops variables 
   #AZURE_SUBSCRIPTION - set this value in AzureDevops variables
@@ -40,6 +40,30 @@ steps:
     echo $(modulePath)
   displayName: 'Set up the Go workspace'
 
+- script: |
+    go version
+    go env
+    # go get -v -t -d ./...
+    if [ -f Gopkg.toml ]; then
+        curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
+        dep ensure
+    fi
+    go get github.com/jstemmer/go-junit-report
+    go get github.com/axw/gocov/gocov
+    go get github.com/AlekSi/gocov-xml
+    go get -u gopkg.in/matm/v1/gocov-html
+  workingDirectory: '$(modulePath)'
+  displayName: 'Get dependencies'
+  
+- script: |
+    go env
+    echo 'modulePath'
+    echo $(modulePath)
+    ls
+    make build -C databricks-operator
+  workingDirectory: '$(modulePath)'
+  continueOnError: 'false'
+  displayName: 'Build app'
 
 - script: |
     sudo rm -rf $HOME/.minikube/
@@ -58,30 +82,6 @@ steps:
   continueOnError: 'true'
   displayName: 'Set up the Kubernetes installation'
 
-
-
-- script: |
-    go version
-    go env
-    # go get -v -t -d ./...
-    if [ -f Gopkg.toml ]; then
-        curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
-        dep ensure
-    fi
-    go get github.com/jstemmer/go-junit-report
-    go get github.com/axw/gocov/gocov
-    go get github.com/AlekSi/gocov-xml
-    go get -u gopkg.in/matm/v1/gocov-html
-  workingDirectory: '$(modulePath)'
-  displayName: 'Get dependencies'
-  
-- script: |
-    ls
-    make build
-  workingDirectory: '$(modulePath)'
-  continueOnError: 'false'
-  displayName: 'Build app'
-  
 - script: |
     make install
     make test
