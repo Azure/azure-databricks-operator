@@ -52,7 +52,7 @@ steps:
     go get github.com/axw/gocov/gocov
     go get github.com/AlekSi/gocov-xml
     go get -u gopkg.in/matm/v1/gocov-html
-  workingDirectory: '$(modulePath)'
+  workingDirectory: $(modulePath)/databricks-operator
   displayName: 'Get dependencies'
   
 - script: |
@@ -63,8 +63,8 @@ steps:
     ls
     echo 'ls $(modulePath)'
     ls $(modulePath)
-    make build -C databricks-operator
-  workingDirectory: $(modulePath)
+    make build 
+  workingDirectory: $(modulePath)/databricks-operator
   continueOnError: 'false'
   displayName: 'Build app'
 
