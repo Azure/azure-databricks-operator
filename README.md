@@ -1,3 +1,5 @@
+[![Build Status](https://dev.azure.com/aussiedevcrew/azure-databricks-operator/_apis/build/status/databricks-api/azure-databricks-api-CI?branchName=master)](https://dev.azure.com/aussiedevcrew/azure-databricks-operator/_build/latest?definitionId=17&branchName=master)
+
 # Azure Databricks operator
 
 ## Introduction
