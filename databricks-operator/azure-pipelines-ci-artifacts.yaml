@@ -13,7 +13,7 @@ variables:
   GOBIN:  '$(GOPATH)/bin' # Go binaries path
   GOROOT: '/usr/local/go1.12.1' # Go installation path
   GOPATH: '$(system.defaultWorkingDirectory)/gopath' # Go workspace path
-  modulePath: '$(GOPATH)/src/$(build.repository.name)/databricks-operator' # Path to the module's code
+  modulePath: '$(GOPATH)/src/$(build.repository.name)' # Path to the module's code
   IMAGE_NAME: 'public/k8s/azure-databricks/operator:$(Build.SourceVersion)' 
   #ACR_NAME - set this value in AzureDevops variables 
   #AZURE_SUBSCRIPTION - set this value in AzureDevops variables
@@ -40,6 +40,31 @@ steps:
     echo $(modulePath)
   displayName: 'Set up the Go workspace'
 
+- script: |
+    echo 'ls $(modulePath)/databricks-operator'
+    ls $(modulePath)/databricks-operator
+    go version
+    go env
+    # go get -v -t -d ./...
+    if [ -f Gopkg.toml ]; then
+        curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
+        dep ensure
+    fi
+    go get github.com/jstemmer/go-junit-report
+    go get github.com/axw/gocov/gocov
+    go get github.com/AlekSi/gocov-xml
+    go get -u gopkg.in/matm/v1/gocov-html
+    echo 'ls $(modulePath)/databricks-operator'
+    ls $(modulePath)/databricks-operator
+  workingDirectory: $(modulePath)/databricks-operator
+  displayName: 'Get dependencies'
+  continueOnError: 'false'
+  
+- script: |
+    make build 
+  workingDirectory: $(modulePath)/databricks-operator
+  continueOnError: 'false'
+  displayName: 'Build app'
 
 - script: |
     sudo rm -rf $HOME/.minikube/
@@ -54,42 +79,18 @@ steps:
     JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}'; until kubectl -n kube-system get pods -lcomponent=kube-addon-manager -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True"; do sleep 1;echo "waiting for kube-addon-manager to be available"; kubectl get pods --all-namespaces; done
     JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}'; until kubectl -n kube-system get pods -lk8s-app=kube-dns -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True"; do sleep 1;echo "waiting for kube-dns to be available"; kubectl get pods --all-namespaces; done
     kubectl cluster-info
-  workingDirectory: '$(modulePath)'
+  workingDirectory: '$(modulePath)/databricks-operator'
   continueOnError: 'true'
   displayName: 'Set up the Kubernetes installation'
 
-
-
-- script: |
-    go version
-    go env
-    # go get -v -t -d ./...
-    if [ -f Gopkg.toml ]; then
-        curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
-        dep ensure
-    fi
-    go get github.com/jstemmer/go-junit-report
-    go get github.com/axw/gocov/gocov
-    go get github.com/AlekSi/gocov-xml
-    go get -u gopkg.in/matm/v1/gocov-html
-  workingDirectory: '$(modulePath)'
-  displayName: 'Get dependencies'
-  
-- script: |
-    ls
-    make build
-  workingDirectory: '$(modulePath)'
-  continueOnError: 'false'
-  displayName: 'Build app'
-  
 - script: |
     make install
     make test
   continueOnError: 'true'
-  workingDirectory: '$(modulePath)'
+  workingDirectory: '$(modulePath)/databricks-operator'
   displayName: 'Run unit tests'
 
 - script: docker build -t $(IMAGE_NAME) .  # add options to this command to meet your needs
-  workingDirectory: '$(modulePath)'
+  workingDirectory: '$(modulePath)/databricks-operator'
   displayName: 'Docker build'
   

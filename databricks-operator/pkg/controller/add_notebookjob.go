@@ -17,7 +17,7 @@ limitations under the License.
 package controller
 
 import (
-	"azure-databricks-operator/databricks-operator/pkg/controller/notebookjob"
+	"microsoft/azure-databricks-operator/databricks-operator/pkg/controller/notebookjob"
 )
 
 func init() {

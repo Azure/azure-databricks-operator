@@ -17,7 +17,7 @@ limitations under the License.
 package apis
 
 import (
-	"azure-databricks-operator/databricks-operator/pkg/apis/microsoft/v1beta1"
+	"microsoft/azure-databricks-operator/databricks-operator/pkg/apis/microsoft/v1beta1"
 )
 
 func init() {

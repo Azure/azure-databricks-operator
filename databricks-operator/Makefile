@@ -6,7 +6,7 @@ all: test build
 
 # Build manager binary
 build: fmt vet
-	go build -o bin/manager azure-databricks-operator/databricks-operator/cmd/manager
+	go build -o bin/manager microsoft/azure-databricks-operator/databricks-operator/cmd/manager
 
 test:
 	go test ./pkg/... ./cmd/... -coverprofile cover.out

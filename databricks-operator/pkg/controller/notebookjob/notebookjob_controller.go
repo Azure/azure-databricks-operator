@@ -22,8 +22,8 @@ import (
 
 	v1 "k8s.io/api/core/v1"
 
-	microsoftv1beta1 "azure-databricks-operator/databricks-operator/pkg/apis/microsoft/v1beta1"
-	swagger "azure-databricks-operator/databricks-operator/pkg/swagger"
+	microsoftv1beta1 "microsoft/azure-databricks-operator/databricks-operator/pkg/apis/microsoft/v1beta1"
+	swagger "microsoft/azure-databricks-operator/databricks-operator/pkg/swagger"
 
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
