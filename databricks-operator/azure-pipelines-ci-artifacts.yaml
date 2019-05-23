@@ -59,9 +59,12 @@ steps:
     go env
     echo 'modulePath'
     echo $(modulePath)
+    echo 'ls'
     ls
+    echo 'ls $(modulePath)'
+    ls $(modulePath)
     make build -C databricks-operator
-  workingDirectory: '$(modulePath)'
+  workingDirectory: $(modulePath)
   continueOnError: 'false'
   displayName: 'Build app'
 
