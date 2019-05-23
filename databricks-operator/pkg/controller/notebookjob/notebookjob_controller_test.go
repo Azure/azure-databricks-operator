@@ -21,9 +21,9 @@ import (
 	"time"
 
 	microsoftv1beta1 "microsoft/azure-databricks-operator/databricks-operator/pkg/apis/microsoft/v1beta1"
-	mocks "azure-databricks-operator/databricks-operator/pkg/mocks"
-	randStr "azure-databricks-operator/databricks-operator/pkg/rand"
-	swagger "azure-databricks-operator/databricks-operator/pkg/swagger"
+	mocks "microsoft/azure-databricks-operator/databricks-operator/pkg/mocks"
+	randStr "microsoft/azure-databricks-operator/databricks-operator/pkg/rand"
+	swagger "microsoft/azure-databricks-operator/databricks-operator/pkg/swagger"
 
 	"github.com/onsi/gomega"
 	"golang.org/x/net/context"
