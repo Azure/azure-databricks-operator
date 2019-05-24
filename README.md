@@ -1,6 +1,8 @@
-[![Build Status](https://dev.azure.com/aussiedevcrew/azure-databricks-operator/_apis/build/status/databricks-api/azure-databricks-api-CI?branchName=master)](https://dev.azure.com/aussiedevcrew/azure-databricks-operator/_build/latest?definitionId=17&branchName=master)
+[![Build Status](https://img.shields.io/azure-devops/build/aussiedevcrew/d4700b68-d4e4-4c1c-8802-b3031bfa80b0/17.svg?label=build-azure-databricks-api&style=flat-square&logo=data%3Aimage%2Fpng%3Bbase64%2CiVBORw0KGgoAAAANSUhEUgAAADQAAAAyCAMAAAAk%2FwjEAAAAXVBMVEX%2F%2F%2F%2BTk5Obm5udnZ2kpKSlpaWnp6eoqKiwsLCxsbGysrKzs7O6urq7u7u9vb3GxsbHx8fIyMjJycnR0dHS0tLT09PU1NTd3d3e3t7f39%2Fo6Ojp6enq6ur09PT%2F%2F%2F%2Bel%2BNbAAAAAXRSTlMAQObYZgAAAM5JREFUeNrt090OgjAMhuEqCoqKv8Mprvd%2FmUY6U9SFfSwemMh7toMno82gsd%2BpcNxtgpiMX6sR5BKQ5eGoYOlARDWKvMnawwpDVsyFpBuCSpZyPccRv6EcQA37KpKqONrxM9e52VCgJQdq9OYg4nDWWGYcaemoTECWhqM94UhX%2F21kHbI4zcm0n8pNe%2F9v63F8bZrRl6fNCWgT2UDcsEHMop1C5zpRf%2FL5TiZ3MJq1yzvLCUc6WgJaM47U4Oh6fKRrQJCPumoLI1UNjf1ddw%2FHSv3TGNoxAAAAAElFTkSuQmCC)](https://dev.azure.com/aussiedevcrew/azure-databricks-operator/_build/latest?definitionId=17&branchName=master)
 
-[![Build Status](https://dev.azure.com/aussiedevcrew/azure-databricks-operator/_apis/build/status/databricks-operator/azure-databricks-operator-CI?branchName=master)](https://dev.azure.com/aussiedevcrew/azure-databricks-operator/_build/latest?definitionId=18&branchName=master)
+
+[![Build Status](https://img.shields.io/azure-devops/build/aussiedevcrew/d4700b68-d4e4-4c1c-8802-b3031bfa80b0/18.svg?label=build-azure-databricks-operator&style=flat-square&logo=data%3Aimage%2Fpng%3Bbase64%2CiVBORw0KGgoAAAANSUhEUgAAADQAAAAyCAMAAAAk%2FwjEAAAAXVBMVEX%2F%2F%2F%2BTk5Obm5udnZ2kpKSlpaWnp6eoqKiwsLCxsbGysrKzs7O6urq7u7u9vb3GxsbHx8fIyMjJycnR0dHS0tLT09PU1NTd3d3e3t7f39%2Fo6Ojp6enq6ur09PT%2F%2F%2F%2Bel%2BNbAAAAAXRSTlMAQObYZgAAAM5JREFUeNrt090OgjAMhuEqCoqKv8Mprvd%2FmUY6U9SFfSwemMh7toMno82gsd%2BpcNxtgpiMX6sR5BKQ5eGoYOlARDWKvMnawwpDVsyFpBuCSpZyPccRv6EcQA37KpKqONrxM9e52VCgJQdq9OYg4nDWWGYcaemoTECWhqM94UhX%2F21kHbI4zcm0n8pNe%2F9v63F8bZrRl6fNCWgT2UDcsEHMop1C5zpRf%2FL5TiZ3MJq1yzvLCUc6WgJaM47U4Oh6fKRrQJCPumoLI1UNjf1ddw%2FHSv3TGNoxAAAAAElFTkSuQmCC)](https://dev.azure.com/aussiedevcrew/azure-databricks-operator/_build/latest?definitionId=18&branchName=master)
+
 
 # Azure Databricks operator
 
@@ -115,7 +117,6 @@ To Extend the operator `databricks-operator`:
     make docker-push IMG=azadehkhojandi/databricks-operator
     make deploy
     ```
-
 ## Main Contributors
 
 1. Jordan Knight [Github](https://github.com/jakkaj), [Linkedin](https://www.linkedin.com/in/jakkaj/)
@@ -127,6 +128,13 @@ To Extend the operator `databricks-operator`:
 7. Craig Rodger [Github](https://github.com/crrodger), [Linkedin](https://www.linkedin.com/in/craigrodger/)
 8. Justin Chizer [Github](https://github.com/justinchizer), [Linkedin](https://www.linkedin.com/in/jchizer/)
 9. Azadeh Khojandi [Github](https://github.com/Azadehkhojandi), [Linkedin](https://www.linkedin.com/in/azadeh-khojandi-ba441b3/)
+
+## Resources
+
+### Build pipelines
+1. [Create a pipeline and add a status badge to Github](https://docs.microsoft.com/en-us/azure/devops/pipelines/create-first-pipeline?view=azure-devops&tabs=tfs-2018-2)
+2. [Customize status badge with shields.io](https://shields.io/)
+
 
 ## Contributing
 
