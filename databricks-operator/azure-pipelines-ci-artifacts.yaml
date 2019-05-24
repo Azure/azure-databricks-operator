@@ -103,7 +103,7 @@ steps:
 
 - task: CopyFiles@2
   inputs:
-    contents: '$(modulePath)/databricks-operatorconfig/crds/**'
+    contents: '$(modulePath)/databricks-operator/config/crds/**'
     targetFolder: $(Build.ArtifactStagingDirectory)
 
 
