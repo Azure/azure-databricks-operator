@@ -2,6 +2,9 @@
 
 [![Build Status](https://dev.azure.com/aussiedevcrew/azure-databricks-operator/_apis/build/status/databricks-operator/azure-databricks-operator-CI?branchName=master)](https://dev.azure.com/aussiedevcrew/azure-databricks-operator/_build/latest?definitionId=18&branchName=master)
 
+https://img.shields.io/azure-devops/build/aussiedevcrew/d4700b68-d4e4-4c1c-8802-b3031bfa80b0/17.svg?label=build-azure-databricks-api&style=flat-square
+https://img.shields.io/azure-devops/build/aussiedevcrew/d4700b68-d4e4-4c1c-8802-b3031bfa80b0/18.svg?label=build-azure-databricks-operator&style=flat-square
+
 # Azure Databricks operator
 
 ## Introduction
