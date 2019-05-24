@@ -86,11 +86,28 @@ steps:
 - script: |
     make install
     make test
-  continueOnError: 'true'
+  continueOnError: 'false'
   workingDirectory: '$(modulePath)/databricks-operator'
   displayName: 'Run unit tests'
 
 - script: docker build -t $(IMAGE_NAME) .  # add options to this command to meet your needs
   workingDirectory: '$(modulePath)/databricks-operator'
   displayName: 'Docker build'
-  
+
+- script: |
+    go get sigs.k8s.io/kustomize
+    kustomize build config > $(Build.ArtifactStagingDirectory)/setup.yml
+  continueOnError: 'false'
+  workingDirectory: '$(modulePath)/databricks-operator'
+  displayName: 'install kustomize'  
+
+- task: CopyFiles@2
+  inputs:
+    contents: '$(modulePath)/databricks-operatorconfig/crds/**'
+    targetFolder: $(Build.ArtifactStagingDirectory)
+
+
+- task: PublishBuildArtifacts@1
+  inputs:
+    pathtoPublish: $(Build.ArtifactStagingDirectory)
+    artifactName: drop
