@@ -13,7 +13,7 @@ trigger:
 
 variables:
   WORKING_DIR: 'databricks-api'
-  IMAGE_NAME: 'public/azure-databricks/api:$(Build.SourceVersion)' 
+  IMAGE_NAME: 'candidate/azure-databricks/api:$(Build.SourceVersion)' 
   #ACR_NAME - set this value in AzureDevops variables 
   #AZURE_SUBSCRIPTION - set this value in AzureDevops variables
 pool:
@@ -34,9 +34,19 @@ steps:
   workingDirectory: $(WORKING_DIR)
   displayName: 'Run lint tests'
 
-- script: echo $(IMAGE_NAME)
+- task: AzureCLI@1
+  displayName: Push to Azure Container Registry  
+  inputs:
+    azureSubscription: $(AZURE_SUBSCRIPTION)
+    scriptLocation: inlineScript 
+    failOnStandardError: true
+    workingDirectory: '$(modulePath)'
+    inlineScript: az acr build --registry $(ACR_NAME) --image $(IMAGE_NAME) . 
 
-- script: docker build -t $(IMAGE_NAME) .  # add options to this command to meet your needs
-  workingDirectory: $(WORKING_DIR) 
-  displayName: 'Docker build'
+- script: echo $(IMAGE_NAME) > $(Build.ArtifactStagingDirectory)/databricks-api.txt
+
+- task: PublishBuildArtifacts@1
+  inputs:
+    pathtoPublish: $(Build.ArtifactStagingDirectory)
+    artifactName: drop
   
