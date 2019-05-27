@@ -40,7 +40,7 @@ steps:
     azureSubscription: $(AZURE_SUBSCRIPTION)
     scriptLocation: inlineScript 
     failOnStandardError: true
-    workingDirectory: '$(modulePath)'
+    workingDirectory: $(WORKING_DIR) 
     inlineScript: az acr build --registry $(ACR_NAME) --image $(IMAGE_NAME) . 
 
 - script: echo $(IMAGE_NAME) > $(Build.ArtifactStagingDirectory)/databricks-api.txt
