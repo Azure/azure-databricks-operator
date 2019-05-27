@@ -14,7 +14,7 @@ variables:
   GOROOT: '/usr/local/go1.12.1' # Go installation path
   GOPATH: '$(system.defaultWorkingDirectory)/gopath' # Go workspace path
   modulePath: '$(GOPATH)/src/$(build.repository.name)' # Path to the module's code
-  IMAGE_NAME: 'canidate/k8s/azure-databricks/operator:$(Build.SourceVersion)' 
+  IMAGE_NAME: 'candidate/k8s/azure-databricks/operator:$(Build.SourceVersion)' 
   #ACR_NAME - set this value in AzureDevops variables 
   #AZURE_SUBSCRIPTION - set this value in AzureDevops variables
 steps:
