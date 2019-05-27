@@ -98,12 +98,14 @@ steps:
   workingDirectory: '$(modulePath)/databricks-operator'
   displayName: 'install kustomize'  
 
+- script: echo $(AZURE_SUBSCRIPTION)
+
 - task: AzureCLI@1
   displayName: Push to Azure Container Registry  
   inputs:
     azureSubscription: $(AZURE_SUBSCRIPTION)
     scriptLocation: inlineScript 
-    failOnStandardError: true
+    failOnStandardError: false
     workingDirectory: '$(modulePath)/databricks-operator'
     inlineScript: az acr build --registry $(ACR_NAME) --image $(IMAGE_NAME) . 
 
