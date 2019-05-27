@@ -43,7 +43,7 @@ steps:
   inputs:
     azureSubscription: $(AZURE_SUBSCRIPTION)
     scriptLocation: inlineScript 
-    failOnStandardError: true
+    failOnStandardError: false
     workingDirectory: $(WORKING_DIR) 
     inlineScript: az acr build --registry $(ACR_NAME) --image $(IMAGE_NAME) . 
 
