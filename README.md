@@ -43,7 +43,7 @@ Basic commands to check your cluster
 
 #### Kubernetes on WSL
     
-on windows command line run `kubectl config view` to find the values of [windows-user-name],[minikubeip],[port]
+On windows command line run `kubectl config view` to find the values of [windows-user-name],[minikubeip],[port]
 
 ```shell
 mkdir ~/.kube \
@@ -70,7 +70,7 @@ More info:
     kubectl create secret testdatabricks --from-literal=DatabricksHost="https://xxxx.azuredatabricks.net" --from-literal=DatabricksToken="xxxxx"
     ```
 
-    Make sure your secrete name is set correctly in `databricks-operator/config/default/azure_databricks_api_image_patch.yaml`
+    Make sure your secret name is set correctly in `databricks-operator/config/default/azure_databricks_api_image_patch.yaml`
 
 2. To install NotebookJob CRD in the configured Kubernetes cluster in ~/.kube/config, run `kubectl apply -f databricks-operator/config/crds` or `make install -C databricks-operator`
 
@@ -94,7 +94,7 @@ More info:
     kubectl describe notebookjob kubectl sample1run1
     ```
 
-### How to extend the opertaor and build your own images
+### How to extend the operator and build your own images
 
 #### Updating databricks operator:
 
