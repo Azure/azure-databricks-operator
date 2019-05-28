@@ -14,7 +14,7 @@ variables:
   GOROOT: '/usr/local/go1.12.1' # Go installation path
   GOPATH: '$(system.defaultWorkingDirectory)/gopath' # Go workspace path
   modulePath: '$(GOPATH)/src/$(build.repository.name)' # Path to the module's code
-  IMAGE_NAME: 'public/k8s/azure-databricks/operator:$(Build.SourceVersion)' 
+  IMAGE_NAME: 'candidate/k8s/azure-databricks/operator:$(Build.SourceVersion)' 
   #ACR_NAME - set this value in AzureDevops variables 
   #AZURE_SUBSCRIPTION - set this value in AzureDevops variables
 steps:
@@ -86,11 +86,45 @@ steps:
 - script: |
     make install
     make test
-  continueOnError: 'true'
+  continueOnError: 'false'
   workingDirectory: '$(modulePath)/databricks-operator'
   displayName: 'Run unit tests'
 
+
+- script: |
+    go get sigs.k8s.io/kustomize
+    kustomize build config > $(Build.ArtifactStagingDirectory)/setup.yml
+  continueOnError: 'false'
+  workingDirectory: '$(modulePath)/databricks-operator'
+  displayName: 'install kustomize'  
+
 - script: docker build -t $(IMAGE_NAME) .  # add options to this command to meet your needs
+  condition: and(succeeded(), ne(variables['Build.SourceBranch'], 'refs/heads/master'))
   workingDirectory: '$(modulePath)/databricks-operator'
   displayName: 'Docker build'
-  
+
+- task: AzureCLI@1
+  displayName: Push to Azure Container Registry
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))  
+  inputs:
+    azureSubscription: $(AZURE_SUBSCRIPTION)
+    scriptLocation: inlineScript 
+    failOnStandardError: false
+    workingDirectory: '$(modulePath)/databricks-operator'
+    inlineScript: az acr build --registry $(ACR_NAME) --image $(IMAGE_NAME) . 
+
+- script: echo $(IMAGE_NAME) > $(Build.ArtifactStagingDirectory)/azure-databricks-operator.txt
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))  
+
+- task: CopyFiles@2
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))  
+  inputs:
+    contents: '$(modulePath)/databricks-operator/config/crds/*'
+    targetFolder: $(Build.ArtifactStagingDirectory)
+
+
+- task: PublishBuildArtifacts@1
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))  
+  inputs:
+    pathtoPublish: $(Build.ArtifactStagingDirectory)
+    artifactName: drop
