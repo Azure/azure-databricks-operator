@@ -98,10 +98,11 @@ steps:
   workingDirectory: '$(modulePath)/databricks-operator'
   displayName: 'install kustomize'  
 
-- script: echo $(AZURE_SUBSCRIPTION)
+
 
 - task: AzureCLI@1
-  displayName: Push to Azure Container Registry  
+  displayName: Push to Azure Container Registry
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))  
   inputs:
     azureSubscription: $(AZURE_SUBSCRIPTION)
     scriptLocation: inlineScript 
@@ -110,14 +111,17 @@ steps:
     inlineScript: az acr build --registry $(ACR_NAME) --image $(IMAGE_NAME) . 
 
 - script: echo $(IMAGE_NAME) > $(Build.ArtifactStagingDirectory)/azure-databricks-operator.txt
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))  
 
 - task: CopyFiles@2
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))  
   inputs:
     contents: '$(modulePath)/databricks-operator/config/crds/*'
     targetFolder: $(Build.ArtifactStagingDirectory)
 
 
 - task: PublishBuildArtifacts@1
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))  
   inputs:
     pathtoPublish: $(Build.ArtifactStagingDirectory)
     artifactName: drop
