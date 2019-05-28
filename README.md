@@ -23,14 +23,12 @@ The project was built using
 
 ### Prerequisites And Assumptions
 
-1. You have [Minikube](https://kubernetes.io/docs/tasks/tools/install-minikube/),[Kind](https://github.com/kubernetes-sigs/kind) or docker for desktop installed on your local computer with RBAC enabled.
-2. You have a Kubernetes cluster running.
-3. You have the kubectl command line (kubectl CLI) installed.
-4. You have Helm and Tiller installed.
+1. You have the kubectl command line (kubectl CLI) installed.
+
+2. You have a Kubernetes cluster running. It can be a local Cluster, [Minikube](https://kubernetes.io/docs/tasks/tools/install-minikube/),[Kind](https://github.com/kubernetes-sigs/kind) or docker for desktop installed on your local computer with RBAC enabled. if you opt AKS, you can use: `az aks get-credentials --resource-group $RG_NAME --name $Cluster_NAME`
 
 * Configure a Kubernetes cluster in your machine
     > You need to make sure a kubeconfig file is configured.
-    > if you opt AKS, you can use: `az aks get-credentials --resource-group $RG_NAME --name $Cluster_NAME`
 
 Basic commands to check your cluster
 
@@ -41,49 +39,71 @@ Basic commands to check your cluster
     kubectl get pods -n kube-system
 ```
 
-#### Kubernetes on WSL
-    
-On windows command line run `kubectl config view` to find the values of [windows-user-name],[minikubeip],[port]
-
-```shell
-mkdir ~/.kube \
-&& cp /mnt/c/Users/[windows-user-name]/.kube/config ~/.kube
-
-kubectl config set-cluster minikube --server=https://<minikubeip>:<port> --certificate-authority=/mnt/c/Users/<windows-user-name>/.minikube/ca.crt
-kubectl config set-credentials minikube --client-certificate=/mnt/c/Users/<windows-user-name>/.minikube/client.crt --client-key=/mnt/c/Users/<windows-user-name>/.minikube/client.key
-kubectl config set-context minikube --cluster=minikube --user=minikub
-
-```
-
-More info:
-
-1. https://devkimchi.com/2018/06/05/running-kubernetes-on-wsl/
-2. https://www.jamessturtevant.com/posts/Running-Kubernetes-Minikube-on-Windows-10-with-WSL/
-
-### How to use operator
+## How to use operator
 
 *Docs are work in progress*
 
-1. Create a secret set values of `DATABRICKS_HOST` and `DATABRICKS_TOKEN`
+### Quick start
 
-    ```shell
-    kubectl create secret testdatabricks --from-literal=DatabricksHost="https://xxxx.azuredatabricks.net" --from-literal=DatabricksToken="xxxxx"
-    ```
+1. Download [latest release.zip](https://github.com/microsoft/azure-databricks-operator/releases)
 
-    Make sure your secret name is set correctly in `databricks-operator/config/default/azure_databricks_api_image_patch.yaml`
+2. Create `databricks-operator-system` Namespace
 
-2. To install NotebookJob CRD in the configured Kubernetes cluster in ~/.kube/config, run `kubectl apply -f databricks-operator/config/crds` or `make install -C databricks-operator`
+```shell
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    control-plane: controller-manager
+    controller-tools.k8s.io: "1.0"
+  name: databricks-operator-system
+```
 
-3. To deploy controller in the configured Kubernetes cluster in ~/.kube/config, run `kustomize build databricks-operator/config | kubectl apply -f -`
+3. Create a secret set values of `DATABRICKS_HOST` and `DATABRICKS_TOKEN`
 
-4. Change NotebookJob name from `sample1run1` to your desired name, set Databricks notebook path and update the values in `microsoft_v1beta2_notebookjob.yaml`
+```shell
+    kubectl  --namespace databricks-operator-system create secret generic dbrickssettings --from-literal=DatabricksHost="https://xxxx.azuredatabricks.net" --from-literal=DatabricksToken="xxxxx"
+```
 
-    ```shell
-    kubectl apply -f databricks-operator/config/samples/microsoft_v1beta2_notebookjob.yaml
-    ```
+4. Install NotebookJob CRD and Operators in the configured Kubernetes cluster in ~/.kube/config
 
-5. Basic commands to check the new Notebookjob
-    
+`kubectl apply -f  release/config`
+
+5. Create a test secret, you can pass value of secrets into your notebook as Databricks secrets
+`kubectl create secret generic test --from-literal=my_secret_key="my_secret_value"`
+
+6. Define your Notebook job and apply it
+
+```shell
+apiVersion: microsoft.k8s.io/v1beta1
+kind: NotebookJob
+metadata:
+  annotations:
+    microsoft.k8s.io/prd-id: 2ae31bc5-ad0a-447d-8c26-29ac2a6b4c39
+    microsoft.k8s.io/author: azkhojan@microsoft.com
+  name: samplejob_1
+spec:
+  notebookTask:
+    notebookPath: "/testnotebook"
+  timeoutSeconds: 500
+  notebookSpec:
+    "flag":  "true"
+  notebookSpecSecrets:
+    - secretName: "test"
+      mapping: 
+        - "secretKey": "my_secret_key"
+          "outputKey": "dbricks_secret_key"
+  notebookAdditionalLibraries: 
+    - type: "maven"
+      properties:
+        coordinates: "com.microsoft.azure:azure-eventhubs-spark_2.11:2.3.9"
+  clusterSpec:
+    sparkVersion: "5.2.x-scala2.11"
+    nodeTypeId: "Standard_DS12_v2"
+    numWorkers: 1
+```
+7. Basic commands to check the new Notebookjob
+        
     ```shell
     kubectl get crd
     kubectl -n databricks-operator-system get svc
@@ -91,7 +111,30 @@ More info:
     kubectl -n databricks-operator-system describe  pod databricks-operator-controller-manager-0
     kubectl -n databricks-operator-system logs  databricks-operator-controller-manager-0 -c dbricks -f
     kubectl get notebookjob
-    kubectl describe notebookjob kubectl sample1run1
+    kubectl describe notebookjob kubectl samplejob_1
+    ```
+
+### Run Souce Code
+
+1. Clone the repo
+
+2. To install NotebookJob CRD in the configured Kubernetes cluster in ~/.kube/config, 
+run `kubectl apply -f databricks-operator/config/crds` or `make install -C databricks-operator`
+
+3. Create a secret set values of `DATABRICKS_HOST` and `DATABRICKS_TOKEN`
+
+    ```shell
+    kubectl  --namespace databricks-operator-system create secret generic dbrickssettings --from-literal=DatabricksHost="https://xxxx.azuredatabricks.net" --from-literal=DatabricksToken="xxxxx"
+    ```
+
+    Make sure your secret name is set correctly in `databricks-operator/config/default/azure_databricks_api_image_patch.yaml`
+
+4. To deploy controller in the configured Kubernetes cluster in ~/.kube/config, run `kustomize build databricks-operator/config | kubectl apply -f -`
+
+5. Change NotebookJob name from `sample1run1` to your desired name, set Databricks notebook path and update the values in `microsoft_v1beta2_notebookjob.yaml`
+
+    ```shell
+    kubectl apply -f databricks-operator/config/samples/microsoft_v1beta2_notebookjob.yaml
     ```
 
 ### How to extend the operator and build your own images
@@ -130,6 +173,25 @@ To Extend the operator `databricks-operator`:
 9. Azadeh Khojandi [Github](https://github.com/Azadehkhojandi), [Linkedin](https://www.linkedin.com/in/azadeh-khojandi-ba441b3/)
 
 ## Resources
+
+#### Kubernetes on WSL
+    
+On windows command line run `kubectl config view` to find the values of [windows-user-name],[minikubeip],[port]
+
+```shell
+mkdir ~/.kube \
+&& cp /mnt/c/Users/[windows-user-name]/.kube/config ~/.kube
+
+kubectl config set-cluster minikube --server=https://<minikubeip>:<port> --certificate-authority=/mnt/c/Users/<windows-user-name>/.minikube/ca.crt
+kubectl config set-credentials minikube --client-certificate=/mnt/c/Users/<windows-user-name>/.minikube/client.crt --client-key=/mnt/c/Users/<windows-user-name>/.minikube/client.key
+kubectl config set-context minikube --cluster=minikube --user=minikub
+
+```
+
+More info:
+
+1. https://devkimchi.com/2018/06/05/running-kubernetes-on-wsl/
+2. https://www.jamessturtevant.com/posts/Running-Kubernetes-Minikube-on-Windows-10-with-WSL/
 
 ### Build pipelines
 1. [Create a pipeline and add a status badge to Github](https://docs.microsoft.com/en-us/azure/devops/pipelines/create-first-pipeline?view=azure-devops&tabs=tfs-2018-2)

@@ -17,11 +17,11 @@ spec:
           - name: DATABRICKS_HOST
             valueFrom: 
               secretKeyRef:
-                name: testdatabricks
+                name: dbrickssettings
                 key: DatabricksHost
           - name: DATABRICKS_TOKEN
             valueFrom:
               secretKeyRef:
-                name: testdatabricks
+                name: dbrickssettings
                 key: DatabricksToken
 
