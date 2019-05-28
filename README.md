@@ -81,7 +81,7 @@ metadata:
   annotations:
     microsoft.k8s.io/prd-id: 2ae31bc5-ad0a-447d-8c26-29ac2a6b4c39
     microsoft.k8s.io/author: azkhojan@microsoft.com
-  name: samplejob_1
+  name: samplejob1
 spec:
   notebookTask:
     notebookPath: "/testnotebook"
@@ -111,7 +111,7 @@ spec:
     kubectl -n databricks-operator-system describe  pod databricks-operator-controller-manager-0
     kubectl -n databricks-operator-system logs  databricks-operator-controller-manager-0 -c dbricks -f
     kubectl get notebookjob
-    kubectl describe notebookjob kubectl samplejob_1
+    kubectl describe notebookjob kubectl samplejob1
     ```
 
 ### Run Souce Code
