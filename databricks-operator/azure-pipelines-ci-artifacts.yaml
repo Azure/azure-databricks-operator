@@ -98,7 +98,10 @@ steps:
   workingDirectory: '$(modulePath)/databricks-operator'
   displayName: 'install kustomize'  
 
-
+- script: docker build -t $(IMAGE_NAME) .  # add options to this command to meet your needs
+  condition: and(succeeded(), ne(variables['Build.SourceBranch'], 'refs/heads/master'))
+  workingDirectory: '$(modulePath)/databricks-operator'
+  displayName: 'Docker build'
 
 - task: AzureCLI@1
   displayName: Push to Azure Container Registry
