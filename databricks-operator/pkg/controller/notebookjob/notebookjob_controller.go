@@ -146,7 +146,8 @@ func (r *ReconcileNotebookJob) Reconcile(request reconcile.Request) (reconcile.R
 	return reconcile.Result{}, nil
 }
 
-func (r *ReconcileNotebookJob) convertInstanceToRunDefinition(instance *microsoftv1beta1.NotebookJob) (string, dbmodels.ClusterSpec, dbmodels.JobTask, int, error) {
+func (r *ReconcileNotebookJob) convertInstanceToRunDefinition(instance *microsoftv1beta1.NotebookJob) (
+	string, dbmodels.ClusterSpec, dbmodels.JobTask, int, map[string]string, error) {
 
 	var runName = instance.ObjectMeta.Name
 
@@ -195,8 +196,24 @@ func (r *ReconcileNotebookJob) convertInstanceToRunDefinition(instance *microsof
 
 	var timeoutSeconds = instance.Spec.TimeoutSeconds
 
-	return runName, clusterSpec, jobTask, timeoutSeconds, nil
+	var scopeSecrets = make(map[string]string, len(instance.Spec.NotebookSpecSecrets))
+	for _, notebookSpecSecret := range instance.Spec.NotebookSpecSecrets {
+		secretName := notebookSpecSecret.SecretName
+		secret := &v1.Secret{}
+		err := r.Get(context.TODO(), types.NamespacedName{Name: secretName, Namespace: instance.Namespace}, secret)
+		if err != nil {
+			return runName, clusterSpec, jobTask, timeoutSeconds, scopeSecrets, err
+		}
+		for _, mapping := range notebookSpecSecret.Mapping {
+			secretvalue := secret.Data[mapping.SecretKey]
+			tempkey := mapping.OutputKey
+			scopeSecrets[tempkey] = fmt.Sprintf("%s", secretvalue)
+		}
+	}
+
+	return runName, clusterSpec, jobTask, timeoutSeconds, scopeSecrets, nil
 }
+
 func (r *ReconcileNotebookJob) getEventHubConnectionString(instance *microsoftv1beta1.NotebookJob, secretName string) (string, error) {
 	secret := &v1.Secret{}
 	err := r.Get(context.TODO(), types.NamespacedName{Name: secretName, Namespace: instance.Namespace}, secret)
@@ -245,11 +262,23 @@ func (r *ReconcileNotebookJob) deleteExternalDependency(instance *microsoftv1bet
 }
 
 func (r *ReconcileNotebookJob) submitRunToAPI(instance *microsoftv1beta1.NotebookJob) error {
-	runName, clusterSpec, jobTask, timeoutSeconds, err := r.convertInstanceToRunDefinition(instance)
+	// get definition
+	runName, clusterSpec, jobTask, timeoutSeconds, scopeSecrets, err := r.convertInstanceToRunDefinition(instance)
 	if err != nil {
 		return err
 	}
 
+	// create scope and put secrets
+	secretScopeName := runName + "_scope"
+	err = r.apiClient.Secrets().CreateSecretScope(secretScopeName, "users")
+	if err != nil {
+		return err
+	}
+	for k, v := range scopeSecrets {
+		r.apiClient.Secrets().PutSecretString(v, secretScopeName, k)
+	}
+
+	// submit run
 	runResponse, err := r.apiClient.Jobs().RunsSubmit(runName, clusterSpec, jobTask, int32(timeoutSeconds))
 	if err != nil {
 		return err
