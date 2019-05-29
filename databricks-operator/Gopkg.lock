@@ -126,6 +126,14 @@
   version = "v1.0.0"
 
 [[projects]]
+  digest = "1:a98aaa0376806017a5d6f88cb8c3b8206943bd16585f58b394ac62d6e8abbc73"
+  name = "github.com/google/go-querystring"
+  packages = ["query"]
+  pruneopts = "T"
+  revision = "44c6ddd0a2342c386950e880b658017258da92fc"
+  version = "v1.0.0"
+
+[[projects]]
   digest = "1:a6181aca1fd5e27103f9a920876f29ac72854df7345a39f3b01e61c8c94cc8af"
   name = "github.com/google/gofuzz"
   packages = ["."]
@@ -413,6 +421,18 @@
   pruneopts = "T"
   revision = "298182f68c66c05229eb03ac171abe6e309ee79a"
   version = "v1.0.3"
+
+[[projects]]
+  branch = "master"
+  digest = "1:4f17a345963eba87c58712790180101a7e224b8d8f80994056069deea324dedd"
+  name = "github.com/xinsnake/databricks-sdk-golang"
+  packages = [
+    ".",
+    "azure",
+    "azure/models",
+  ]
+  pruneopts = "T"
+  revision = "7a536b21db7068ebdd96ff02abc4dc77a8bc5f97"
 
 [[projects]]
   digest = "1:365b8ecb35a5faf5aa0ee8d798548fc9cd4200cb95d77a5b0b285ac881bae499"
@@ -935,8 +955,10 @@
     "github.com/emicklei/go-restful",
     "github.com/onsi/ginkgo",
     "github.com/onsi/gomega",
+    "github.com/xinsnake/databricks-sdk-golang",
+    "github.com/xinsnake/databricks-sdk-golang/azure",
+    "github.com/xinsnake/databricks-sdk-golang/azure/models",
     "golang.org/x/net/context",
-    "golang.org/x/oauth2",
     "k8s.io/api/core/v1",
     "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1",
     "k8s.io/apimachinery/pkg/api/errors",

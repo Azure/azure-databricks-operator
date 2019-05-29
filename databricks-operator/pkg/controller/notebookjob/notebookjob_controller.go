@@ -19,11 +19,15 @@ package notebookjob
 import (
 	"context"
 	"fmt"
+	"os"
 
 	v1 "k8s.io/api/core/v1"
 
 	microsoftv1beta1 "microsoft/azure-databricks-operator/databricks-operator/pkg/apis/microsoft/v1beta1"
-	swagger "microsoft/azure-databricks-operator/databricks-operator/pkg/swagger"
+
+	db "github.com/xinsnake/databricks-sdk-golang"
+	dbazure "github.com/xinsnake/databricks-sdk-golang/azure"
+	dbmodels "github.com/xinsnake/databricks-sdk-golang/azure/models"
 
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -50,20 +54,13 @@ func Add(mgr manager.Manager) error {
 
 // newReconciler returns a new reconcile.Reconciler
 func newReconciler(mgr manager.Manager) reconcile.Reconciler {
-	apiConfig := swagger.NewConfiguration()
+	var apiConfig db.DBClientOption
 	//TODO Make it configurable
-	apiConfig.BasePath = "http://localhost:5000"
+	apiConfig.Host = os.Getenv("DATABRICKS_HOST")
+	apiConfig.Token = os.Getenv("DATABRICKS_TOKEN")
+	var apiClient dbazure.DBClient
+	apiClient.Init(apiConfig)
 
-	return &ReconcileNotebookJob{
-		Client:    mgr.GetClient(),
-		scheme:    mgr.GetScheme(),
-		recorder:  mgr.GetRecorder("notebookjob-controller"),
-		apiClient: swagger.NewAPIClient(apiConfig),
-	}
-}
-
-// newReconciler returns a new reconcile.Reconciler
-func newReconcilerWithoutAPIClient(mgr manager.Manager, apiClient *swagger.APIClient) reconcile.Reconciler {
 	return &ReconcileNotebookJob{
 		Client:    mgr.GetClient(),
 		scheme:    mgr.GetScheme(),
@@ -97,7 +94,7 @@ type ReconcileNotebookJob struct {
 	scheme   *runtime.Scheme
 	recorder record.EventRecorder
 
-	apiClient *swagger.APIClient
+	apiClient dbazure.DBClient
 }
 
 // Reconcile reads that state of the cluster for a NotebookJob object and makes changes based on the state read
@@ -149,46 +146,46 @@ func (r *ReconcileNotebookJob) Reconcile(request reconcile.Request) (reconcile.R
 	return reconcile.Result{}, nil
 }
 
-func (r *ReconcileNotebookJob) convertInstanceToRunDefinition(instance *microsoftv1beta1.NotebookJob) (swagger.RunDefinition, error) {
+func (r *ReconcileNotebookJob) convertInstanceToRunDefinition(instance *microsoftv1beta1.NotebookJob) (string, dbmodels.ClusterSpec, dbmodels.JobTask, error) {
 
-	definition := swagger.RunDefinition{}
-	definition.RunName = instance.ObjectMeta.Name
+	runName := instance.ObjectMeta.Name
 
-	var notebookTask = swagger.NotebookTask{NotebookPath: instance.Spec.NotebookTask.NotebookPath}
-	definition.NotebookTask = &notebookTask
+	var clusterSpec dbmodels.ClusterSpec
 
-	var newCluster = swagger.NewCluster{
-		SparkVersion: instance.Spec.ClusterSpec.SparkVersion,
-		NodeTypeId:   instance.Spec.ClusterSpec.NodeTypeId,
-		NumWorkers:   int32(instance.Spec.ClusterSpec.NumWorkers),
-	}
-	definition.NewCluster = &newCluster
-	notebook_spec_secrets := map[string]string{}
-
-	for _, notebookSpecSecret := range instance.Spec.NotebookSpecSecrets {
-		secretName := notebookSpecSecret.SecretName
-		secret := &v1.Secret{}
-		err := r.Get(context.TODO(), types.NamespacedName{Name: secretName, Namespace: instance.Namespace}, secret)
-		if err != nil {
-			return swagger.RunDefinition{}, err
+	clusterSpec.NewCluster.SparkVersion = instance.Spec.ClusterSpec.SparkVersion
+	clusterSpec.NewCluster.NodeTypeID = instance.Spec.ClusterSpec.NodeTypeId
+	clusterSpec.NewCluster.NumWorkers = int32(instance.Spec.ClusterSpec.NumWorkers)
+	clusterSpec.Libraries = make([]dbmodels.Library, len(instance.Spec.NotebookAdditionalLibraries))
+	for i, v := range instance.Spec.NotebookAdditionalLibraries {
+		if v.Type == "jar" {
+			clusterSpec.Libraries[i].Jar = v.Properties["path"]
 		}
-		for _, mapping := range notebookSpecSecret.Mapping {
-
-			secretvalue := secret.Data[mapping.SecretKey]
-			tempkey := mapping.OutputKey
-			notebook_spec_secrets[tempkey] = fmt.Sprintf("%s", secretvalue)
+		if v.Type == "egg" {
+			clusterSpec.Libraries[i].Egg = v.Properties["path"]
 		}
-
+		if v.Type == "whl" {
+			clusterSpec.Libraries[i].Whl = v.Properties["path"]
+		}
+		if v.Type == "pypi" {
+			clusterSpec.Libraries[i].Pypi.Package = v.Properties["package"]
+			clusterSpec.Libraries[i].Pypi.Repo = v.Properties["repo"]
+		}
+		if v.Type == "maven" {
+			clusterSpec.Libraries[i].Maven.Coordinates = v.Properties["coordinates"]
+			clusterSpec.Libraries[i].Maven.Repo = v.Properties["repo"]
+			// TODO the spec doesn't support array
+			// clusterSpec.Libraries[i].Maven.Exclusions = v.Properties["exclusions"]
+		}
+		if v.Type == "cran" {
+			clusterSpec.Libraries[i].Cran.Package = v.Properties["package"]
+			clusterSpec.Libraries[i].Cran.Repo = v.Properties["repo"]
+		}
 	}
 
-	var notebookSpec = instance.Spec.NotebookSpec
-	definition.NotebookSpec = &notebookSpec
+	var jobTask dbmodels.JobTask
+	jobTask.NotebookTask.NotebookPath = instance.Spec.NotebookTask.NotebookPath
 
-	var notebookAdditionalLibraries = instance.Spec.NotebookAdditionalLibraries
-	definition.NotebookAdditionalLibraries = &notebookAdditionalLibraries
-
-	definition.NotebookSpecSecrets = notebook_spec_secrets
-	return definition, nil
+	return runName, clusterSpec, jobTask, nil
 }
 func (r *ReconcileNotebookJob) getEventHubConnectionString(instance *microsoftv1beta1.NotebookJob, secretName string) (string, error) {
 	secret := &v1.Secret{}
@@ -234,26 +231,25 @@ func (r *ReconcileNotebookJob) handleFinalizer(instance *microsoftv1beta1.Notebo
 func (r *ReconcileNotebookJob) deleteExternalDependency(instance *microsoftv1beta1.NotebookJob) error {
 	log.Info("deleting the external dependencies")
 	runID := instance.Spec.NotebookTask.RunID
-	_, err := r.apiClient.ApijobsrunsApi.DeleteRun(context.TODO(), int32(runID))
-	return err
+	return r.apiClient.Jobs().RunsDelete(int64(runID))
 }
 
 func (r *ReconcileNotebookJob) submitRunToAPI(instance *microsoftv1beta1.NotebookJob) error {
-	payload, err := r.convertInstanceToRunDefinition(instance)
+	runName, clusterSpec, jobTask, err := r.convertInstanceToRunDefinition(instance)
 	if err != nil {
 		return err
 	}
 
-	jobStatus, _, err := r.apiClient.ApijobsrunsApi.SubmitRun(context.TODO(), payload, nil)
+	runResponse, err := r.apiClient.Jobs().RunsSubmit(runName, clusterSpec, jobTask)
 	if err != nil {
 		return err
 	}
 
-	if len(jobStatus.Result) == 0 {
+	if runResponse.RunID == 0 {
 		return fmt.Errorf("result from API didn't return any values")
 	}
 
-	instance.Spec.NotebookTask.RunID = int(jobStatus.Result[0].RunId)
+	instance.Spec.NotebookTask.RunID = int(runResponse.RunID)
 	err = r.Update(context.TODO(), instance)
 	if err != nil {
 		return fmt.Errorf("error when updating NotebookJob after submitting to API: %v", err)

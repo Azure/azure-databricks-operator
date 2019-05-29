@@ -21,9 +21,7 @@ import (
 	"time"
 
 	microsoftv1beta1 "microsoft/azure-databricks-operator/databricks-operator/pkg/apis/microsoft/v1beta1"
-	mocks "microsoft/azure-databricks-operator/databricks-operator/pkg/mocks"
 	randStr "microsoft/azure-databricks-operator/databricks-operator/pkg/rand"
-	swagger "microsoft/azure-databricks-operator/databricks-operator/pkg/swagger"
 
 	"github.com/onsi/gomega"
 	"golang.org/x/net/context"
@@ -66,11 +64,7 @@ func TestReconcile(t *testing.T) {
 	g.Expect(err).NotTo(gomega.HaveOccurred())
 	c = mgr.GetClient()
 
-	apiJobRuns := new(mocks.MockedApiJobRuns)
-
-	apiClient := swagger.NewAPIClient(swagger.NewConfiguration())
-	apiClient.ApijobsrunsApi = apiJobRuns
-	recFn, requests := SetupTestReconcile(newReconcilerWithoutAPIClient(mgr, apiClient))
+	recFn, requests := SetupTestReconcile(newReconciler(mgr))
 	g.Expect(add(mgr, recFn)).NotTo(gomega.HaveOccurred())
 
 	stopMgr, mgrStopped := StartTestManager(mgr, g)
