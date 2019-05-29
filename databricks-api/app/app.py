@@ -162,7 +162,7 @@ class RunsList(Resource):
 
             notebook_additional_libraries = data['notebook_additional_libraries']
 
-        checkpoint_location = "dbfs:/checkpoints/" + run_name + "/output.txt"
+        checkpoint_location = "dbfs:/checkpoints/" + run_name + "/output"
 
         # Read job config
         with open(JOB_CONFIG_PATH) as job_config_file:
