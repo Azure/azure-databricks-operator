@@ -37,7 +37,7 @@ steps:
 
 - script: docker build -t $(IMAGE_NAME) .  # add options to this command to meet your needs
   condition: and(succeeded(), ne(variables['Build.SourceBranch'], 'refs/heads/master'))
-  workingDirectory: '$(modulePath)/databricks-operator'
+  workingDirectory: $(WORKING_DIR)
   displayName: 'Docker build'
 
 
