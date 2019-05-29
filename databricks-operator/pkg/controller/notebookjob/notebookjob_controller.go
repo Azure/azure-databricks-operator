@@ -148,7 +148,7 @@ func (r *ReconcileNotebookJob) Reconcile(request reconcile.Request) (reconcile.R
 
 func (r *ReconcileNotebookJob) convertInstanceToRunDefinition(instance *microsoftv1beta1.NotebookJob) (string, dbmodels.ClusterSpec, dbmodels.JobTask, int, error) {
 
-	runName := instance.ObjectMeta.Name
+	var runName = instance.ObjectMeta.Name
 
 	var clusterSpec dbmodels.ClusterSpec
 
@@ -184,8 +184,16 @@ func (r *ReconcileNotebookJob) convertInstanceToRunDefinition(instance *microsof
 
 	var jobTask dbmodels.JobTask
 	jobTask.NotebookTask.NotebookPath = instance.Spec.NotebookTask.NotebookPath
+	jobTask.NotebookTask.BaseParameters = make([]dbmodels.ParamPair, len(instance.Spec.NotebookSpec))
+	counter := 0
+	for k, v := range instance.Spec.NotebookSpec {
+		jobTask.NotebookTask.BaseParameters[counter] = dbmodels.ParamPair{
+			Key: k, Value: v,
+		}
+		counter++
+	}
 
-	timeoutSeconds := instance.Spec.TimeoutSeconds
+	var timeoutSeconds = instance.Spec.TimeoutSeconds
 
 	return runName, clusterSpec, jobTask, timeoutSeconds, nil
 }
