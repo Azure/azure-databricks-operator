@@ -146,7 +146,7 @@ func (r *ReconcileNotebookJob) Reconcile(request reconcile.Request) (reconcile.R
 	return reconcile.Result{}, nil
 }
 
-func (r *ReconcileNotebookJob) convertInstanceToRunDefinition(instance *microsoftv1beta1.NotebookJob) (string, dbmodels.ClusterSpec, dbmodels.JobTask, error) {
+func (r *ReconcileNotebookJob) convertInstanceToRunDefinition(instance *microsoftv1beta1.NotebookJob) (string, dbmodels.ClusterSpec, dbmodels.JobTask, int, error) {
 
 	runName := instance.ObjectMeta.Name
 
@@ -185,7 +185,9 @@ func (r *ReconcileNotebookJob) convertInstanceToRunDefinition(instance *microsof
 	var jobTask dbmodels.JobTask
 	jobTask.NotebookTask.NotebookPath = instance.Spec.NotebookTask.NotebookPath
 
-	return runName, clusterSpec, jobTask, nil
+	timeoutSeconds := instance.Spec.TimeoutSeconds
+
+	return runName, clusterSpec, jobTask, timeoutSeconds, nil
 }
 func (r *ReconcileNotebookJob) getEventHubConnectionString(instance *microsoftv1beta1.NotebookJob, secretName string) (string, error) {
 	secret := &v1.Secret{}
@@ -235,12 +237,12 @@ func (r *ReconcileNotebookJob) deleteExternalDependency(instance *microsoftv1bet
 }
 
 func (r *ReconcileNotebookJob) submitRunToAPI(instance *microsoftv1beta1.NotebookJob) error {
-	runName, clusterSpec, jobTask, err := r.convertInstanceToRunDefinition(instance)
+	runName, clusterSpec, jobTask, timeoutSeconds, err := r.convertInstanceToRunDefinition(instance)
 	if err != nil {
 		return err
 	}
 
-	runResponse, err := r.apiClient.Jobs().RunsSubmit(runName, clusterSpec, jobTask)
+	runResponse, err := r.apiClient.Jobs().RunsSubmit(runName, clusterSpec, jobTask, int32(timeoutSeconds))
 	if err != nil {
 		return err
 	}
