@@ -8,7 +8,6 @@
         }
     },
     "libraries": [],
-    "timeout_seconds": 3600,
     "notebook_task": {
         "notebook_path": ""
     }
