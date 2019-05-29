@@ -4,13 +4,19 @@
 [![Build Status](https://img.shields.io/azure-devops/build/aussiedevcrew/d4700b68-d4e4-4c1c-8802-b3031bfa80b0/18.svg?label=build-azure-databricks-operator&style=flat-square&logo=data%3Aimage%2Fpng%3Bbase64%2CiVBORw0KGgoAAAANSUhEUgAAADQAAAAyCAMAAAAk%2FwjEAAAAXVBMVEX%2F%2F%2F%2BTk5Obm5udnZ2kpKSlpaWnp6eoqKiwsLCxsbGysrKzs7O6urq7u7u9vb3GxsbHx8fIyMjJycnR0dHS0tLT09PU1NTd3d3e3t7f39%2Fo6Ojp6enq6ur09PT%2F%2F%2F%2Bel%2BNbAAAAAXRSTlMAQObYZgAAAM5JREFUeNrt090OgjAMhuEqCoqKv8Mprvd%2FmUY6U9SFfSwemMh7toMno82gsd%2BpcNxtgpiMX6sR5BKQ5eGoYOlARDWKvMnawwpDVsyFpBuCSpZyPccRv6EcQA37KpKqONrxM9e52VCgJQdq9OYg4nDWWGYcaemoTECWhqM94UhX%2F21kHbI4zcm0n8pNe%2F9v63F8bZrRl6fNCWgT2UDcsEHMop1C5zpRf%2FL5TiZ3MJq1yzvLCUc6WgJaM47U4Oh6fKRrQJCPumoLI1UNjf1ddw%2FHSv3TGNoxAAAAAElFTkSuQmCC)](https://dev.azure.com/aussiedevcrew/azure-databricks-operator/_build/latest?definitionId=18&branchName=master)
 
 
-# Azure Databricks operator
+# Azure Databricks operator (for Kubernetes)
 
 ## Introduction
 
-Azure Databricks operator contains two projects. The golang application is a Kubernetes controller that watches CRDs that defines a Databricks job and The Python Flask App which sends commands to the Databricks.
+Kubernetes offers the facility of extending it's API through the concept of 'Operators' ([Introducing Operators: Putting Operational Knowledge into Software](https://coreos.com/blog/introducing-operators.html)). This repository contains the resources and code to deploy an Azure Databricks Operator for Kubernetes.
+
+The Azure Databricks operator comprises two projects:
+- The golang application is a Kubernetes controller that watches Customer Resource Definitions (CRDs) that define a Databricks job, and,
+- A Python Flask App which sends commands to the Databricks clusters.
 
 ![alt text](docs/images/azure-databricks-operator.jpg "high level architecture")
+
+The Databricks operator is useful in situations where Kubernetes hosted applications wish to launch and use Databricks data engineering and machine learning tasks. 
 
 The project was built using
 
@@ -25,10 +31,12 @@ The project was built using
 
 1. You have the kubectl command line (kubectl CLI) installed.
 
-2. You have a Kubernetes cluster running. It can be a local Cluster, [Minikube](https://kubernetes.io/docs/tasks/tools/install-minikube/),[Kind](https://github.com/kubernetes-sigs/kind) or docker for desktop installed on your local computer with RBAC enabled. if you opt AKS, you can use: `az aks get-credentials --resource-group $RG_NAME --name $Cluster_NAME`
+2. You have acess to a Kubernetes cluster. It can be a local hosted Cluster like [Minikube](https://kubernetes.io/docs/tasks/tools/install-minikube/), [Kind](https://github.com/kubernetes-sigs/kind) or, Docker for desktop installed localy with RBAC enabled. if you opt for Azure Kubernetes Service ([AKS](https://azure.microsoft.com/en-au/services/kubernetes-service/)), you can use: `az aks get-credentials --resource-group $RG_NAME --name $Cluster_NAME`
 
-* Configure a Kubernetes cluster in your machine
+* To configure a local Kubernetes cluster on your machine
     > You need to make sure a kubeconfig file is configured.
+
+3. [kustomize](https://github.com/kubernetes-sigs/kustomize) is also needed
 
 Basic commands to check your cluster
 
@@ -39,15 +47,15 @@ Basic commands to check your cluster
     kubectl get pods -n kube-system
 ```
 
-## How to use operator
+## How to use the operator
 
-*Docs are work in progress*
+*Documentation is a work in progress*
 
 ### Quick start
 
 1. Download [latest release.zip](https://github.com/microsoft/azure-databricks-operator/releases)
 
-2. Create `databricks-operator-system` Namespace
+2. Create the `databricks-operator-system` Namespace
 
 ```shell
 apiVersion: v1
@@ -59,17 +67,17 @@ metadata:
   name: databricks-operator-system
 ```
 
-3. Create a secret set values of `DATABRICKS_HOST` and `DATABRICKS_TOKEN`
+3. Create Kubernetes secrets with values for `DATABRICKS_HOST` and `DATABRICKS_TOKEN`
 
 ```shell
     kubectl  --namespace databricks-operator-system create secret generic dbrickssettings --from-literal=DatabricksHost="https://xxxx.azuredatabricks.net" --from-literal=DatabricksToken="xxxxx"
 ```
 
-4. Install NotebookJob CRD and Operators in the configured Kubernetes cluster in ~/.kube/config
+4. Install the NotebookJob CRD and Operators in the configured Kubernetes cluster in ~/.kube/config
 
 `kubectl apply -f  release/config`
 
-5. Create a test secret, you can pass value of secrets into your notebook as Databricks secrets
+5. Create a test secret, you can pass the value of Kubernetes secrets into your notebook as Databricks secrets
 `kubectl create secret generic test --from-literal=my_secret_key="my_secret_value"`
 
 6. Define your Notebook job and apply it
@@ -118,10 +126,10 @@ spec:
 
 1. Clone the repo
 
-2. To install NotebookJob CRD in the configured Kubernetes cluster in ~/.kube/config, 
+2. Install the NotebookJob CRD in the configured Kubernetes cluster folder ~/.kube/config, 
 run `kubectl apply -f databricks-operator/config/crds` or `make install -C databricks-operator`
 
-3. Create a secret set values of `DATABRICKS_HOST` and `DATABRICKS_TOKEN`
+3. Create secrets for `DATABRICKS_HOST` and `DATABRICKS_TOKEN`
 
     ```shell
     kubectl  --namespace databricks-operator-system create secret generic dbrickssettings --from-literal=DatabricksHost="https://xxxx.azuredatabricks.net" --from-literal=DatabricksToken="xxxxx"
@@ -129,9 +137,9 @@ run `kubectl apply -f databricks-operator/config/crds` or `make install -C datab
 
     Make sure your secret name is set correctly in `databricks-operator/config/default/azure_databricks_api_image_patch.yaml`
 
-4. To deploy controller in the configured Kubernetes cluster in ~/.kube/config, run `kustomize build databricks-operator/config | kubectl apply -f -`
+4. Deploy the controller in the configured Kubernetes cluster folder ~/.kube/config, run `kustomize build databricks-operator/config | kubectl apply -f -`
 
-5. Change NotebookJob name from `sample1run1` to your desired name, set Databricks notebook path and update the values in `microsoft_v1beta2_notebookjob.yaml`
+5. Change the NotebookJob name from `sample1run1` to your desired name, set the Databricks notebook path and update the values in `microsoft_v1beta2_notebookjob.yaml` to reflect your Databricks environment
 
     ```shell
     kubectl apply -f databricks-operator/config/samples/microsoft_v1beta2_notebookjob.yaml
@@ -139,7 +147,7 @@ run `kubectl apply -f databricks-operator/config/crds` or `make install -C datab
 
 ### How to extend the operator and build your own images
 
-#### Updating databricks operator:
+#### Updating the Databricks operator:
 
 This Repo is generated by [Kubebuilder](https://book.kubebuilder.io/).
 
