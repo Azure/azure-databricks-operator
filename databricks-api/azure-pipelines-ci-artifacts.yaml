@@ -34,12 +34,16 @@ steps:
   workingDirectory: $(WORKING_DIR)
   displayName: 'Run lint tests'
 
-- script: echo $(AZURE_SUBSCRIPTION)
-  workingDirectory: $(WORKING_DIR)
-  displayName: 'test'
+
+- script: docker build -t $(IMAGE_NAME) .  # add options to this command to meet your needs
+  condition: and(succeeded(), ne(variables['Build.SourceBranch'], 'refs/heads/master'))
+  workingDirectory: '$(modulePath)/databricks-operator'
+  displayName: 'Docker build'
+
 
 - task: AzureCLI@1
-  displayName: Push to Azure Container Registry  
+  displayName: Push to Azure Container Registry
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))  
   inputs:
     azureSubscription: $(AZURE_SUBSCRIPTION)
     scriptLocation: inlineScript 
@@ -48,8 +52,10 @@ steps:
     inlineScript: az acr build --registry $(ACR_NAME) --image $(IMAGE_NAME) . 
 
 - script: echo $(IMAGE_NAME) > $(Build.ArtifactStagingDirectory)/databricks-api.txt
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))  
 
 - task: PublishBuildArtifacts@1
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))  
   inputs:
     pathtoPublish: $(Build.ArtifactStagingDirectory)
     artifactName: drop
