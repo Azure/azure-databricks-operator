@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 
 	v1 "k8s.io/api/core/v1"
 
@@ -55,17 +56,17 @@ func Add(mgr manager.Manager) error {
 // newReconciler returns a new reconcile.Reconciler
 func newReconciler(mgr manager.Manager) reconcile.Reconciler {
 	var apiConfig db.DBClientOption
-	//TODO Make it configurable
 	apiConfig.Host = os.Getenv("DATABRICKS_HOST")
 	apiConfig.Token = os.Getenv("DATABRICKS_TOKEN")
 	var apiClient dbazure.DBClient
-	apiClient.Init(apiConfig)
+	log.Info(fmt.Sprintf("initializing databricks client using host %s..., token %s...",
+		apiConfig.Host[0:10], apiConfig.Token[0:5]))
 
 	return &ReconcileNotebookJob{
 		Client:    mgr.GetClient(),
 		scheme:    mgr.GetScheme(),
 		recorder:  mgr.GetRecorder("notebookjob-controller"),
-		apiClient: apiClient,
+		apiClient: apiClient.Init(apiConfig),
 	}
 }
 
@@ -258,7 +259,10 @@ func (r *ReconcileNotebookJob) handleFinalizer(instance *microsoftv1beta1.Notebo
 func (r *ReconcileNotebookJob) deleteExternalDependency(instance *microsoftv1beta1.NotebookJob) error {
 	log.Info("deleting the external dependencies")
 	runID := instance.Spec.NotebookTask.RunID
-	return r.apiClient.Jobs().RunsDelete(int64(runID))
+	if runID != 0 {
+		return r.apiClient.Jobs().RunsDelete(int64(runID))
+	}
+	return nil
 }
 
 func (r *ReconcileNotebookJob) submitRunToAPI(instance *microsoftv1beta1.NotebookJob) error {
@@ -271,7 +275,7 @@ func (r *ReconcileNotebookJob) submitRunToAPI(instance *microsoftv1beta1.Noteboo
 	// create scope and put secrets
 	secretScopeName := runName + "_scope"
 	err = r.apiClient.Secrets().CreateSecretScope(secretScopeName, "users")
-	if err != nil {
+	if err != nil && !strings.Contains(err.Error(), "RESOURCE_ALREADY_EXISTS") {
 		return err
 	}
 	for k, v := range scopeSecrets {
