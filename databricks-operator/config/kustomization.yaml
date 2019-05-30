@@ -30,7 +30,6 @@ resources:
 
 patches:
 - default/azure_databricks_operator_image_patch.yaml
-- default/azure_databricks_api_image_patch.yaml
   # Protect the /metrics endpoint by putting it behind auth.
   # Only one of manager_auth_proxy_patch.yaml and
   # manager_prometheus_metrics_patch.yaml should be enabled.
