@@ -10,3 +10,14 @@ spec:
       # Change the value of image field below to your controller image URL
       - image: mcr.microsoft.com/k8s/azure-databricks/operator:latest
         name: manager
+        env:
+          - name: DATABRICKS_HOST
+            valueFrom:
+              secretKeyRef:
+                name: dbrickssettings
+                key: DatabricksHost
+          - name: DATABRICKS_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: dbrickssettings
+                key: DatabricksToken
