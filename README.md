@@ -55,9 +55,9 @@ Basic commands to check your cluster
 
 1. Download [latest release.zip](https://github.com/microsoft/azure-databricks-operator/releases)
 
-2. Create the `databricks-operator-system` Namespace
+2. Create the `databricks-operator-system` namespace
 
-```shell
+```yaml
 apiVersion: v1
 kind: Namespace
 metadata:
