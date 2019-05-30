@@ -11,6 +11,7 @@ pool:
   vmImage: 'Ubuntu 16.04'
 
 variables:
+  key: val
   #ACR_NAME - set this value in AzureDevops variables 
   #AZURE_SUBSCRIPTION - set this value in AzureDevops variables
 
