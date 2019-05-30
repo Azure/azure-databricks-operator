@@ -13,19 +13,19 @@ spec:
     "flag":  "true"
   notebookSpecSecrets:
     - secretName: "sourceeh"
-      mapping : 
+      mapping :
         - "secretKey": "eventHubName"
           "outputKey": "SRC_CS_EVENTHUBNAME"
         - "secretKey": "connectionString"
           "outputKey": "SRC_CS_CONNECTIONSTRING"
     - secretName: "desteh"
-      mapping : 
+      mapping :
         - "secretKey": "eventHubName"
           "outputKey": "DestinationeventHubName"
         - "secretKey": "connectionString"
           "outputKey": "DestinationConnectionString"
     - secretName: "dltest"
-      mapping : 
+      mapping :
         - "secretKey": "secretkey_dest_oauth2_clientid"
           "outputKey": "DEST_OAUTH2_CLIENTID"
         - "secretKey": "secretkey_dest_oauth2_clientsecret"
@@ -34,15 +34,10 @@ spec:
           "outputKey": "DEST_OAUTH2_TENANTID"
         - "secretKey": "secretkey_adl2_dest_name"
           "outputKey": "ADL2_DEST_NAME"
-
-
-
-  notebookAdditionalLibraries: 
+  notebookAdditionalLibraries:
     - type: "maven"
       properties:
         coordinates: "com.microsoft.azure:azure-eventhubs-spark_2.11:2.3.9"
-       
-
   clusterSpec:
     sparkVersion: "5.2.x-scala2.11"
     nodeTypeId: "Standard_DS12_v2"
