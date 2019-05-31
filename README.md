@@ -55,9 +55,9 @@ Basic commands to check your cluster
 
 1. Download [latest release.zip](https://github.com/microsoft/azure-databricks-operator/releases)
 
-2. Create the `databricks-operator-system` Namespace
+2. Create the `databricks-operator-system` namespace
 
-```shell
+```yaml
 apiVersion: v1
 kind: Namespace
 metadata:
@@ -67,27 +67,42 @@ metadata:
   name: databricks-operator-system
 ```
 
-3. Create Kubernetes secrets with values for `DATABRICKS_HOST` and `DATABRICKS_TOKEN`
+3. [Generate a databricks token](https://docs.databricks.com/api/latest/authentication.html#generate-a-token), and create Kubernetes secrets with values for `DATABRICKS_HOST` and `DATABRICKS_TOKEN`
 
 ```shell
     kubectl  --namespace databricks-operator-system create secret generic dbrickssettings --from-literal=DatabricksHost="https://xxxx.azuredatabricks.net" --from-literal=DatabricksToken="xxxxx"
 ```
 
-4. Install the NotebookJob CRD and Operators in the configured Kubernetes cluster in ~/.kube/config
+4. Apply the manifests for the CRD and Operator in `release/config`:
 
-`kubectl apply -f  release/config`
+```sh
+kubectl apply -f  release/config
+```
 
 5. Create a test secret, you can pass the value of Kubernetes secrets into your notebook as Databricks secrets
 `kubectl create secret generic test --from-literal=my_secret_key="my_secret_value"`
 
-6. Define your Notebook job and apply it
+6. In Databricks, [create a new Python Notebook](https://docs.databricks.com/user-guide/notebooks/notebook-manage.html#create-a-notebook) called `testnotebook` in the root of your [Workspace](https://docs.databricks.com/user-guide/workspace.html#folders). Put the following in the first cell of the notebook:
 
-```shell
+```py
+dbutils.widgets.text("secret_scope", "", "value from CRD")
+secret_scope = dbutils.widgets.get("secret_scope")
+secret_value = dbutils.secrets.get(scope=secret_scope, key="dbricks_secret_key") # this will come from a kubernetes secret
+print(secret_value) # will be redacted
+
+dbutils.widgets.text("flag", "", "value from CRD")
+value = dbutils.widgets.get("flag")
+print(value) # 'true'
+
+```
+
+7. Define your Notebook job and apply it
+
+```yaml
 apiVersion: microsoft.k8s.io/v1beta1
 kind: NotebookJob
 metadata:
   annotations:
-    microsoft.k8s.io/prd-id: 2ae31bc5-ad0a-447d-8c26-29ac2a6b4c39
     microsoft.k8s.io/author: azkhojan@microsoft.com
   name: samplejob1
 spec:
@@ -110,17 +125,18 @@ spec:
     nodeTypeId: "Standard_DS12_v2"
     numWorkers: 1
 ```
-7. Basic commands to check the new Notebookjob
+
+8. Basic commands to check the new Notebookjob
         
-    ```shell
-    kubectl get crd
-    kubectl -n databricks-operator-system get svc
-    kubectl -n databricks-operator-system get pod
-    kubectl -n databricks-operator-system describe  pod databricks-operator-controller-manager-0
-    kubectl -n databricks-operator-system logs  databricks-operator-controller-manager-0 -c dbricks -f
-    kubectl get notebookjob
-    kubectl describe notebookjob kubectl samplejob1
-    ```
+```shell
+kubectl get crd
+kubectl -n databricks-operator-system get svc
+kubectl -n databricks-operator-system get pod
+kubectl -n databricks-operator-system describe  pod databricks-operator-controller-manager-0
+kubectl -n databricks-operator-system logs  databricks-operator-controller-manager-0 -c dbricks -f
+kubectl get notebookjob
+kubectl describe notebookjob kubectl samplejob1
+```
 
 ### Run Souce Code
 
