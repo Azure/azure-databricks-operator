@@ -2,7 +2,6 @@ apiVersion: microsoft.k8s.io/v1beta1
 kind: NotebookJob
 metadata:
   annotations:
-    microsoft.k8s.io/prd-id: 2ae31bc5-ad0a-447d-8c26-29ac2a6b4c39
     microsoft.k8s.io/author: azkhojan@microsoft.com
   name: sample1run1
 spec:
