@@ -73,16 +73,18 @@ metadata:
     kubectl  --namespace databricks-operator-system create secret generic dbrickssettings --from-literal=DatabricksHost="https://xxxx.azuredatabricks.net" --from-literal=DatabricksToken="xxxxx"
 ```
 
-4. Install the NotebookJob CRD and Operators in the configured Kubernetes cluster in ~/.kube/config
+4. Apply the manifests for the CRD and Operator in `release/config`:
 
-`kubectl apply -f  release/config`
+```sh
+kubectl apply -f  release/config
+```
 
 5. Create a test secret, you can pass the value of Kubernetes secrets into your notebook as Databricks secrets
 `kubectl create secret generic test --from-literal=my_secret_key="my_secret_value"`
 
 6. Define your Notebook job and apply it
 
-```shell
+```yaml
 apiVersion: microsoft.k8s.io/v1beta1
 kind: NotebookJob
 metadata:
@@ -110,17 +112,18 @@ spec:
     nodeTypeId: "Standard_DS12_v2"
     numWorkers: 1
 ```
+
 7. Basic commands to check the new Notebookjob
         
-    ```shell
-    kubectl get crd
-    kubectl -n databricks-operator-system get svc
-    kubectl -n databricks-operator-system get pod
-    kubectl -n databricks-operator-system describe  pod databricks-operator-controller-manager-0
-    kubectl -n databricks-operator-system logs  databricks-operator-controller-manager-0 -c dbricks -f
-    kubectl get notebookjob
-    kubectl describe notebookjob kubectl samplejob1
-    ```
+```shell
+kubectl get crd
+kubectl -n databricks-operator-system get svc
+kubectl -n databricks-operator-system get pod
+kubectl -n databricks-operator-system describe  pod databricks-operator-controller-manager-0
+kubectl -n databricks-operator-system logs  databricks-operator-controller-manager-0 -c dbricks -f
+kubectl get notebookjob
+kubectl describe notebookjob kubectl samplejob1
+```
 
 ### Run Souce Code
 
