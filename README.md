@@ -82,7 +82,21 @@ kubectl apply -f  release/config
 5. Create a test secret, you can pass the value of Kubernetes secrets into your notebook as Databricks secrets
 `kubectl create secret generic test --from-literal=my_secret_key="my_secret_value"`
 
-6. Define your Notebook job and apply it
+6. In Databricks, [create a new Python Notebook](https://docs.databricks.com/user-guide/notebooks/notebook-manage.html#create-a-notebook) called `testnotebook` in the root of your [Workspace](https://docs.databricks.com/user-guide/workspace.html#folders). Put the following in the first cell of the notebook:
+
+```py
+dbutils.widgets.text("secret_scope", "", "value from CRD")
+secret_scope = dbutils.widgets.get("secret_scope")
+secret_value = dbutils.secrets.get(scope=secret_scope, key="dbricks_secret_key") # this will come from a kubernetes secret
+print(secret_value) # will be redacted
+
+dbutils.widgets.text("flag", "", "value from CRD")
+value = dbutils.widgets.get("flag")
+print(value) # 'true'
+
+```
+
+7. Define your Notebook job and apply it
 
 ```yaml
 apiVersion: microsoft.k8s.io/v1beta1
@@ -112,7 +126,7 @@ spec:
     numWorkers: 1
 ```
 
-7. Basic commands to check the new Notebookjob
+8. Basic commands to check the new Notebookjob
         
 ```shell
 kubectl get crd
