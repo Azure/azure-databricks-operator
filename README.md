@@ -6,6 +6,8 @@
 
 # Azure Databricks operator (for Kubernetes)
 
+> This project is experimental. Expect the API to change. It is not recommended for production environments.
+
 ## Introduction
 
 Kubernetes offers the facility of extending it's API through the concept of 'Operators' ([Introducing Operators: Putting Operational Knowledge into Software](https://coreos.com/blog/introducing-operators.html)). This repository contains the resources and code to deploy an Azure Databricks Operator for Kubernetes.
@@ -57,14 +59,8 @@ Basic commands to check your cluster
 
 2. Create the `databricks-operator-system` namespace
 
-```yaml
-apiVersion: v1
-kind: Namespace
-metadata:
-  labels:
-    control-plane: controller-manager
-    controller-tools.k8s.io: "1.0"
-  name: databricks-operator-system
+```sh
+kubectl create namespace databricks-operator-system
 ```
 
 3. [Generate a databricks token](https://docs.databricks.com/api/latest/authentication.html#generate-a-token), and create Kubernetes secrets with values for `DATABRICKS_HOST` and `DATABRICKS_TOKEN`
