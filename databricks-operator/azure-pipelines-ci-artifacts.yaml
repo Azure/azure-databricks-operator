@@ -19,6 +19,8 @@ variables:
   #AZURE_SUBSCRIPTION - set this value in AzureDevops variables
 steps:
 - script: |
+    echo 'ls /usr/local/'
+    ls /usr/local/
     mkdir -p '$(GOBIN)'
     mkdir -p '$(GOPATH)/pkg'
     mkdir -p '$(modulePath)'
