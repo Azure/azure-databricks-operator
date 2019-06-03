@@ -115,7 +115,7 @@ spec:
   notebookAdditionalLibraries: 
     - type: "maven"
       properties:
-        coordinates: "com.microsoft.azure:azure-eventhubs-spark_2.11:2.3.9"
+        coordinates: "com.microsoft.azure:azure-eventhubs-spark_2.11:2.3.9" # installs the azure event hubs library
   clusterSpec:
     sparkVersion: "5.2.x-scala2.11"
     nodeTypeId: "Standard_DS12_v2"
