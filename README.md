@@ -57,6 +57,12 @@ Basic commands to check your cluster
 
 1. Download [latest release.zip](https://github.com/microsoft/azure-databricks-operator/releases)
 
+```sh
+VERSION=0.44
+wget https://github.com/microsoft/azure-databricks-operator/releases/download/$VERSION/release.zip
+unzip release.zip
+```
+
 2. Create the `databricks-operator-system` namespace
 
 ```sh
@@ -72,7 +78,7 @@ kubectl create namespace databricks-operator-system
 4. Apply the manifests for the CRD and Operator in `release/config`:
 
 ```sh
-kubectl apply -f  release/config
+kubectl apply -f release/config
 ```
 
 5. Create a test secret, you can pass the value of Kubernetes secrets into your notebook as Databricks secrets
@@ -121,17 +127,20 @@ spec:
     numWorkers: 1
 ```
 
-8. Basic commands to check the new Notebookjob
+8. Check the NotebookJob and Operator pod
         
-```shell
-kubectl get crd
-kubectl -n databricks-operator-system get svc
-kubectl -n databricks-operator-system get pod
-kubectl -n databricks-operator-system describe  pod databricks-operator-controller-manager-0
-kubectl -n databricks-operator-system logs  databricks-operator-controller-manager-0 -c dbricks -f
+```sh
+# list all notebook jobs
 kubectl get notebookjob
-kubectl describe notebookjob kubectl samplejob1
+# describe a notebook job
+kubectl describe notebookjob samplejob1
+# describe the operator pod
+kubectl -n databricks-operator-system describe pod databricks-operator-controller-manager-0
+# get logs from the manager container
+kubectl -n databricks-operator-system logs databricks-operator-controller-manager-0 -c dbricks
 ```
+
+9. Check the job ran with expected output in the Databricks UI.
 
 ### Run Souce Code
 
