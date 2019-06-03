@@ -11,7 +11,7 @@ pool:
 
 variables:
   GOBIN:  '$(GOPATH)/bin' # Go binaries path
-  GOROOT: '/usr/local/go1.12.1' # Go installation path
+  GOROOT: '/usr/local/go1.12' # Go installation path
   GOPATH: '$(system.defaultWorkingDirectory)/gopath' # Go workspace path
   modulePath: '$(GOPATH)/src/$(build.repository.name)' # Path to the module's code
   IMAGE_NAME: 'candidate/k8s/azure-databricks/operator:$(Build.SourceVersion)' 
@@ -19,6 +19,8 @@ variables:
   #AZURE_SUBSCRIPTION - set this value in AzureDevops variables
 steps:
 - script: |
+    echo 'ls /usr/local/'
+    ls /usr/local/
     mkdir -p '$(GOBIN)'
     mkdir -p '$(GOPATH)/pkg'
     mkdir -p '$(modulePath)'
