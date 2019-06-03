@@ -56,17 +56,24 @@ func Add(mgr manager.Manager) error {
 // newReconciler returns a new reconcile.Reconciler
 func newReconciler(mgr manager.Manager) reconcile.Reconciler {
 	var apiConfig db.DBClientOption
-	apiConfig.Host = os.Getenv("DATABRICKS_HOST")
-	apiConfig.Token = os.Getenv("DATABRICKS_TOKEN")
+	apiConfig.Host, apiConfig.Token = os.Getenv("DATABRICKS_HOST"), os.Getenv("DATABRICKS_TOKEN")
+
 	var apiClient dbazure.DBClient
-	log.Info(fmt.Sprintf("initializing databricks client using host %s..., token %s...",
-		apiConfig.Host[0:10], apiConfig.Token[0:5]))
+	if len(apiConfig.Host) >= 10 && len(apiConfig.Token) >= 5 {
+		log.Info(fmt.Sprintf("initializing databricks client using host %s..., token %s...",
+			apiConfig.Host[0:10], apiConfig.Token[0:5]))
+		apiClient.Init(apiConfig)
+	} else {
+		msg := "no valid databricks host / key configured"
+		log.Error(fmt.Errorf(msg), msg)
+		return nil
+	}
 
 	return &ReconcileNotebookJob{
 		Client:    mgr.GetClient(),
 		scheme:    mgr.GetScheme(),
 		recorder:  mgr.GetRecorder("notebookjob-controller"),
-		apiClient: apiClient.Init(apiConfig),
+		apiClient: apiClient,
 	}
 }
 
@@ -152,7 +159,17 @@ func (r *ReconcileNotebookJob) convertInstanceToRunDefinition(instance *microsof
 
 	var runName = instance.ObjectMeta.Name
 
-	var clusterSpec dbmodels.ClusterSpec
+	clusterSpec := dbmodels.ClusterSpec{
+		NewCluster: dbmodels.NewCluster{
+			SparkVersion: "5.2.x-scala2.11",
+			NodeTypeID:   "Standard_DS3_v2",
+			NumWorkers:   3,
+			SparkEnvVars: dbmodels.SparkEnvPair{
+				Key:   "PYSPARK_PYTHON",
+				Value: "/databricks/python3/bin/python3",
+			},
+		},
+	}
 
 	clusterSpec.NewCluster.SparkVersion = instance.Spec.ClusterSpec.SparkVersion
 	clusterSpec.NewCluster.NodeTypeID = instance.Spec.ClusterSpec.NodeTypeId
@@ -279,7 +296,10 @@ func (r *ReconcileNotebookJob) submitRunToAPI(instance *microsoftv1beta1.Noteboo
 		return err
 	}
 	for k, v := range scopeSecrets {
-		r.apiClient.Secrets().PutSecretString(v, secretScopeName, k)
+		err = r.apiClient.Secrets().PutSecretString(v, secretScopeName, k)
+		if err != nil {
+			return err
+		}
 	}
 
 	// submit run

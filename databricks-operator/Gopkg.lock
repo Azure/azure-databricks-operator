@@ -424,7 +424,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:22639c76cb4b9533086e5fa9099986b507684e568ba2f17024c12293e5f02f71"
+  digest = "1:26e2e56859b6ba512c1dc5d0074d8714b5afb5c8862515c916d651b25e4fd28a"
   name = "github.com/xinsnake/databricks-sdk-golang"
   packages = [
     ".",
@@ -432,7 +432,7 @@
     "azure/models",
   ]
   pruneopts = "T"
-  revision = "c80ad9e2b9d0c205a57318c1fb657d38f2a9afae"
+  revision = "c7bb4c7019dfe0b571e4de408421e765bbef38a5"
 
 [[projects]]
   digest = "1:365b8ecb35a5faf5aa0ee8d798548fc9cd4200cb95d77a5b0b285ac881bae499"
