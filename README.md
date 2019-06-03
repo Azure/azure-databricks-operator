@@ -6,6 +6,8 @@
 
 # Azure Databricks operator (for Kubernetes)
 
+> This project is experimental. Expect the API to change. It is not recommended for production environments.
+
 ## Introduction
 
 Kubernetes offers the facility of extending it's API through the concept of 'Operators' ([Introducing Operators: Putting Operational Knowledge into Software](https://coreos.com/blog/introducing-operators.html)). This repository contains the resources and code to deploy an Azure Databricks Operator for Kubernetes.
@@ -55,16 +57,15 @@ Basic commands to check your cluster
 
 1. Download [latest release.zip](https://github.com/microsoft/azure-databricks-operator/releases)
 
+```sh
+wget https://github.com/microsoft/azure-databricks-operator/releases/latest/download/release.zip
+unzip release.zip
+```
+
 2. Create the `databricks-operator-system` namespace
 
-```yaml
-apiVersion: v1
-kind: Namespace
-metadata:
-  labels:
-    control-plane: controller-manager
-    controller-tools.k8s.io: "1.0"
-  name: databricks-operator-system
+```sh
+kubectl create namespace databricks-operator-system
 ```
 
 3. [Generate a databricks token](https://docs.databricks.com/api/latest/authentication.html#generate-a-token), and create Kubernetes secrets with values for `DATABRICKS_HOST` and `DATABRICKS_TOKEN`
@@ -76,7 +77,7 @@ metadata:
 4. Apply the manifests for the CRD and Operator in `release/config`:
 
 ```sh
-kubectl apply -f  release/config
+kubectl apply -f release/config
 ```
 
 5. Create a test secret, you can pass the value of Kubernetes secrets into your notebook as Databricks secrets
@@ -85,15 +86,14 @@ kubectl apply -f  release/config
 6. In Databricks, [create a new Python Notebook](https://docs.databricks.com/user-guide/notebooks/notebook-manage.html#create-a-notebook) called `testnotebook` in the root of your [Workspace](https://docs.databricks.com/user-guide/workspace.html#folders). Put the following in the first cell of the notebook:
 
 ```py
-dbutils.widgets.text("secret_scope", "", "value from CRD")
-secret_scope = dbutils.widgets.get("secret_scope")
+run_name = dbutils.widgets.get("run_name")
+secret_scope = run_name + "_scope"
+
 secret_value = dbutils.secrets.get(scope=secret_scope, key="dbricks_secret_key") # this will come from a kubernetes secret
 print(secret_value) # will be redacted
 
-dbutils.widgets.text("flag", "", "value from CRD")
 value = dbutils.widgets.get("flag")
 print(value) # 'true'
-
 ```
 
 7. Define your Notebook job and apply it
@@ -112,31 +112,34 @@ spec:
   notebookSpec:
     "flag":  "true"
   notebookSpecSecrets:
-    - secretName: "test"
-      mapping: 
-        - "secretKey": "my_secret_key"
-          "outputKey": "dbricks_secret_key"
+  - secretName: "test"
+    mapping: 
+    - "secretKey": "my_secret_key"
+      "outputKey": "dbricks_secret_key"
   notebookAdditionalLibraries: 
     - type: "maven"
       properties:
-        coordinates: "com.microsoft.azure:azure-eventhubs-spark_2.11:2.3.9"
+        coordinates: "com.microsoft.azure:azure-eventhubs-spark_2.11:2.3.9" # installs the azure event hubs library
   clusterSpec:
     sparkVersion: "5.2.x-scala2.11"
     nodeTypeId: "Standard_DS12_v2"
     numWorkers: 1
 ```
 
-8. Basic commands to check the new Notebookjob
+8. Check the NotebookJob and Operator pod
         
-```shell
-kubectl get crd
-kubectl -n databricks-operator-system get svc
-kubectl -n databricks-operator-system get pod
-kubectl -n databricks-operator-system describe  pod databricks-operator-controller-manager-0
-kubectl -n databricks-operator-system logs  databricks-operator-controller-manager-0 -c dbricks -f
+```sh
+# list all notebook jobs
 kubectl get notebookjob
-kubectl describe notebookjob kubectl samplejob1
+# describe a notebook job
+kubectl describe notebookjob samplejob1
+# describe the operator pod
+kubectl -n databricks-operator-system describe pod databricks-operator-controller-manager-0
+# get logs from the manager container
+kubectl -n databricks-operator-system logs databricks-operator-controller-manager-0 -c dbricks
 ```
+
+9. Check the job ran with expected output in the Databricks UI.
 
 ### Run Souce Code
 
