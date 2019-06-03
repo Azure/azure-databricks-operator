@@ -58,8 +58,7 @@ Basic commands to check your cluster
 1. Download [latest release.zip](https://github.com/microsoft/azure-databricks-operator/releases)
 
 ```sh
-VERSION=0.44
-wget https://github.com/microsoft/azure-databricks-operator/releases/download/$VERSION/release.zip
+wget https://github.com/microsoft/azure-databricks-operator/releases/latest/download/release.zip
 unzip release.zip
 ```
 
