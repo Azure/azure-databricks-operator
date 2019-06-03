@@ -93,7 +93,7 @@ steps:
 
 - script: |
     go get sigs.k8s.io/kustomize
-    kustomize build config > $(Build.ArtifactStagingDirectory)/setup.yml
+    kustomize build config > $(Build.ArtifactStagingDirectory)/setup.yaml
   continueOnError: 'false'
   workingDirectory: '$(modulePath)/databricks-operator'
   displayName: 'install kustomize'  
