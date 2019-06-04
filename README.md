@@ -1,10 +1,12 @@
-[![Build Status](https://img.shields.io/azure-devops/build/aussiedevcrew/d4700b68-d4e4-4c1c-8802-b3031bfa80b0/17.svg?label=build-azure-databricks-api&style=flat-square&logo=data%3Aimage%2Fpng%3Bbase64%2CiVBORw0KGgoAAAANSUhEUgAAADQAAAAyCAMAAAAk%2FwjEAAAAXVBMVEX%2F%2F%2F%2BTk5Obm5udnZ2kpKSlpaWnp6eoqKiwsLCxsbGysrKzs7O6urq7u7u9vb3GxsbHx8fIyMjJycnR0dHS0tLT09PU1NTd3d3e3t7f39%2Fo6Ojp6enq6ur09PT%2F%2F%2F%2Bel%2BNbAAAAAXRSTlMAQObYZgAAAM5JREFUeNrt090OgjAMhuEqCoqKv8Mprvd%2FmUY6U9SFfSwemMh7toMno82gsd%2BpcNxtgpiMX6sR5BKQ5eGoYOlARDWKvMnawwpDVsyFpBuCSpZyPccRv6EcQA37KpKqONrxM9e52VCgJQdq9OYg4nDWWGYcaemoTECWhqM94UhX%2F21kHbI4zcm0n8pNe%2F9v63F8bZrRl6fNCWgT2UDcsEHMop1C5zpRf%2FL5TiZ3MJq1yzvLCUc6WgJaM47U4Oh6fKRrQJCPumoLI1UNjf1ddw%2FHSv3TGNoxAAAAAElFTkSuQmCC)](https://dev.azure.com/aussiedevcrew/azure-databricks-operator/_build/latest?definitionId=17&branchName=master)
+[![Build Status](https://img.shields.io/azure-devops/build/ms/c7bb5181-d75b-4ef1-8145-a2c051657858/153.svg?label=build-azure-databricks-api&style=flat-square&logo=data%3Aimage%2Fpng%3Bbase64%2CiVBORw0KGgoAAAANSUhEUgAAADQAAAAyCAMAAAAk%2FwjEAAAAXVBMVEX%2F%2F%2F%2BTk5Obm5udnZ2kpKSlpaWnp6eoqKiwsLCxsbGysrKzs7O6urq7u7u9vb3GxsbHx8fIyMjJycnR0dHS0tLT09PU1NTd3d3e3t7f39%2Fo6Ojp6enq6ur09PT%2F%2F%2F%2Bel%2BNbAAAAAXRSTlMAQObYZgAAAM5JREFUeNrt090OgjAMhuEqCoqKv8Mprvd%2FmUY6U9SFfSwemMh7toMno82gsd%2BpcNxtgpiMX6sR5BKQ5eGoYOlARDWKvMnawwpDVsyFpBuCSpZyPccRv6EcQA37KpKqONrxM9e52VCgJQdq9OYg4nDWWGYcaemoTECWhqM94UhX%2F21kHbI4zcm0n8pNe%2F9v63F8bZrRl6fNCWgT2UDcsEHMop1C5zpRf%2FL5TiZ3MJq1yzvLCUc6WgJaM47U4Oh6fKRrQJCPumoLI1UNjf1ddw%2FHSv3TGNoxAAAAAElFTkSuQmCC)](https://dev.azure.com/ms/azure-databricks-operator/_build/latest?definitionId=153&branchName=master)
 
 
-[![Build Status](https://img.shields.io/azure-devops/build/aussiedevcrew/d4700b68-d4e4-4c1c-8802-b3031bfa80b0/18.svg?label=build-azure-databricks-operator&style=flat-square&logo=data%3Aimage%2Fpng%3Bbase64%2CiVBORw0KGgoAAAANSUhEUgAAADQAAAAyCAMAAAAk%2FwjEAAAAXVBMVEX%2F%2F%2F%2BTk5Obm5udnZ2kpKSlpaWnp6eoqKiwsLCxsbGysrKzs7O6urq7u7u9vb3GxsbHx8fIyMjJycnR0dHS0tLT09PU1NTd3d3e3t7f39%2Fo6Ojp6enq6ur09PT%2F%2F%2F%2Bel%2BNbAAAAAXRSTlMAQObYZgAAAM5JREFUeNrt090OgjAMhuEqCoqKv8Mprvd%2FmUY6U9SFfSwemMh7toMno82gsd%2BpcNxtgpiMX6sR5BKQ5eGoYOlARDWKvMnawwpDVsyFpBuCSpZyPccRv6EcQA37KpKqONrxM9e52VCgJQdq9OYg4nDWWGYcaemoTECWhqM94UhX%2F21kHbI4zcm0n8pNe%2F9v63F8bZrRl6fNCWgT2UDcsEHMop1C5zpRf%2FL5TiZ3MJq1yzvLCUc6WgJaM47U4Oh6fKRrQJCPumoLI1UNjf1ddw%2FHSv3TGNoxAAAAAElFTkSuQmCC)](https://dev.azure.com/aussiedevcrew/azure-databricks-operator/_build/latest?definitionId=18&branchName=master)
+[![Build Status](https://img.shields.io/azure-devops/build/ms/c7bb5181-d75b-4ef1-8145-a2c051657858/152.svg?label=build-azure-databricks-operator&style=flat-square&logo=data%3Aimage%2Fpng%3Bbase64%2CiVBORw0KGgoAAAANSUhEUgAAADQAAAAyCAMAAAAk%2FwjEAAAAXVBMVEX%2F%2F%2F%2BTk5Obm5udnZ2kpKSlpaWnp6eoqKiwsLCxsbGysrKzs7O6urq7u7u9vb3GxsbHx8fIyMjJycnR0dHS0tLT09PU1NTd3d3e3t7f39%2Fo6Ojp6enq6ur09PT%2F%2F%2F%2Bel%2BNbAAAAAXRSTlMAQObYZgAAAM5JREFUeNrt090OgjAMhuEqCoqKv8Mprvd%2FmUY6U9SFfSwemMh7toMno82gsd%2BpcNxtgpiMX6sR5BKQ5eGoYOlARDWKvMnawwpDVsyFpBuCSpZyPccRv6EcQA37KpKqONrxM9e52VCgJQdq9OYg4nDWWGYcaemoTECWhqM94UhX%2F21kHbI4zcm0n8pNe%2F9v63F8bZrRl6fNCWgT2UDcsEHMop1C5zpRf%2FL5TiZ3MJq1yzvLCUc6WgJaM47U4Oh6fKRrQJCPumoLI1UNjf1ddw%2FHSv3TGNoxAAAAAElFTkSuQmCC)](https://dev.azure.com/ms/azure-databricks-operator/_build/latest?definitionId=152&branchName=master)
 
 
 # Azure Databricks operator (for Kubernetes)
+
+> This project is experimental. Expect the API to change. It is not recommended for production environments.
 
 ## Introduction
 
@@ -16,7 +18,7 @@ The Azure Databricks operator comprises two projects:
 
 ![alt text](docs/images/azure-databricks-operator.jpg "high level architecture")
 
-The Databricks operator is useful in situations where Kubernetes hosted applications wish to launch and use Databricks data engineering and machine learning tasks. 
+The Databricks operator is useful in situations where Kubernetes hosted applications wish to launch and use Databricks data engineering and machine learning tasks.
 
 The project was built using
 
@@ -55,16 +57,15 @@ Basic commands to check your cluster
 
 1. Download [latest release.zip](https://github.com/microsoft/azure-databricks-operator/releases)
 
+```sh
+wget https://github.com/microsoft/azure-databricks-operator/releases/latest/download/release.zip
+unzip release.zip
+```
+
 2. Create the `databricks-operator-system` namespace
 
-```yaml
-apiVersion: v1
-kind: Namespace
-metadata:
-  labels:
-    control-plane: controller-manager
-    controller-tools.k8s.io: "1.0"
-  name: databricks-operator-system
+```sh
+kubectl create namespace databricks-operator-system
 ```
 
 3. [Generate a databricks token](https://docs.databricks.com/api/latest/authentication.html#generate-a-token), and create Kubernetes secrets with values for `DATABRICKS_HOST` and `DATABRICKS_TOKEN`
@@ -76,7 +77,7 @@ metadata:
 4. Apply the manifests for the CRD and Operator in `release/config`:
 
 ```sh
-kubectl apply -f  release/config
+kubectl apply -f release/config
 ```
 
 5. Create a test secret, you can pass the value of Kubernetes secrets into your notebook as Databricks secrets
@@ -85,15 +86,14 @@ kubectl apply -f  release/config
 6. In Databricks, [create a new Python Notebook](https://docs.databricks.com/user-guide/notebooks/notebook-manage.html#create-a-notebook) called `testnotebook` in the root of your [Workspace](https://docs.databricks.com/user-guide/workspace.html#folders). Put the following in the first cell of the notebook:
 
 ```py
-dbutils.widgets.text("secret_scope", "", "value from CRD")
-secret_scope = dbutils.widgets.get("secret_scope")
+run_name = dbutils.widgets.get("run_name")
+secret_scope = run_name + "_scope"
+
 secret_value = dbutils.secrets.get(scope=secret_scope, key="dbricks_secret_key") # this will come from a kubernetes secret
 print(secret_value) # will be redacted
 
-dbutils.widgets.text("flag", "", "value from CRD")
 value = dbutils.widgets.get("flag")
 print(value) # 'true'
-
 ```
 
 7. Define your Notebook job and apply it
@@ -112,37 +112,40 @@ spec:
   notebookSpec:
     "flag":  "true"
   notebookSpecSecrets:
-    - secretName: "test"
-      mapping: 
-        - "secretKey": "my_secret_key"
-          "outputKey": "dbricks_secret_key"
-  notebookAdditionalLibraries: 
+  - secretName: "test"
+    mapping:
+    - "secretKey": "my_secret_key"
+      "outputKey": "dbricks_secret_key"
+  notebookAdditionalLibraries:
     - type: "maven"
       properties:
-        coordinates: "com.microsoft.azure:azure-eventhubs-spark_2.11:2.3.9"
+        coordinates: "com.microsoft.azure:azure-eventhubs-spark_2.11:2.3.9" # installs the azure event hubs library
   clusterSpec:
     sparkVersion: "5.2.x-scala2.11"
     nodeTypeId: "Standard_DS12_v2"
     numWorkers: 1
 ```
 
-8. Basic commands to check the new Notebookjob
-        
-```shell
-kubectl get crd
-kubectl -n databricks-operator-system get svc
-kubectl -n databricks-operator-system get pod
-kubectl -n databricks-operator-system describe  pod databricks-operator-controller-manager-0
-kubectl -n databricks-operator-system logs  databricks-operator-controller-manager-0 -c dbricks -f
+8. Check the NotebookJob and Operator pod
+
+```sh
+# list all notebook jobs
 kubectl get notebookjob
-kubectl describe notebookjob kubectl samplejob1
+# describe a notebook job
+kubectl describe notebookjob samplejob1
+# describe the operator pod
+kubectl -n databricks-operator-system describe pod databricks-operator-controller-manager-0
+# get logs from the manager container
+kubectl -n databricks-operator-system logs databricks-operator-controller-manager-0 -c dbricks
 ```
+
+9. Check the job ran with expected output in the Databricks UI.
 
 ### Run Souce Code
 
 1. Clone the repo
 
-2. Install the NotebookJob CRD in the configured Kubernetes cluster folder ~/.kube/config, 
+2. Install the NotebookJob CRD in the configured Kubernetes cluster folder ~/.kube/config,
 run `kubectl apply -f databricks-operator/config/crds` or `make install -C databricks-operator`
 
 3. Create secrets for `DATABRICKS_HOST` and `DATABRICKS_TOKEN`
@@ -199,7 +202,7 @@ To Extend the operator `databricks-operator`:
 ## Resources
 
 #### Kubernetes on WSL
-    
+
 On windows command line run `kubectl config view` to find the values of [windows-user-name],[minikubeip],[port]
 
 ```shell
