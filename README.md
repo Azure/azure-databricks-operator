@@ -81,7 +81,10 @@ kubectl apply -f release/config
 ```
 
 5. Create a test secret, you can pass the value of Kubernetes secrets into your notebook as Databricks secrets
-`kubectl create secret generic test --from-literal=my_secret_key="my_secret_value"`
+
+```sh
+kubectl create secret generic test --from-literal=my_secret_key="my_secret_value"
+```
 
 6. In Databricks, [create a new Python Notebook](https://docs.databricks.com/user-guide/notebooks/notebook-manage.html#create-a-notebook) called `testnotebook` in the root of your [Workspace](https://docs.databricks.com/user-guide/workspace.html#folders). Put the following in the first cell of the notebook:
 
