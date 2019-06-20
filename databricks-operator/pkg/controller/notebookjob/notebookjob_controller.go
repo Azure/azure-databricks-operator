@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	v1 "k8s.io/api/core/v1"
 
@@ -182,6 +183,11 @@ func (r *ReconcileNotebookJob) deleteExternalDependency(instance *microsoftv1bet
 	log.Info("deleting the external dependencies")
 	runID := instance.Spec.NotebookTask.RunID
 	if runID != 0 {
+		err := r.apiClient.Jobs().RunsCancel(int64(runID))
+		if err != nil {
+			return err
+		}
+		time.Sleep(10 * time.Second)
 		return r.apiClient.Jobs().RunsDelete(int64(runID))
 	}
 	return nil
@@ -189,20 +195,21 @@ func (r *ReconcileNotebookJob) deleteExternalDependency(instance *microsoftv1bet
 
 func (r *ReconcileNotebookJob) submitRunToAPI(instance *microsoftv1beta1.NotebookJob) error {
 
-	// get definition
+	// runName
 	var runName = instance.ObjectMeta.Name
+
+	// clusterSpec
 	clusterSpec := dbmodels.ClusterSpec{
-		NewCluster: dbmodels.NewCluster{
+		NewCluster: &dbmodels.NewCluster{
 			SparkVersion: "5.2.x-scala2.11",
 			NodeTypeID:   "Standard_DS3_v2",
 			NumWorkers:   3,
-			SparkEnvVars: dbmodels.SparkEnvPair{
+			SparkEnvVars: &dbmodels.SparkEnvPair{
 				Key:   "PYSPARK_PYTHON",
 				Value: "/databricks/python3/bin/python3",
 			},
 		},
 	}
-
 	if instance.Spec.ClusterSpec.SparkVersion != "" {
 		clusterSpec.NewCluster.SparkVersion = instance.Spec.ClusterSpec.SparkVersion
 	}
@@ -239,9 +246,13 @@ func (r *ReconcileNotebookJob) submitRunToAPI(instance *microsoftv1beta1.Noteboo
 		}
 	}
 
-	jobTask := dbmodels.JobTask{}
-	jobTask.NotebookTask.NotebookPath = instance.Spec.NotebookTask.NotebookPath
-	jobTask.NotebookTask.BaseParameters = make([]dbmodels.ParamPair, len(instance.Spec.NotebookSpec))
+	// jobTask
+	jobTask := dbmodels.JobTask{
+		NotebookTask: &dbmodels.NotebookTask{
+			NotebookPath:   instance.Spec.NotebookTask.NotebookPath,
+			BaseParameters: make([]dbmodels.ParamPair, len(instance.Spec.NotebookSpec)),
+		},
+	}
 	counter := 0
 	for k, v := range instance.Spec.NotebookSpec {
 		jobTask.NotebookTask.BaseParameters[counter] = dbmodels.ParamPair{
@@ -250,8 +261,10 @@ func (r *ReconcileNotebookJob) submitRunToAPI(instance *microsoftv1beta1.Noteboo
 		counter++
 	}
 
+	// timeoutSeconds
 	var timeoutSeconds = instance.Spec.TimeoutSeconds
 
+	// scopeSecrents
 	var scopeSecrets = make(map[string]string, len(instance.Spec.NotebookSpecSecrets))
 	for _, notebookSpecSecret := range instance.Spec.NotebookSpecSecrets {
 		secretName := notebookSpecSecret.SecretName
@@ -267,7 +280,6 @@ func (r *ReconcileNotebookJob) submitRunToAPI(instance *microsoftv1beta1.Noteboo
 		}
 	}
 
-	// create scope and put secrets
 	secretScopeName := runName + "_scope"
 	err := r.apiClient.Secrets().CreateSecretScope(secretScopeName, "users")
 	if err != nil && !strings.Contains(err.Error(), "RESOURCE_ALREADY_EXISTS") {
