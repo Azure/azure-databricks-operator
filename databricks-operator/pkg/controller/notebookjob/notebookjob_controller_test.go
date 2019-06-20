@@ -44,12 +44,13 @@ const timeout = time.Second * 120
 func TestReconcile(t *testing.T) {
 	g := gomega.NewGomegaWithT(t)
 
-	secretData := make(map[string][]byte)
-	secretData["eventHubName"] = []byte("ehname123")
-	secretData["connectionString"] = []byte("Endpoint=sb://xxxx.servicebus.windows.net/;SharedAccessKeyName=xxxx;SharedAccessKey=xxxx")
+	numberToAdd := &v1.Secret{Data: map[string][]byte{
+		"number-to-add": []byte("100"),
+	}, ObjectMeta: metav1.ObjectMeta{Name: "number-to-add", Namespace: "default"}}
 
-	secretInput := &v1.Secret{Data: secretData, ObjectMeta: metav1.ObjectMeta{Name: "eventhub-input", Namespace: "default"}}
-	secretOutput := &v1.Secret{Data: secretData, ObjectMeta: metav1.ObjectMeta{Name: "eventhub-output", Namespace: "default"}}
+	defer func() {
+		c.Delete(context.TODO(), numberToAdd)
+	}()
 
 	instance := &microsoftv1beta1.NotebookJob{
 		ObjectMeta: metav1.ObjectMeta{Name: namespacedName.Name, Namespace: namespacedName.Namespace},
@@ -70,18 +71,12 @@ func TestReconcile(t *testing.T) {
 	stopMgr, mgrStopped := StartTestManager(mgr, g)
 
 	defer func() {
-		c.Delete(context.TODO(), secretInput)
-		c.Delete(context.TODO(), secretOutput)
-	}()
-
-	defer func() {
 		close(stopMgr)
 		mgrStopped.Wait()
 	}()
 
-	//kubectl create secret  generic myeh  --from-literal=eventHubName=ehname123 --from-literal=connectionString=Endpoint=sb://xxxx.servicebus.windows.net/;SharedAccessKeyName=xxxx;SharedAccessKey=xxxx
-	c.Create(context.TODO(), secretInput)
-	c.Create(context.TODO(), secretOutput)
+	//kubectl create secret
+	c.Create(context.TODO(), numberToAdd)
 
 	// Create the NotebookJob object and expect the Reconcile to be created
 	err = c.Create(context.TODO(), instance)
