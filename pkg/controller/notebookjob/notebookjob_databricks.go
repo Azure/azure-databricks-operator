@@ -33,11 +33,15 @@ func (r *ReconcileNotebookJob) deleteRunFromDatabricks(runID int64) error {
 		return nil
 	}
 	err := r.apiClient.Jobs().RunsCancel(runID)
-	if err != nil {
+	if err != nil && !strings.Contains(err.Error(), "does not exist") {
 		return err
 	}
 	time.Sleep(10 * time.Second)
-	return r.apiClient.Jobs().RunsDelete(runID)
+	err = r.apiClient.Jobs().RunsDelete(runID)
+	if err != nil && !strings.Contains(err.Error(), "does not exist") {
+		return err
+	}
+	return nil
 }
 
 func (r *ReconcileNotebookJob) submitRunToDatabricks(instance *microsoftv1beta1.NotebookJob) error {
