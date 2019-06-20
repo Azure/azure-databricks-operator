@@ -25,7 +25,6 @@ import (
 
 	"github.com/onsi/gomega"
 	"golang.org/x/net/context"
-	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -44,18 +43,15 @@ const timeout = time.Second * 120
 func TestReconcile(t *testing.T) {
 	g := gomega.NewGomegaWithT(t)
 
-	numberToAdd := &v1.Secret{Data: map[string][]byte{
-		"number-to-add": []byte("100"),
-	}, ObjectMeta: metav1.ObjectMeta{Name: "number-to-add", Namespace: "default"}}
-
-	defer func() {
-		c.Delete(context.TODO(), numberToAdd)
-	}()
-
 	instance := &microsoftv1beta1.NotebookJob{
-		ObjectMeta: metav1.ObjectMeta{Name: namespacedName.Name, Namespace: namespacedName.Namespace},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      namespacedName.Name,
+			Namespace: namespacedName.Namespace,
+		},
 		Spec: microsoftv1beta1.NotebookJobSpec{
-			NotebookSpec: nil,
+			NotebookTask: microsoftv1beta1.NotebookTask{
+				NotebookPath: "/test-notebook",
+			},
 		},
 	}
 
@@ -74,9 +70,6 @@ func TestReconcile(t *testing.T) {
 		close(stopMgr)
 		mgrStopped.Wait()
 	}()
-
-	//kubectl create secret
-	c.Create(context.TODO(), numberToAdd)
 
 	// Create the NotebookJob object and expect the Reconcile to be created
 	err = c.Create(context.TODO(), instance)

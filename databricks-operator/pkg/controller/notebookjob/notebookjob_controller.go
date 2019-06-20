@@ -59,9 +59,7 @@ func newReconciler(mgr manager.Manager) reconcile.Reconciler {
 	apiConfig.Host, apiConfig.Token = os.Getenv("DATABRICKS_HOST"), os.Getenv("DATABRICKS_TOKEN")
 
 	var apiClient dbazure.DBClient
-	if len(apiConfig.Host) >= 10 && len(apiConfig.Token) >= 5 {
-		log.Info(fmt.Sprintf("initializing databricks client using host %s..., token %s...",
-			apiConfig.Host[0:10], apiConfig.Token[0:5]))
+	if len(apiConfig.Host) >= 10 && len(apiConfig.Token) >= 10 {
 		apiClient.Init(apiConfig)
 	} else {
 		msg := "no valid databricks host / key configured"
@@ -154,99 +152,6 @@ func (r *ReconcileNotebookJob) Reconcile(request reconcile.Request) (reconcile.R
 	return reconcile.Result{}, nil
 }
 
-func (r *ReconcileNotebookJob) convertInstanceToRunDefinition(instance *microsoftv1beta1.NotebookJob) (
-	string, dbmodels.ClusterSpec, dbmodels.JobTask, int, map[string]string, error) {
-
-	var runName = instance.ObjectMeta.Name
-
-	clusterSpec := dbmodels.ClusterSpec{
-		NewCluster: dbmodels.NewCluster{
-			SparkVersion: "5.2.x-scala2.11",
-			NodeTypeID:   "Standard_DS3_v2",
-			NumWorkers:   3,
-			SparkEnvVars: dbmodels.SparkEnvPair{
-				Key:   "PYSPARK_PYTHON",
-				Value: "/databricks/python3/bin/python3",
-			},
-		},
-	}
-
-	clusterSpec.NewCluster.SparkVersion = instance.Spec.ClusterSpec.SparkVersion
-	clusterSpec.NewCluster.NodeTypeID = instance.Spec.ClusterSpec.NodeTypeId
-	clusterSpec.NewCluster.NumWorkers = int32(instance.Spec.ClusterSpec.NumWorkers)
-	clusterSpec.Libraries = make([]dbmodels.Library, len(instance.Spec.NotebookAdditionalLibraries))
-	for i, v := range instance.Spec.NotebookAdditionalLibraries {
-		if v.Type == "jar" {
-			clusterSpec.Libraries[i].Jar = v.Properties["path"]
-		}
-		if v.Type == "egg" {
-			clusterSpec.Libraries[i].Egg = v.Properties["path"]
-		}
-		if v.Type == "whl" {
-			clusterSpec.Libraries[i].Whl = v.Properties["path"]
-		}
-		if v.Type == "pypi" {
-			clusterSpec.Libraries[i].Pypi.Package = v.Properties["package"]
-			clusterSpec.Libraries[i].Pypi.Repo = v.Properties["repo"]
-		}
-		if v.Type == "maven" {
-			clusterSpec.Libraries[i].Maven.Coordinates = v.Properties["coordinates"]
-			clusterSpec.Libraries[i].Maven.Repo = v.Properties["repo"]
-			// TODO the spec doesn't support array
-			// clusterSpec.Libraries[i].Maven.Exclusions = v.Properties["exclusions"]
-		}
-		if v.Type == "cran" {
-			clusterSpec.Libraries[i].Cran.Package = v.Properties["package"]
-			clusterSpec.Libraries[i].Cran.Repo = v.Properties["repo"]
-		}
-	}
-
-	var jobTask dbmodels.JobTask
-	jobTask.NotebookTask.NotebookPath = instance.Spec.NotebookTask.NotebookPath
-	jobTask.NotebookTask.BaseParameters = make([]dbmodels.ParamPair, len(instance.Spec.NotebookSpec))
-	counter := 0
-	for k, v := range instance.Spec.NotebookSpec {
-		jobTask.NotebookTask.BaseParameters[counter] = dbmodels.ParamPair{
-			Key: k, Value: v,
-		}
-		counter++
-	}
-
-	var timeoutSeconds = instance.Spec.TimeoutSeconds
-
-	var scopeSecrets = make(map[string]string, len(instance.Spec.NotebookSpecSecrets))
-	for _, notebookSpecSecret := range instance.Spec.NotebookSpecSecrets {
-		secretName := notebookSpecSecret.SecretName
-		secret := &v1.Secret{}
-		err := r.Get(context.TODO(), types.NamespacedName{Name: secretName, Namespace: instance.Namespace}, secret)
-		if err != nil {
-			return runName, clusterSpec, jobTask, timeoutSeconds, scopeSecrets, err
-		}
-		for _, mapping := range notebookSpecSecret.Mapping {
-			secretvalue := secret.Data[mapping.SecretKey]
-			tempkey := mapping.OutputKey
-			scopeSecrets[tempkey] = fmt.Sprintf("%s", secretvalue)
-		}
-	}
-
-	return runName, clusterSpec, jobTask, timeoutSeconds, scopeSecrets, nil
-}
-
-func (r *ReconcileNotebookJob) getEventHubConnectionString(instance *microsoftv1beta1.NotebookJob, secretName string) (string, error) {
-	secret := &v1.Secret{}
-	err := r.Get(context.TODO(), types.NamespacedName{Name: secretName, Namespace: instance.Namespace}, secret)
-
-	if err != nil {
-		return "", err
-	}
-
-	eventHubName := secret.Data["eventHubName"]
-	connectionString := secret.Data["connectionString"]
-	fullConnectionString := fmt.Sprintf("%s;EntityPath=%s", connectionString, eventHubName)
-
-	return fullConnectionString, nil
-}
-
 func (r *ReconcileNotebookJob) addFinalizer(instance *microsoftv1beta1.NotebookJob) error {
 	instance.AddFinalizer(finalizerName)
 	err := r.Update(context.Background(), instance)
@@ -283,15 +188,88 @@ func (r *ReconcileNotebookJob) deleteExternalDependency(instance *microsoftv1bet
 }
 
 func (r *ReconcileNotebookJob) submitRunToAPI(instance *microsoftv1beta1.NotebookJob) error {
+
 	// get definition
-	runName, clusterSpec, jobTask, timeoutSeconds, scopeSecrets, err := r.convertInstanceToRunDefinition(instance)
-	if err != nil {
-		return err
+	var runName = instance.ObjectMeta.Name
+	clusterSpec := dbmodels.ClusterSpec{
+		NewCluster: dbmodels.NewCluster{
+			SparkVersion: "5.2.x-scala2.11",
+			NodeTypeID:   "Standard_DS3_v2",
+			NumWorkers:   3,
+			SparkEnvVars: dbmodels.SparkEnvPair{
+				Key:   "PYSPARK_PYTHON",
+				Value: "/databricks/python3/bin/python3",
+			},
+		},
+	}
+
+	if instance.Spec.ClusterSpec.SparkVersion != "" {
+		clusterSpec.NewCluster.SparkVersion = instance.Spec.ClusterSpec.SparkVersion
+	}
+	if instance.Spec.ClusterSpec.NodeTypeId != "" {
+		clusterSpec.NewCluster.NodeTypeID = instance.Spec.ClusterSpec.NodeTypeId
+	}
+	if int32(instance.Spec.ClusterSpec.NumWorkers) != 0 {
+		clusterSpec.NewCluster.NumWorkers = int32(instance.Spec.ClusterSpec.NumWorkers)
+	}
+	clusterSpec.Libraries = make([]dbmodels.Library, len(instance.Spec.NotebookAdditionalLibraries))
+	for i, v := range instance.Spec.NotebookAdditionalLibraries {
+		if v.Type == "jar" {
+			clusterSpec.Libraries[i].Jar = v.Properties["path"]
+		}
+		if v.Type == "egg" {
+			clusterSpec.Libraries[i].Egg = v.Properties["path"]
+		}
+		if v.Type == "whl" {
+			clusterSpec.Libraries[i].Whl = v.Properties["path"]
+		}
+		if v.Type == "pypi" {
+			clusterSpec.Libraries[i].Pypi.Package = v.Properties["package"]
+			clusterSpec.Libraries[i].Pypi.Repo = v.Properties["repo"]
+		}
+		if v.Type == "maven" {
+			clusterSpec.Libraries[i].Maven.Coordinates = v.Properties["coordinates"]
+			clusterSpec.Libraries[i].Maven.Repo = v.Properties["repo"]
+			// TODO the spec doesn't support array
+			// clusterSpec.Libraries[i].Maven.Exclusions = v.Properties["exclusions"]
+		}
+		if v.Type == "cran" {
+			clusterSpec.Libraries[i].Cran.Package = v.Properties["package"]
+			clusterSpec.Libraries[i].Cran.Repo = v.Properties["repo"]
+		}
+	}
+
+	jobTask := dbmodels.JobTask{}
+	jobTask.NotebookTask.NotebookPath = instance.Spec.NotebookTask.NotebookPath
+	jobTask.NotebookTask.BaseParameters = make([]dbmodels.ParamPair, len(instance.Spec.NotebookSpec))
+	counter := 0
+	for k, v := range instance.Spec.NotebookSpec {
+		jobTask.NotebookTask.BaseParameters[counter] = dbmodels.ParamPair{
+			Key: k, Value: v,
+		}
+		counter++
+	}
+
+	var timeoutSeconds = instance.Spec.TimeoutSeconds
+
+	var scopeSecrets = make(map[string]string, len(instance.Spec.NotebookSpecSecrets))
+	for _, notebookSpecSecret := range instance.Spec.NotebookSpecSecrets {
+		secretName := notebookSpecSecret.SecretName
+		secret := &v1.Secret{}
+		err := r.Get(context.TODO(), types.NamespacedName{Name: secretName, Namespace: instance.Namespace}, secret)
+		if err != nil {
+			return err
+		}
+		for _, mapping := range notebookSpecSecret.Mapping {
+			secretvalue := secret.Data[mapping.SecretKey]
+			tempkey := mapping.OutputKey
+			scopeSecrets[tempkey] = fmt.Sprintf("%s", secretvalue)
+		}
 	}
 
 	// create scope and put secrets
 	secretScopeName := runName + "_scope"
-	err = r.apiClient.Secrets().CreateSecretScope(secretScopeName, "users")
+	err := r.apiClient.Secrets().CreateSecretScope(secretScopeName, "users")
 	if err != nil && !strings.Contains(err.Error(), "RESOURCE_ALREADY_EXISTS") {
 		return err
 	}
@@ -319,6 +297,5 @@ func (r *ReconcileNotebookJob) submitRunToAPI(instance *microsoftv1beta1.Noteboo
 	}
 
 	r.recorder.Event(instance, "Normal", "Updated", "runID added")
-
 	return nil
 }
