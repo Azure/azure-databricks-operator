@@ -22,7 +22,7 @@ import (
 	"testing"
 	"time"
 
-	randStr "microsoft/azure-databricks-operator/databricks-operator/pkg/rand"
+	randStr "microsoft/azure-databricks-operator/pkg/rand"
 
 	"github.com/onsi/gomega"
 	"golang.org/x/net/context"

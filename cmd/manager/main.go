@@ -20,9 +20,9 @@ import (
 	"flag"
 	"os"
 
-	"microsoft/azure-databricks-operator/databricks-operator/pkg/apis"
-	"microsoft/azure-databricks-operator/databricks-operator/pkg/controller"
-	"microsoft/azure-databricks-operator/databricks-operator/pkg/webhook"
+	"microsoft/azure-databricks-operator/pkg/apis"
+	"microsoft/azure-databricks-operator/pkg/controller"
+	"microsoft/azure-databricks-operator/pkg/webhook"
 
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"

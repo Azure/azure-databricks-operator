@@ -186,8 +186,8 @@ To Extend the operator `databricks-operator`:
 9. Deploy
 
     ```shell
-    make docker-build IMG=azadehkhojandi/databricks-operator
-    make docker-push IMG=azadehkhojandi/databricks-operator
+    make docker-build IMG=azadehkhojandi
+    make docker-push IMG=azadehkhojandi
     make deploy
     ```
 ## Main Contributors

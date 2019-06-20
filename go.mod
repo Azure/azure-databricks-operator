@@ -1,4 +1,4 @@
-module microsoft/azure-databricks-operator/databricks-operator
+module microsoft/azure-databricks-operator
 
 go 1.12
 

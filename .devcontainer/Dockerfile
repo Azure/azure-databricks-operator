@@ -61,7 +61,7 @@ RUN curl -LO https://github.com/kubernetes-sigs/kustomize/releases/download/v2.0
     && chmod a+x /usr/local/bin/kustomize
 
 # Drop user into correct working folder for go code
-RUN echo "cd /go/src/databricks-operator" >> ~/.bashrc
+RUN echo "cd /go/src" >> ~/.bashrc
 
 WORKDIR /go/src
 

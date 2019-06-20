@@ -11,6 +11,6 @@
 		"seccomp=unconfined"
 	],
 	"postCreateCommand": [
-		"ln", "-s", "/workspaces/databricks-operator", "/go/src/databricks-operator"
+		"ln", "-s", "/workspaces", "/go/src"
 	]
 }

@@ -14,13 +14,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package controller
+package apis
 
 import (
-	"microsoft/azure-databricks-operator/databricks-operator/pkg/controller/notebookjob"
+	"microsoft/azure-databricks-operator/pkg/apis/microsoft/v1beta1"
 )
 
 func init() {
-	// AddToManagerFuncs is a list of functions to create controllers and add them to a manager.
-	AddToManagerFuncs = append(AddToManagerFuncs, notebookjob.Add)
+	// Register the types with the Scheme so the components can map objects to GroupVersionKinds and back
+	AddToSchemes = append(AddToSchemes, v1beta1.SchemeBuilder.AddToScheme)
 }

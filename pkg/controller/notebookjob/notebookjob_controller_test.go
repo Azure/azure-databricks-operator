@@ -20,8 +20,8 @@ import (
 	"testing"
 	"time"
 
-	microsoftv1beta1 "microsoft/azure-databricks-operator/databricks-operator/pkg/apis/microsoft/v1beta1"
-	randStr "microsoft/azure-databricks-operator/databricks-operator/pkg/rand"
+	microsoftv1beta1 "microsoft/azure-databricks-operator/pkg/apis/microsoft/v1beta1"
+	randStr "microsoft/azure-databricks-operator/pkg/rand"
 
 	"github.com/onsi/gomega"
 	"golang.org/x/net/context"

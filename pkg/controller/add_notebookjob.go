@@ -14,10 +14,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package v1beta1 contains API Schema definitions for the microsoft v1beta1 API group
-// +k8s:openapi-gen=true
-// +k8s:deepcopy-gen=package,register
-// +k8s:conversion-gen=microsoft/azure-databricks-operator/databricks-operator/pkg/apis/microsoft
-// +k8s:defaulter-gen=TypeMeta
-// +groupName=microsoft.k8s.io
-package v1beta1
+package controller
+
+import (
+	"microsoft/azure-databricks-operator/pkg/controller/notebookjob"
+)
+
+func init() {
+	// AddToManagerFuncs is a list of functions to create controllers and add them to a manager.
+	AddToManagerFuncs = append(AddToManagerFuncs, notebookjob.Add)
+}
