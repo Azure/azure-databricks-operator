@@ -1,6 +1,8 @@
 
 # Image URL to use all building/pushing image targets
 IMG ?= controller:latest
+# Enable GO Mod
+export GO111MODULE := on
 
 all: test build
 
@@ -35,7 +37,7 @@ deploy: manifests
 
 # Generate manifests e.g. CRD, RBAC etc.
 manifests:
-	go run ../../../pkg/mod/sigs.k8s.io/controller-tools@v0.1.10/cmd/controller-gen/main.go all
+	./bin/controller-gen all
 
 # Run go fmt against code
 fmt:
