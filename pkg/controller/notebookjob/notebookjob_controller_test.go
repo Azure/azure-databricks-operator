@@ -17,6 +17,7 @@ limitations under the License.
 package notebookjob
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -51,6 +52,17 @@ func TestReconcile(t *testing.T) {
 		Spec: microsoftv1beta1.NotebookJobSpec{
 			NotebookTask: microsoftv1beta1.NotebookTask{
 				NotebookPath: "/test-notebook",
+			},
+			NotebookSpec: map[string]string{
+				"TestSpec": fmt.Sprintf("%v", time.Now().String()),
+			},
+			NotebookAdditionalLibraries: []microsoftv1beta1.NotebookAdditionalLibrary{
+				{
+					Type: "maven",
+					Properties: map[string]string{
+						"coordinates": "com.microsoft.azure:azure-eventhubs-spark_2.11:2.3.9",
+					},
+				},
 			},
 		},
 	}

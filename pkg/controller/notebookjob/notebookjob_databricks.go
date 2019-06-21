@@ -32,7 +32,11 @@ func (r *ReconcileNotebookJob) deleteRunFromDatabricks(runID int64) error {
 	if runID == 0 {
 		return nil
 	}
-	err := r.apiClient.Jobs().RunsCancel(runID)
+	_, err := r.apiClient.Jobs().RunsGet(runID)
+	if err != nil && strings.Contains(err.Error(), "does not exist") {
+		return nil
+	}
+	err = r.apiClient.Jobs().RunsCancel(runID)
 	if err != nil && !strings.Contains(err.Error(), "does not exist") {
 		return err
 	}
@@ -53,9 +57,8 @@ func (r *ReconcileNotebookJob) submitRunToDatabricks(instance *microsoftv1beta1.
 	instance = instance.LoadDefaultConfig()
 	clusterSpec := dbmodels.ClusterSpec{
 		NewCluster: &dbmodels.NewCluster{
-			SparkEnvVars: &dbmodels.SparkEnvPair{
-				Key:   "PYSPARK_PYTHON",
-				Value: "/databricks/python3/bin/python3",
+			SparkEnvVars: map[string]string{
+				"PYSPARK_PYTHON": "/databricks/python3/bin/python3",
 			},
 		},
 	}
@@ -74,18 +77,24 @@ func (r *ReconcileNotebookJob) submitRunToDatabricks(instance *microsoftv1beta1.
 			clusterSpec.Libraries[i].Whl = v.Properties["path"]
 		}
 		if v.Type == "pypi" {
-			clusterSpec.Libraries[i].Pypi.Package = v.Properties["package"]
-			clusterSpec.Libraries[i].Pypi.Repo = v.Properties["repo"]
+			clusterSpec.Libraries[i].Pypi = &dbmodels.PythonPyPiLibrary{
+				Package: v.Properties["package"],
+				Repo:    v.Properties["repo"],
+			}
 		}
 		if v.Type == "maven" {
-			clusterSpec.Libraries[i].Maven.Coordinates = v.Properties["coordinates"]
-			clusterSpec.Libraries[i].Maven.Repo = v.Properties["repo"]
-			// TODO the spec doesn't support array
-			// clusterSpec.Libraries[i].Maven.Exclusions = v.Properties["exclusions"]
+			clusterSpec.Libraries[i].Maven = &dbmodels.MavenLibrary{
+				Coordinates: v.Properties["coordinates"],
+				Repo:        v.Properties["repo"],
+				// TODO: current exlusions is not a map
+				// Exclusions:  v.Properties["exclusions"],
+			}
 		}
 		if v.Type == "cran" {
-			clusterSpec.Libraries[i].Cran.Package = v.Properties["package"]
-			clusterSpec.Libraries[i].Cran.Repo = v.Properties["repo"]
+			clusterSpec.Libraries[i].Cran = &dbmodels.RCranLibrary{
+				Package: v.Properties["package"],
+				Repo:    v.Properties["repo"],
+			}
 		}
 	}
 
@@ -93,15 +102,8 @@ func (r *ReconcileNotebookJob) submitRunToDatabricks(instance *microsoftv1beta1.
 	jobTask := dbmodels.JobTask{
 		NotebookTask: &dbmodels.NotebookTask{
 			NotebookPath:   instance.Spec.NotebookTask.NotebookPath,
-			BaseParameters: make([]dbmodels.ParamPair, len(instance.Spec.NotebookSpec)),
+			BaseParameters: instance.Spec.NotebookSpec,
 		},
-	}
-	counter := 0
-	for k, v := range instance.Spec.NotebookSpec {
-		jobTask.NotebookTask.BaseParameters[counter] = dbmodels.ParamPair{
-			Key: k, Value: v,
-		}
-		counter++
 	}
 
 	// timeoutSeconds

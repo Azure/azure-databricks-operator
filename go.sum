@@ -134,6 +134,10 @@ github.com/stretchr/testify v1.3.0 h1:TivCn/peBQ7UY8ooIcPgZFpTNSz0Q2U6UrFlUfqbe0
 github.com/stretchr/testify v1.3.0/go.mod h1:M5WIy9Dh21IEIfnGCwXGc5bZfKNJtfHm1UVUgZn+9EI=
 github.com/xinsnake/databricks-sdk-golang v0.0.0-20190620065659-7e05bd7c105f h1:SLS2q2eb52K3eUZsVDVdzYtTPM4N2+1WEPTe/U2x+Po=
 github.com/xinsnake/databricks-sdk-golang v0.0.0-20190620065659-7e05bd7c105f/go.mod h1:8RROKFtXYmb3l4nmJeWWlHmMRYh+V6ha0ugrMSxm2A0=
+github.com/xinsnake/databricks-sdk-golang v0.0.0-20190620232738-5f70192ced56 h1:mcP10rVz8P4Of0d5rjV1tEF+ZiFMGEO8myzdECyAoKg=
+github.com/xinsnake/databricks-sdk-golang v0.0.0-20190620232738-5f70192ced56/go.mod h1:8RROKFtXYmb3l4nmJeWWlHmMRYh+V6ha0ugrMSxm2A0=
+github.com/xinsnake/databricks-sdk-golang v0.0.0-20190621002826-727cae3171aa h1:UWYgt2m8WtGq8pk6NpPwk2GEo9o9Hep8TCbhbdJ324s=
+github.com/xinsnake/databricks-sdk-golang v0.0.0-20190621002826-727cae3171aa/go.mod h1:8RROKFtXYmb3l4nmJeWWlHmMRYh+V6ha0ugrMSxm2A0=
 go.opencensus.io v0.20.1/go.mod h1:6WKK9ahsWS3RSO+PY9ZHZUfv2irvY6gN279GOPZjmmk=
 go.uber.org/atomic v1.3.2 h1:2Oa65PReHzfn29GpvgsYwloV9AVFHPDk8tYxt2c2tr4=
 go.uber.org/atomic v1.3.2/go.mod h1:gD2HeocX3+yG+ygLZcrzQJaqmWj9AIm7n08wl/qW/PE=
