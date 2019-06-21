@@ -9,7 +9,10 @@ spec:
   group: microsoft.k8s.io
   names:
     kind: NotebookJob
+    singular: notebookjob
     plural: notebookjobs
+    shortNames:
+    - nbj
   scope: Namespaced
   additionalPrinterColumns:
   - name: Age
