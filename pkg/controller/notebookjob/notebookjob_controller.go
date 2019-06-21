@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"time"
 
 	microsoftv1beta1 "microsoft/azure-databricks-operator/pkg/apis/microsoft/v1beta1"
 
@@ -147,7 +148,6 @@ func (r *ReconcileNotebookJob) Reconcile(request reconcile.Request) (reconcile.R
 		if err != nil {
 			return reconcile.Result{}, fmt.Errorf("error when submitting job to API: %v", err)
 		}
-		return reconcile.Result{}, nil
 	}
 
 	if instance.IsSubmitted() {
@@ -157,7 +157,7 @@ func (r *ReconcileNotebookJob) Reconcile(request reconcile.Request) (reconcile.R
 		}
 	}
 
-	return reconcile.Result{}, nil
+	return reconcile.Result{RequeueAfter: 60 * time.Second}, nil
 }
 
 func (r *ReconcileNotebookJob) addFinalizer(instance *microsoftv1beta1.NotebookJob) error {
