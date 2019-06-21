@@ -6,25 +6,23 @@ metadata:
     controller-tools.k8s.io: "1.0"
   name: notebookjobs.microsoft.k8s.io
 spec:
+  additionalPrinterColumns:
+  - JSONPath: .metadata.creationTimestamp
+    name: Age
+    type: date
+  - JSONPath: .spec.notebookTask.runID
+    name: RunID
+    type: integer
+  - JSONPath: .status.stateMessage
+    name: State
+    type: string
   group: microsoft.k8s.io
   names:
     kind: NotebookJob
-    singular: notebookjob
     plural: notebookjobs
     shortNames:
     - nbj
   scope: Namespaced
-  additionalPrinterColumns:
-  - name: Age
-    type: date
-    JSONPath: .metadata.creationTimestamp
-  - name: RunID
-    type: integer
-    description: Run ID in DataBricks
-    JSONPath: .spec.notebookTask.runID
-  - name: State
-    type: string
-    JSONPath: .status.stateMessage
   validation:
     openAPIV3Schema:
       properties:
@@ -101,6 +99,12 @@ spec:
               type: integer
           type: object
         status:
+          properties:
+            stateMessage:
+              description: 'INSERT ADDITIONAL STATUS FIELD - define observed state
+                of cluster Important: Run "make" to regenerate code after modifying
+                this file'
+              type: string
           type: object
   version: v1beta1
 status:

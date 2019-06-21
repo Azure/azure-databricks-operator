@@ -72,6 +72,10 @@ type NotebookJobStatus struct {
 
 // NotebookJob is the Schema for the notebookjobs API
 // +k8s:openapi-gen=true
+// +kubebuilder:resource:shortName=nbj
+// +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
+// +kubebuilder:printcolumn:name="RunID",type="integer",JSONPath=".spec.notebookTask.runID"
+// +kubebuilder:printcolumn:name="State",type="string",JSONPath=".status.stateMessage"
 type NotebookJob struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

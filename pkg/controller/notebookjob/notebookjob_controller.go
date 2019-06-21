@@ -113,6 +113,7 @@ type ReconcileNotebookJob struct {
 // +kubebuilder:rbac:groups=microsoft.k8s.io,resources=notebookjobs,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=microsoft.k8s.io,resources=notebookjobs/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=microsoft.k8s.io,resources=events,verbs=create;patch
+// +kubebuilder:rbac:groups=core,resources=events,verbs=create;watch
 func (r *ReconcileNotebookJob) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	// Fetch the NotebookJob instance
 	instance := &microsoftv1beta1.NotebookJob{}
