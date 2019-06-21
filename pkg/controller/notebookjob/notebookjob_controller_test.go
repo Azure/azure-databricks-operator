@@ -40,7 +40,7 @@ var c client.Client
 var namespacedName = types.NamespacedName{Name: randStr.String(10), Namespace: "default"}
 var expectedRequest = reconcile.Request{NamespacedName: namespacedName}
 
-const timeout = time.Second * 120
+const timeout = time.Second * 60
 
 func TestReconcile(t *testing.T) {
 	g := gomega.NewGomegaWithT(t)
@@ -117,6 +117,8 @@ func TestReconcile(t *testing.T) {
 	}
 	g.Expect(err).NotTo(gomega.HaveOccurred())
 
+	time.Sleep(15 * time.Second)
+
 	g.Eventually(requests, timeout).Should(gomega.Receive(gomega.Equal(expectedRequest)))
 	g.Eventually(func() bool {
 		_ = c.Get(context.TODO(), namespacedName, instance)
@@ -136,6 +138,8 @@ func TestReconcile(t *testing.T) {
 		t.Logf("failed to delete object: %v", err)
 		return
 	}
+
+	time.Sleep(15 * time.Second)
 
 	g.Eventually(requests, timeout).Should(gomega.Receive(gomega.Equal(expectedRequest)))
 	g.Eventually(func() error { return c.Delete(context.TODO(), instance) }, timeout).
