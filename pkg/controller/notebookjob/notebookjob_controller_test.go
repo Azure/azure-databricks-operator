@@ -26,6 +26,7 @@ import (
 
 	"github.com/onsi/gomega"
 	"golang.org/x/net/context"
+	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -44,6 +45,16 @@ const timeout = time.Second * 120
 func TestReconcile(t *testing.T) {
 	g := gomega.NewGomegaWithT(t)
 
+	secrets := make(map[string][]byte)
+	secrets["secret1"] = []byte("value1")
+	secret1 := &v1.Secret{Data: secrets, ObjectMeta: metav1.ObjectMeta{
+		Name: "test-secret", Namespace: "default",
+	}}
+
+	defer func() {
+		c.Delete(context.TODO(), secret1)
+	}()
+
 	instance := &microsoftv1beta1.NotebookJob{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      namespacedName.Name,
@@ -55,6 +66,17 @@ func TestReconcile(t *testing.T) {
 			},
 			NotebookSpec: map[string]string{
 				"TestSpec": fmt.Sprintf("%v", time.Now().String()),
+			},
+			NotebookSpecSecrets: []microsoftv1beta1.NotebookSpecSecret{
+				{
+					SecretName: "test-secret",
+					Mapping: []microsoftv1beta1.KeyMapping{
+						{
+							SecretKey: "secret1",
+							OutputKey: "SECRET_VALUE",
+						},
+					},
+				},
 			},
 			NotebookAdditionalLibraries: []microsoftv1beta1.NotebookAdditionalLibrary{
 				{
