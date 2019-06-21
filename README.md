@@ -18,7 +18,7 @@ The Azure Databricks operator comprises two projects:
 
 ![alt text](docs/images/azure-databricks-operator.jpg "high level architecture")
 
-The Databricks operator is useful in situations where Kubernetes hosted applications wish to launch and use Databricks data engineering and machine learning tasks. 
+The Databricks operator is useful in situations where Kubernetes hosted applications wish to launch and use Databricks data engineering and machine learning tasks.
 
 The project was built using
 
@@ -116,10 +116,10 @@ spec:
     "flag":  "true"
   notebookSpecSecrets:
   - secretName: "test"
-    mapping: 
+    mapping:
     - "secretKey": "my_secret_key"
       "outputKey": "dbricks_secret_key"
-  notebookAdditionalLibraries: 
+  notebookAdditionalLibraries:
     - type: "maven"
       properties:
         coordinates: "com.microsoft.azure:azure-eventhubs-spark_2.11:2.3.9" # installs the azure event hubs library
@@ -130,7 +130,7 @@ spec:
 ```
 
 8. Check the NotebookJob and Operator pod
-        
+
 ```sh
 # list all notebook jobs
 kubectl get notebookjob
@@ -148,7 +148,7 @@ kubectl -n databricks-operator-system logs databricks-operator-controller-manage
 
 1. Clone the repo
 
-2. Install the NotebookJob CRD in the configured Kubernetes cluster folder ~/.kube/config, 
+2. Install the NotebookJob CRD in the configured Kubernetes cluster folder ~/.kube/config,
 run `kubectl apply -f databricks-operator/config/crds` or `make install -C databricks-operator`
 
 3. Create secrets for `DATABRICKS_HOST` and `DATABRICKS_TOKEN`
@@ -186,8 +186,8 @@ To Extend the operator `databricks-operator`:
 9. Deploy
 
     ```shell
-    make docker-build IMG=azadehkhojandi/databricks-operator
-    make docker-push IMG=azadehkhojandi/databricks-operator
+    make docker-build IMG={your-docker-image-name}
+    make docker-push IMG={your-docker-image-name}
     make deploy
     ```
 ## Main Contributors
@@ -196,15 +196,15 @@ To Extend the operator `databricks-operator`:
 2. Paul Bouwer [Github](https://github.com/paulbouwer), [Linkedin](https://www.linkedin.com/in/pbouwer/)
 3. Lace Lofranco [Github](https://github.com/devlace), [Linkedin](https://www.linkedin.com/in/lacelofranco/)
 4. Allan Targino [Github](https://github.com/allantargino), [Linkedin](https://www.linkedin.com/in/allan-targino//)
-6. Jason Goodselli [Github](https://github.com/JasonTheDeveloper), [Linkedin](https://www.linkedin.com/in/jason-goodsell-2505a3b2/)
-7. Craig Rodger [Github](https://github.com/crrodger), [Linkedin](https://www.linkedin.com/in/craigrodger/)
-8. Justin Chizer [Github](https://github.com/justinchizer), [Linkedin](https://www.linkedin.com/in/jchizer/)
-9. Azadeh Khojandi [Github](https://github.com/Azadehkhojandi), [Linkedin](https://www.linkedin.com/in/azadeh-khojandi-ba441b3/)
+5. Jason Goodselli [Github](https://github.com/JasonTheDeveloper), [Linkedin](https://www.linkedin.com/in/jason-goodsell-2505a3b2/)
+6. Craig Rodger [Github](https://github.com/crrodger), [Linkedin](https://www.linkedin.com/in/craigrodger/)
+7. Justin Chizer [Github](https://github.com/justinchizer), [Linkedin](https://www.linkedin.com/in/jchizer/)
+8. Azadeh Khojandi [Github](https://github.com/Azadehkhojandi), [Linkedin](https://www.linkedin.com/in/azadeh-khojandi-ba441b3/)
 
 ## Resources
 
 #### Kubernetes on WSL
-    
+
 On windows command line run `kubectl config view` to find the values of [windows-user-name],[minikubeip],[port]
 
 ```shell

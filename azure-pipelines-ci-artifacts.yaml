@@ -1,0 +1,132 @@
+trigger:
+  branches:
+    include:
+    - master
+  paths:
+    include:
+    - databricks-operator/*
+
+pool:
+  vmImage: 'Ubuntu 16.04'
+
+variables:
+  GOBIN:  '$(GOPATH)/bin' # Go binaries path
+  GOROOT: '/usr/local/go1.12' # Go installation path
+  GOPATH: '$(system.defaultWorkingDirectory)/gopath' # Go workspace path
+  modulePath: '$(GOPATH)/src/$(build.repository.name)' # Path to the module's code
+  IMAGE_NAME: 'candidate/k8s/azure-databricks/operator:$(Build.SourceVersion)'
+  #ACR_NAME - set this value in AzureDevops variables
+  #AZURE_SUBSCRIPTION - set this value in AzureDevops variables
+steps:
+- script: |
+    echo 'ls /usr/local/'
+    ls /usr/local/
+    mkdir -p '$(GOBIN)'
+    mkdir -p '$(GOPATH)/pkg'
+    mkdir -p '$(modulePath)'
+    shopt -s extglob
+    mv !(gopath) '$(modulePath)'
+    echo '##vso[task.prependpath]$(GOBIN)'
+    echo '##vso[task.prependpath]$(GOROOT)/bin'
+    echo 'GOPATH'
+    ls $(GOPATH)
+    echo 'modulePath'
+    ls $(modulePath)
+    echo 'GOBIN'
+    echo $(GOBIN)
+    echo 'GOROOT'
+    echo $(GOROOT)
+    echo 'GOPATH'
+    echo $(GOPATH)
+    echo 'modulePath'
+    echo $(modulePath)
+  displayName: 'Set up the Go workspace'
+
+- script: |
+    echo 'ls $(modulePath)'
+    ls $(modulePath)
+    go version
+    go env
+    # go get -v -t -d ./...
+    if [ -f Gopkg.toml ]; then
+        curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
+        dep ensure
+    fi
+    go get github.com/jstemmer/go-junit-report
+    go get github.com/axw/gocov/gocov
+    go get github.com/AlekSi/gocov-xml
+    go get -u gopkg.in/matm/v1/gocov-html
+    echo 'ls $(modulePath)'
+    ls $(modulePath)
+  workingDirectory: $(modulePath)
+  displayName: 'Get dependencies'
+  continueOnError: 'false'
+
+- script: |
+    make build
+  workingDirectory: $(modulePath)
+  continueOnError: 'false'
+  displayName: 'Build app'
+
+- script: |
+    sudo rm -rf $HOME/.minikube/
+    curl -Lo kubectl https://storage.googleapis.com/kubernetes-release/release/v1.13.4/bin/linux/amd64/kubectl && chmod +x kubectl && sudo mv kubectl /usr/local/bin/
+    curl -Lo minikube https://storage.googleapis.com/minikube/releases/v1.0.0/minikube-linux-amd64 && chmod +x minikube && sudo mv minikube /usr/local/bin/
+    sudo minikube start --vm-driver=none --bootstrapper=kubeadm --kubernetes-version=v1.13.4 --extra-config kubeadm.ignore-preflight-errors=SystemVerification
+    sudo chmod --recursive 777 $HOME/.minikube
+    sudo chmod --recursive 777 $HOME/.kube
+    minikube update-context
+    # Wait for Kubernetes to be up and ready.
+    JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}'; until kubectl get nodes -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True"; do sleep 1; done
+    JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}'; until kubectl -n kube-system get pods -lcomponent=kube-addon-manager -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True"; do sleep 1;echo "waiting for kube-addon-manager to be available"; kubectl get pods --all-namespaces; done
+    JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}'; until kubectl -n kube-system get pods -lk8s-app=kube-dns -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True"; do sleep 1;echo "waiting for kube-dns to be available"; kubectl get pods --all-namespaces; done
+    kubectl cluster-info
+  workingDirectory: '$(modulePath)'
+  continueOnError: 'true'
+  displayName: 'Set up the Kubernetes installation'
+
+- script: |
+    make install
+    make test
+  continueOnError: 'false'
+  workingDirectory: '$(modulePath)'
+  displayName: 'Run unit tests'
+
+
+- script: |
+    go get sigs.k8s.io/kustomize
+    kustomize build config > $(Build.ArtifactStagingDirectory)/setup.yaml
+  continueOnError: 'false'
+  workingDirectory: '$(modulePath)'
+  displayName: 'install kustomize'
+
+- script: docker build -t $(IMAGE_NAME) .  # add options to this command to meet your needs
+  condition: and(succeeded(), ne(variables['Build.SourceBranch'], 'refs/heads/master'))
+  workingDirectory: '$(modulePath)'
+  displayName: 'Docker build'
+
+- task: AzureCLI@1
+  displayName: Push to Azure Container Registry
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+  inputs:
+    azureSubscription: $(AZURE_SUBSCRIPTION)
+    scriptLocation: inlineScript
+    failOnStandardError: false
+    workingDirectory: '$(modulePath)'
+    inlineScript: az acr build --registry $(ACR_NAME) --image $(IMAGE_NAME) .
+
+- script: echo $(IMAGE_NAME) > $(Build.ArtifactStagingDirectory)/azure-databricks-operator.txt
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+
+- task: CopyFiles@2
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+  inputs:
+    contents: '$(modulePath)/config/crds/*'
+    targetFolder: $(Build.ArtifactStagingDirectory)
+
+
+- task: PublishBuildArtifacts@1
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+  inputs:
+    pathtoPublish: $(Build.ArtifactStagingDirectory)
+    artifactName: drop
