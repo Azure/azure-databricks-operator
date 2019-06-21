@@ -2,9 +2,6 @@ trigger:
   branches:
     include:
     - master
-  paths:
-    include:
-    - databricks-operator/*
 
 pool:
   vmImage: 'Ubuntu 16.04'
