@@ -141,12 +141,19 @@ func (r *ReconcileNotebookJob) Reconcile(request reconcile.Request) (reconcile.R
 		return reconcile.Result{}, nil
 	}
 
-	if !instance.IsRunning() {
+	if !instance.IsSubmitted() {
 		err = r.submitRunToDatabricks(instance)
 		if err != nil {
 			return reconcile.Result{}, fmt.Errorf("error when submitting job to API: %v", err)
 		}
 		return reconcile.Result{}, nil
+	}
+
+	if instance.IsSubmitted() {
+		err = r.refreshDatabricksJob(instance)
+		if err != nil {
+			return reconcile.Result{}, fmt.Errorf("error when refreshing job to API: %v", err)
+		}
 	}
 
 	return reconcile.Result{}, nil

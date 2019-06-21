@@ -154,6 +154,24 @@ func (r *ReconcileNotebookJob) submitRunToDatabricks(instance *microsoftv1beta1.
 	return nil
 }
 
+func (r *ReconcileNotebookJob) refreshDatabricksJob(instance *microsoftv1beta1.NotebookJob) error {
+	log.Info(fmt.Sprintf("Refreshing Databricks run_id %v", instance.Spec.NotebookTask.RunID))
+	runID := instance.Spec.NotebookTask.RunID
+	run, err := r.apiClient.Jobs().RunsGet(int64(runID))
+	if err != nil {
+		return err
+	}
+	if instance.Status.StateMessage != run.State.StateMessage {
+		instance.Status.StateMessage = run.State.StateMessage
+		err = r.Update(context.TODO(), instance)
+		if err != nil {
+			return fmt.Errorf("error when updating NotebookJob: %v", err)
+		}
+		r.recorder.Event(instance, "Normal", "Updated", "run status updated")
+	}
+	return nil
+}
+
 func (r *ReconcileNotebookJob) createSecretScopeWithSecrets(scope string, secrets map[string]string) error {
 	err := r.apiClient.Secrets().CreateSecretScope(scope, "users")
 	if err != nil && !strings.Contains(err.Error(), "RESOURCE_ALREADY_EXISTS") {

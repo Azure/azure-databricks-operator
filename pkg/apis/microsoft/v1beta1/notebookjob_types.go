@@ -64,6 +64,7 @@ type NotebookAdditionalLibrary struct {
 type NotebookJobStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
+	StateMessage string `json:"stateMessage,omitempty"`
 }
 
 // +genclient
@@ -96,7 +97,7 @@ func (nj *NotebookJob) IsBeingDeleted() bool {
 	return !nj.ObjectMeta.DeletionTimestamp.IsZero()
 }
 
-func (nj *NotebookJob) IsRunning() bool {
+func (nj *NotebookJob) IsSubmitted() bool {
 	return nj.Spec.NotebookTask.RunID > 0
 }
 

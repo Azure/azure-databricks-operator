@@ -129,7 +129,7 @@ func TestReconcile(t *testing.T) {
 	g.Eventually(requests, timeout).Should(gomega.Receive(gomega.Equal(expectedRequest)))
 	g.Eventually(func() bool {
 		_ = c.Get(context.TODO(), namespacedName, instance)
-		return instance.IsRunning()
+		return instance.IsSubmitted()
 	}, timeout,
 	).Should(gomega.BeTrue())
 

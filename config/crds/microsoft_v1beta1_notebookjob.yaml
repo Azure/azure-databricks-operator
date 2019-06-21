@@ -11,6 +11,17 @@ spec:
     kind: NotebookJob
     plural: notebookjobs
   scope: Namespaced
+  additionalPrinterColumns:
+  - name: Age
+    type: date
+    JSONPath: .metadata.creationTimestamp
+  - name: RunID
+    type: integer
+    description: Run ID in DataBricks
+    JSONPath: .spec.notebookTask.runID
+  - name: State
+    type: string
+    JSONPath: .status.stateMessage
   validation:
     openAPIV3Schema:
       properties:

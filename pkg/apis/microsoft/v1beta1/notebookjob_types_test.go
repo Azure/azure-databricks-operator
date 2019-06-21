@@ -206,9 +206,9 @@ func TestIsRunning(t *testing.T) {
 			Name:      randStr.String(10),
 			Namespace: "default",
 		}}
-	g.Expect(notebookJob.IsRunning()).To(gomega.BeFalse())
+	g.Expect(notebookJob.IsSubmitted()).To(gomega.BeFalse())
 
 	notebookJob.Spec.NotebookTask.RunID = rand.Intn(100) + 1
 
-	g.Expect(notebookJob.IsRunning()).To(gomega.BeTrue())
+	g.Expect(notebookJob.IsSubmitted()).To(gomega.BeTrue())
 }
