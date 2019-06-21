@@ -126,12 +126,14 @@ func (r *ReconcileNotebookJob) submitRunToDatabricks(instance *microsoftv1beta1.
 	}
 
 	secretScopeName := runName + "_scope"
+	log.Info(fmt.Sprintf("Creating secret scope %s with %d secrets", secretScopeName, len(scopeSecrets)))
 	err := r.createSecretScopeWithSecrets(secretScopeName, scopeSecrets)
 	if err != nil {
 		return err
 	}
 
 	// submit run
+	log.Info("Submitting run " + runName)
 	runResponse, err := r.apiClient.Jobs().RunsSubmit(runName, clusterSpec, jobTask, int32(timeoutSeconds))
 	if err != nil {
 		return err

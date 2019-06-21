@@ -51,10 +51,6 @@ func TestReconcile(t *testing.T) {
 		Name: "test-secret", Namespace: "default",
 	}}
 
-	defer func() {
-		c.Delete(context.TODO(), secret1)
-	}()
-
 	instance := &microsoftv1beta1.NotebookJob{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      namespacedName.Name,
@@ -103,6 +99,12 @@ func TestReconcile(t *testing.T) {
 	defer func() {
 		close(stopMgr)
 		mgrStopped.Wait()
+	}()
+
+	// Create the secrets needed
+	c.Create(context.TODO(), secret1)
+	defer func() {
+		c.Delete(context.TODO(), secret1)
 	}()
 
 	// Create the NotebookJob object and expect the Reconcile to be created

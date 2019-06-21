@@ -23,6 +23,7 @@ import (
 
 	microsoftv1beta1 "microsoft/azure-databricks-operator/pkg/apis/microsoft/v1beta1"
 
+	"github.com/go-logr/logr"
 	db "github.com/xinsnake/databricks-sdk-golang"
 	dbazure "github.com/xinsnake/databricks-sdk-golang/azure"
 
@@ -40,7 +41,11 @@ import (
 
 const finalizerName = "notebookjob.finalizers.microsoft.k8s.io"
 
-var log = logf.Log.WithName("notebookjob-controller")
+var log logr.Logger
+
+func init() {
+	log = logf.Log.WithName("notebookjob-controller")
+}
 
 // Add creates a new NotebookJob Controller and adds it to the Manager with default RBAC. The Manager will set fields on the Controller
 // and Start it when the Manager is Started.
@@ -174,6 +179,6 @@ func (r *ReconcileNotebookJob) handleFinalizer(instance *microsoftv1beta1.Notebo
 }
 
 func (r *ReconcileNotebookJob) deleteExternalDependency(instance *microsoftv1beta1.NotebookJob) error {
-	log.Info("deleting the external dependencies")
+	log.Info(fmt.Sprintf("Deleting external dependencies (run_id: %d)", instance.Spec.NotebookTask.RunID))
 	return r.deleteRunFromDatabricks(int64(instance.Spec.NotebookTask.RunID))
 }
