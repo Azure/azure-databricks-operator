@@ -14,6 +14,9 @@ variables:
   IMAGE_NAME: 'candidate/k8s/azure-databricks/operator:$(Build.SourceVersion)'
   #ACR_NAME - set this value in AzureDevops variables
   #AZURE_SUBSCRIPTION - set this value in AzureDevops variables
+  # DATABRICKS_HOST - set this in pipeline
+  # DATABRICKS_TOKEN - set this in pipeline
+
 steps:
 - script: |
     echo 'ls /usr/local/'
@@ -88,6 +91,9 @@ steps:
   continueOnError: 'false'
   workingDirectory: '$(modulePath)'
   displayName: 'Run unit tests'
+  env:
+    DATABRICKS_HOST: $(DATABRICKS_HOST)
+    DATABRICKS_TOKEN: $(DATABRICKS_TOKEN)
 
 
 - script: |
