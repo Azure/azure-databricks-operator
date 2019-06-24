@@ -18,6 +18,10 @@ variables:
   # DATABRICKS_TOKEN - set this in pipeline
 
 steps:
+
+- checkout: self  # self represents the repo where the initial Pipelines YAML file was found
+  lfs: "true"
+
 - script: |
     echo 'ls /usr/local/'
     ls /usr/local/
