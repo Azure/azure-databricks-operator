@@ -96,12 +96,12 @@ steps:
     DATABRICKS_TOKEN: $(DATABRICKS_TOKEN)
 
 
-- script: |
-    go get sigs.k8s.io/kustomize
-    kustomize build config > $(Build.ArtifactStagingDirectory)/setup.yaml
-  continueOnError: 'false'
-  workingDirectory: '$(modulePath)'
-  displayName: 'install kustomize'
+# - script: |
+#     go get sigs.k8s.io/kustomize
+#     kustomize build config > $(Build.ArtifactStagingDirectory)/setup.yaml
+#   continueOnError: 'false'
+#   workingDirectory: '$(modulePath)'
+#   displayName: 'install kustomize'
 
 - script: docker build -t $(IMAGE_NAME) .  # add options to this command to meet your needs
   condition: and(succeeded(), ne(variables['Build.SourceBranch'], 'refs/heads/master'))
