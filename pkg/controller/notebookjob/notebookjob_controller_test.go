@@ -40,7 +40,7 @@ var c client.Client
 var namespacedName = types.NamespacedName{Name: randStr.String(10), Namespace: "default"}
 var expectedRequest = reconcile.Request{NamespacedName: namespacedName}
 
-const timeout = time.Second * 30
+const timeout = time.Second * 60
 
 func TestReconcile(t *testing.T) {
 	g := gomega.NewGomegaWithT(t)
