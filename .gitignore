@@ -13,3 +13,6 @@
 
 .vscode/
 .env
+
+!/bin
+/bin/manager
