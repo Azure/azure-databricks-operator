@@ -157,7 +157,7 @@ func (r *ReconcileNotebookJob) Reconcile(request reconcile.Request) (reconcile.R
 		}
 	}
 
-	return reconcile.Result{RequeueAfter: 60 * time.Second}, nil
+	return reconcile.Result{RequeueAfter: 30 * time.Second}, nil
 }
 
 func (r *ReconcileNotebookJob) addFinalizer(instance *microsoftv1beta1.NotebookJob) error {
@@ -187,6 +187,8 @@ func (r *ReconcileNotebookJob) handleFinalizer(instance *microsoftv1beta1.Notebo
 }
 
 func (r *ReconcileNotebookJob) deleteExternalDependency(instance *microsoftv1beta1.NotebookJob) error {
-	log.Info(fmt.Sprintf("Deleting external dependencies (run_id: %d)", instance.Spec.NotebookTask.RunID))
-	return r.deleteRunFromDatabricks(int64(instance.Spec.NotebookTask.RunID))
+	if instance.Status.Run != nil {
+		log.Info(fmt.Sprintf("Deleting external dependencies (run_id: %d)", instance.Status.Run.RunID))
+	}
+	return r.deleteRunFromDatabricks(instance)
 }

@@ -40,7 +40,7 @@ var c client.Client
 var namespacedName = types.NamespacedName{Name: randStr.String(10), Namespace: "default"}
 var expectedRequest = reconcile.Request{NamespacedName: namespacedName}
 
-const timeout = time.Second * 60
+const timeout = time.Second * 30
 
 func TestReconcile(t *testing.T) {
 	g := gomega.NewGomegaWithT(t)
@@ -107,6 +107,8 @@ func TestReconcile(t *testing.T) {
 		c.Delete(context.TODO(), secret1)
 	}()
 
+	time.Sleep(1 * time.Second)
+
 	// Create the NotebookJob object and expect the Reconcile to be created
 	err = c.Create(context.TODO(), instance)
 	// The instance object may not be a valid object because it might be missing some required fields.
@@ -116,8 +118,6 @@ func TestReconcile(t *testing.T) {
 		return
 	}
 	g.Expect(err).NotTo(gomega.HaveOccurred())
-
-	time.Sleep(15 * time.Second)
 
 	g.Eventually(requests, timeout).Should(gomega.Receive(gomega.Equal(expectedRequest)))
 	g.Eventually(func() bool {
@@ -133,15 +133,20 @@ func TestReconcile(t *testing.T) {
 	}, timeout,
 	).Should(gomega.BeTrue())
 
-	err = c.Delete(context.TODO(), instance)
+	time.Sleep(10 * time.Second)
+
+	instance2 := &microsoftv1beta1.NotebookJob{}
+	err = c.Get(context.TODO(), namespacedName, instance2)
+	if err != nil {
+		t.Logf("failed to get object to be deleted: %v", err)
+	}
+	err = c.Delete(context.TODO(), instance2)
 	if err != nil {
 		t.Logf("failed to delete object: %v", err)
 		return
 	}
 
-	time.Sleep(15 * time.Second)
-
 	g.Eventually(requests, timeout).Should(gomega.Receive(gomega.Equal(expectedRequest)))
-	g.Eventually(func() error { return c.Delete(context.TODO(), instance) }, timeout).
-		Should(gomega.MatchError("notebookjobs.microsoft.k8s.io \"" + namespacedName.Name + "\" not found"))
+	g.Eventually(func() error { return c.Get(context.TODO(), namespacedName, instance2) }, timeout).
+		Should(gomega.MatchError("NotebookJob.microsoft.k8s.io \"" + namespacedName.Name + "\" not found"))
 }

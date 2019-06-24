@@ -25,6 +25,7 @@ import (
 	randStr "microsoft/azure-databricks-operator/pkg/rand"
 
 	"github.com/onsi/gomega"
+	dbmodels "github.com/xinsnake/databricks-sdk-golang/azure/models"
 	"golang.org/x/net/context"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -208,7 +209,9 @@ func TestIsRunning(t *testing.T) {
 		}}
 	g.Expect(notebookJob.IsSubmitted()).To(gomega.BeFalse())
 
-	notebookJob.Spec.NotebookTask.RunID = rand.Intn(100) + 1
+	notebookJob.Status.Run = &dbmodels.Run{
+		RunID: int64(rand.Intn(100) + 1),
+	}
 
 	g.Expect(notebookJob.IsSubmitted()).To(gomega.BeTrue())
 }

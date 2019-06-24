@@ -10,10 +10,10 @@ spec:
   - JSONPath: .metadata.creationTimestamp
     name: Age
     type: date
-  - JSONPath: .spec.notebookTask.runID
+  - JSONPath: .status.run.run_id
     name: RunID
     type: integer
-  - JSONPath: .status.stateMessage
+  - JSONPath: .status.run.state.life_cycle_state
     name: State
     type: string
   group: microsoft.k8s.io
@@ -90,9 +90,6 @@ spec:
               properties:
                 notebookPath:
                   type: string
-                runID:
-                  format: int64
-                  type: integer
               type: object
             timeoutSeconds:
               format: int64
@@ -100,11 +97,20 @@ spec:
           type: object
         status:
           properties:
-            stateMessage:
+            run:
               description: 'INSERT ADDITIONAL STATUS FIELD - define observed state
                 of cluster Important: Run "make" to regenerate code after modifying
                 this file'
-              type: string
+              properties:
+                schedule:
+                  type: object
+                state:
+                  type: object
+                task:
+                  type: object
+                trigger:
+                  type: string
+              type: object
           type: object
   version: v1beta1
 status:

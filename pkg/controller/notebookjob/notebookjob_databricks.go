@@ -28,20 +28,31 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
-func (r *ReconcileNotebookJob) deleteRunFromDatabricks(runID int64) error {
-	if runID == 0 {
-		return nil
+func (r *ReconcileNotebookJob) deleteRunFromDatabricks(instance *microsoftv1beta1.NotebookJob) error {
+	// cancel and delete the job
+	if instance.Status.Run != nil {
+		runID := int64(instance.Status.Run.RunID)
+		_, err := r.apiClient.Jobs().RunsGet(runID)
+		if err == nil {
+			err = r.apiClient.Jobs().RunsCancel(runID)
+			if err != nil {
+				return err
+			}
+			time.Sleep(15 * time.Second)
+			err = r.apiClient.Jobs().RunsDelete(runID)
+			if err != nil {
+				return err
+			}
+		} else {
+			if !strings.Contains(err.Error(), "does not exist") {
+				return err
+			}
+		}
 	}
-	_, err := r.apiClient.Jobs().RunsGet(runID)
-	if err != nil && strings.Contains(err.Error(), "does not exist") {
-		return nil
-	}
-	err = r.apiClient.Jobs().RunsCancel(runID)
-	if err != nil && !strings.Contains(err.Error(), "does not exist") {
-		return err
-	}
-	time.Sleep(10 * time.Second)
-	err = r.apiClient.Jobs().RunsDelete(runID)
+
+	// delete the scope
+	secretScopeName := fmt.Sprintf("%s_scope", instance.ObjectMeta.Name)
+	err := r.apiClient.Secrets().DeleteSecretScope(secretScopeName)
 	if err != nil && !strings.Contains(err.Error(), "does not exist") {
 		return err
 	}
@@ -134,17 +145,17 @@ func (r *ReconcileNotebookJob) submitRunToDatabricks(instance *microsoftv1beta1.
 
 	// submit run
 	log.Info("Submitting run " + runName)
-	runResponse, err := r.apiClient.Jobs().RunsSubmit(runName, clusterSpec, jobTask, int32(timeoutSeconds))
+	run, err := r.apiClient.Jobs().RunsSubmit(runName, clusterSpec, jobTask, int32(timeoutSeconds))
 	if err != nil {
 		return err
 	}
 
-	if runResponse.RunID == 0 {
+	if run.RunID == 0 {
 		return fmt.Errorf("result from API didn't return any values")
 	}
 
 	// write information back to instance
-	instance.Spec.NotebookTask.RunID = int(runResponse.RunID)
+	instance.Status.Run = &run
 	err = r.Update(context.TODO(), instance)
 	if err != nil {
 		return fmt.Errorf("error when updating NotebookJob after submitting to API: %v", err)
@@ -155,20 +166,18 @@ func (r *ReconcileNotebookJob) submitRunToDatabricks(instance *microsoftv1beta1.
 }
 
 func (r *ReconcileNotebookJob) refreshDatabricksJob(instance *microsoftv1beta1.NotebookJob) error {
-	log.Info(fmt.Sprintf("Refreshing Databricks run_id %v", instance.Spec.NotebookTask.RunID))
-	runID := instance.Spec.NotebookTask.RunID
+	log.Info(fmt.Sprintf("Refreshing Databricks run_id %v", instance.Status.Run.RunID))
+	runID := instance.Status.Run.RunID
 	run, err := r.apiClient.Jobs().RunsGet(int64(runID))
 	if err != nil {
 		return err
 	}
-	if instance.Status.StateMessage != run.State.StateMessage {
-		instance.Status.StateMessage = run.State.StateMessage
-		err = r.Update(context.TODO(), instance)
-		if err != nil {
-			return fmt.Errorf("error when updating NotebookJob: %v", err)
-		}
-		r.recorder.Event(instance, "Normal", "Updated", "run status updated")
+	instance.Status.Run = &run
+	err = r.Update(context.TODO(), instance)
+	if err != nil {
+		return fmt.Errorf("error when updating NotebookJob: %v", err)
 	}
+	r.recorder.Event(instance, "Normal", "Updated", "run status updated")
 	return nil
 }
 

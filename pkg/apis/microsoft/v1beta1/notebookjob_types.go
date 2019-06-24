@@ -17,12 +17,12 @@ limitations under the License.
 package v1beta1
 
 import (
+	dbmodels "github.com/xinsnake/databricks-sdk-golang/azure/models"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 type NotebookTask struct {
 	NotebookPath string `json:"notebookPath,omitempty"`
-	RunID        int    `json:"runID,omitempty"`
 }
 
 type NotebookStream struct {
@@ -64,7 +64,7 @@ type NotebookAdditionalLibrary struct {
 type NotebookJobStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
-	StateMessage string `json:"stateMessage,omitempty"`
+	Run *dbmodels.Run `json:"run,omitempty"`
 }
 
 // +genclient
@@ -74,8 +74,8 @@ type NotebookJobStatus struct {
 // +k8s:openapi-gen=true
 // +kubebuilder:resource:shortName=nbj
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
-// +kubebuilder:printcolumn:name="RunID",type="integer",JSONPath=".spec.notebookTask.runID"
-// +kubebuilder:printcolumn:name="State",type="string",JSONPath=".status.stateMessage"
+// +kubebuilder:printcolumn:name="RunID",type="integer",JSONPath=".status.run.run_id"
+// +kubebuilder:printcolumn:name="State",type="string",JSONPath=".status.run.state.life_cycle_state"
 type NotebookJob struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -102,7 +102,10 @@ func (nj *NotebookJob) IsBeingDeleted() bool {
 }
 
 func (nj *NotebookJob) IsSubmitted() bool {
-	return nj.Spec.NotebookTask.RunID > 0
+	if nj.Status.Run == nil {
+		return false
+	}
+	return nj.Status.Run.RunID > 0
 }
 
 func (nj *NotebookJob) HasFinalizer(finalizerName string) bool {
