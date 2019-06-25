@@ -77,10 +77,10 @@ kubectl apply -f release/config
 5. Create a test secret, you can pass the value of Kubernetes secrets into your notebook as Databricks secrets
 
 ```sh
-kubectl create secret generic test --from-literal=my_secret_key="my_secret_value"
+kubectl create secret generic test-secret --from-literal=my_secret_key="my_secret_value"
 ```
 
-6. In Databricks, [create a new Python Notebook](https://docs.databricks.com/user-guide/notebooks/notebook-manage.html#create-a-notebook) called `testnotebook` in the root of your [Workspace](https://docs.databricks.com/user-guide/workspace.html#folders). Put the following in the first cell of the notebook:
+6. In Databricks, [create a new Python Notebook](https://docs.databricks.com/user-guide/notebooks/notebook-manage.html#create-a-notebook) called `test-notebook` in the root of your [Workspace](https://docs.databricks.com/user-guide/workspace.html#folders). Put the following in the first cell of the notebook:
 
 ```py
 run_name = dbutils.widgets.get("run_name")
@@ -101,22 +101,22 @@ kind: NotebookJob
 metadata:
   annotations:
     microsoft.k8s.io/author: azkhojan@microsoft.com
-  name: samplejob1
+  name: sample1run1
 spec:
   notebookTask:
-    notebookPath: "/testnotebook"
+    notebookPath: "/test-notebook"
   timeoutSeconds: 500
   notebookSpec:
-    "flag":  "true"
+    "flag": "true"
   notebookSpecSecrets:
-  - secretName: "test"
-    mapping:
-    - "secretKey": "my_secret_key"
-      "outputKey": "dbricks_secret_key"
+    - secretName: "test-secret"
+      mapping :
+        - "secretKey": "my_secret_key"
+          "outputKey": "dbricks_secret_key"
   notebookAdditionalLibraries:
     - type: "maven"
       properties:
-        coordinates: "com.microsoft.azure:azure-eventhubs-spark_2.11:2.3.9" # installs the azure event hubs library
+        coordinates: "com.microsoft.azure:azure-eventhubs-spark_2.11:2.3.9"
   clusterSpec:
     sparkVersion: "5.2.x-scala2.11"
     nodeTypeId: "Standard_DS12_v2"
@@ -145,10 +145,18 @@ kubectl -n databricks-operator-system logs databricks-operator-controller-manage
 2. Install the NotebookJob CRD in the configured Kubernetes cluster folder ~/.kube/config,
 run `kubectl apply -f databricks-operator/config/crds` or `make install -C databricks-operator`
 
-3. Create secrets for `DATABRICKS_HOST` and `DATABRICKS_TOKEN`
+3. set Environment variables for `DATABRICKS_HOST` and `DATABRICKS_TOKEN`
 
+    Windows command line:
     ```shell
-    kubectl  --namespace databricks-operator-system create secret generic dbrickssettings --from-literal=DatabricksHost="https://xxxx.azuredatabricks.net" --from-literal=DatabricksToken="xxxxx"
+    set DATABRICKS_TOKEN=xxxx
+    set DATABRICKS_HOST=https://xxxx.azuredatabricks.net
+    ```
+
+    bash:
+    ```shell
+    export DATABRICKS_TOKEN=xxxx
+    export DATABRICKS_HOST=https://xxxx.azuredatabricks.net
     ```
 
     Make sure your secret name is set correctly in `databricks-operator/config/default/azure_databricks_api_image_patch.yaml`
@@ -190,10 +198,11 @@ To Extend the operator `databricks-operator`:
 2. Paul Bouwer [Github](https://github.com/paulbouwer), [Linkedin](https://www.linkedin.com/in/pbouwer/)
 3. Lace Lofranco [Github](https://github.com/devlace), [Linkedin](https://www.linkedin.com/in/lacelofranco/)
 4. Allan Targino [Github](https://github.com/allantargino), [Linkedin](https://www.linkedin.com/in/allan-targino//)
-6. Xinyun (Jacob) Zhou[Github](https://github.com/xinsnake),[Linkedin](https://www.linkedin.com/in/xinyun-zhou/)
-7. Jason Goodsell [Github](https://github.com/JasonTheDeveloper), [Linkedin](https://www.linkedin.com/in/jason-goodsell-2505a3b2/)
-8. Craig Rodger [Github](https://github.com/crrodger), [Linkedin](https://www.linkedin.com/in/craigrodger/)
-9. Justin Chizer [Github](https://github.com/justinchizer), [Linkedin](https://www.linkedin.com/in/jchizer/)
+5. Xinyun (Jacob) Zhou[Github](https://github.com/xinsnake), [Linkedin](https://www.linkedin.com/in/xinyun-zhou/)
+6. Jason Goodsell [Github](https://github.com/JasonTheDeveloper), [Linkedin](https://www.linkedin.com/in/jason-goodsell-2505a3b2/)
+7. Craig Rodger [Github](https://github.com/crrodger), [Linkedin](https://www.linkedin.com/in/craigrodger/)
+8. Justin Chizer [Github](https://github.com/justinchizer), [Linkedin](https://www.linkedin.com/in/jchizer/)
+9. Priya Kumaran [Github](https://github.com/priyakumarank), [Linkedin](https://www.linkedin.com/in/priyakumaran/)
 10. Azadeh Khojandi [Github](https://github.com/Azadehkhojandi), [Linkedin](https://www.linkedin.com/in/azadeh-khojandi-ba441b3/)
 
 ## Resources
