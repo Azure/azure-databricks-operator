@@ -1,65 +1,68 @@
 
 # Image URL to use all building/pushing image targets
 IMG ?= controller:latest
-# Enable GO Mod
-export GO111MODULE := on
+# Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
+CRD_OPTIONS ?= "crd:trivialVersions=true"
 
-all: test build
+all: manager
+
+# Run tests
+test: generate fmt vet manifests
+	TEST_USE_EXISTING_CLUSTER=false go test ./api/... ./controllers/... -coverprofile cover.out
+
+# Run tests with existing cluster
+test-existing: generate fmt vet manifests
+	TEST_USE_EXISTING_CLUSTER=true go test ./api/... ./controllers/... -coverprofile cover.out
 
 # Build manager binary
-build: fmt vet
-	go build -o bin/manager microsoft/azure-databricks-operator/cmd/manager
-
-test:
-	go test ./pkg/... ./cmd/... -coverprofile cover.out
-
-# Run tests with code generation
-test-gen: generate fmt vet manifests test
-	go test ./pkg/... ./cmd/... -coverprofile cover.out
-
-# Build manager binary with code generation
-build-gen: generate fmt vet build
+manager: generate fmt vet
+	go build -o bin/manager main.go
 
 # Run against the configured Kubernetes cluster in ~/.kube/config
 run: generate fmt vet
-	go run ./cmd/manager/main.go
+	go run ./main.go
 
 # Install CRDs into a cluster
-install:
-	kubectl apply -f config/crds
-
-install-gen: manifests install
+install: manifests
+	kubectl apply -f config/crd/bases
 
 # Deploy controller in the configured Kubernetes cluster in ~/.kube/config
 deploy: manifests
-	kubectl apply -f config/crds
-	./bin/kustomize build config | kubectl apply -f -
+	kubectl apply -f config/crd/bases
+	kustomize build config/default | kubectl apply -f -
 
 # Generate manifests e.g. CRD, RBAC etc.
-manifests:
-	./bin/controller-gen all
+manifests: controller-gen
+	$(CONTROLLER_GEN) $(CRD_OPTIONS) rbac:roleName=manager-role webhook paths="./..." output:crd:artifacts:config=config/crd/bases
 
 # Run go fmt against code
 fmt:
-	go fmt ./pkg/... ./cmd/...
+	go fmt ./...
 
 # Run go vet against code
 vet:
-	go vet ./pkg/... ./cmd/...
+	go vet ./...
 
 # Generate code
-generate:
-ifndef GOPATH
-	$(error GOPATH not defined, please define GOPATH. Run "go help gopath" to learn more about GOPATH)
-endif
-	go generate ./pkg/... ./cmd/...
+generate: controller-gen
+	$(CONTROLLER_GEN) object:headerFile=./hack/boilerplate.go.txt paths=./api/...
 
 # Build the docker image
 docker-build: test
 	docker build . -t ${IMG}
 	@echo "updating kustomize image patch file for manager resource"
-	sed -i'' -e 's@image: .*@image: '"${IMG}"'@' ./config/default/azure_databricks_operator_image_patch.yaml
+	sed -i'' -e 's@image: .*@image: '"${IMG}"'@' ./config/default/manager_image_patch.yaml
 
 # Push the docker image
 docker-push:
 	docker push ${IMG}
+
+# find or download controller-gen
+# download controller-gen if necessary
+controller-gen:
+ifeq (, $(shell which controller-gen))
+	go get sigs.k8s.io/controller-tools/cmd/controller-gen@v0.2.0-beta.2
+CONTROLLER_GEN="$(shell go env GOPATH)/bin/controller-gen"
+else
+CONTROLLER_GEN="$(shell which controller-gen)"
+endif
