@@ -7,14 +7,14 @@ metadata:
 spec:
   notebookTask:
     notebookPath: "/test-notebook"
-  timeoutSeconds: 3600
+  timeoutSeconds: 500
   notebookSpec:
     "flag": "true"
   notebookSpecSecrets:
     - secretName: "test-secret"
       mapping :
-        - "secretKey": "secret1"
-          "outputKey": "SECRET_VALUE"
+        - "secretKey": "my_secret_key"
+          "outputKey": "dbricks_secret_key"
   notebookAdditionalLibraries:
     - type: "maven"
       properties:
