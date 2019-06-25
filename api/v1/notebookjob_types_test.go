@@ -51,7 +51,7 @@ var _ = Describe("NotebookJob", func() {
 	Context("Create API", func() {
 		It("should create an object successfully", func() {
 			key := types.NamespacedName{
-				Name:      randomString(10),
+				Name:      RandomString(10),
 				Namespace: "default",
 			}
 			created := &NotebookJob{
@@ -80,7 +80,7 @@ var _ = Describe("NotebookJob", func() {
 			finalizers := []string{finalizer}
 
 			key := types.NamespacedName{
-				Name:      randomString(10),
+				Name:      RandomString(10),
 				Namespace: "default",
 			}
 			notebookjob := &NotebookJob{
@@ -109,7 +109,7 @@ var _ = Describe("NotebookJob", func() {
 		It("should return is running", func() {
 			notebookJob := &NotebookJob{
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      randomString(10),
+					Name:      RandomString(10),
 					Namespace: "default",
 				}}
 			Expect(notebookJob.IsSubmitted()).To(BeFalse())
