@@ -1,0 +1,97 @@
+trigger:
+  branches:
+    include:
+    - master
+
+pool:
+  vmImage: 'Ubuntu 16.04'
+
+variables:
+  GOROOT: '/usr/local/go1.12' # Go installation path
+  GOPATH: '$(System.DefaultWorkingDirectory)/gopath' # Go workspace path
+  GOBIN:  '$(GOPATH)/bin' # Go binaries path
+  MODULE_PATH: '$(GOPATH)/src/$(Build.Repository.Name)' # Path to the module's code
+  IMAGE_NAME: 'candidate/k8s/azure-databricks/operator:$(Build.SourceVersion)'
+  # ACR_NAME:           - set this value in Azure Devops variables
+  # AZURE_SUBSCRIPTION: - set this value in Azure Devops variables
+  # DATABRICKS_HOST:    - set this value in Azure Devops variables
+  # DATABRICKS_TOKEN:   - set this value in Azure Devops variables
+
+steps:
+
+- checkout: self  # self represents the repo where the initial Pipelines YAML file was found
+  lfs: "true"
+
+- script: |
+    set -x
+    ls /usr/local/
+
+    mkdir -p '$(GOBIN)'
+    mkdir -p '$(GOPATH)/pkg'
+    mkdir -p '$(MODULE_PATH)'
+    shopt -s extglob
+    mv !(gopath) '$(MODULE_PATH)'
+    echo '##vso[task.prependpath]$(GOBIN)'
+    echo '##vso[task.prependpath]$(GOROOT)/bin'
+
+    go version
+    go env
+  displayName: 'Set up the Go workspace'
+
+# - script: |
+#     set -x
+#     go get -u github.com/jstemmer/go-junit-report
+#     go get -u github.com/axw/gocov/gocov
+#     go get -u github.com/AlekSi/gocov-xml
+#     go get -u gopkg.in/matm/v1/gocov-html
+#   continueOnError: 'false'
+#   displayName: 'Get dependencies'
+#   workingDirectory: $(MODULE_PATH)
+
+- script: |
+    make test
+  continueOnError: 'false'
+  displayName: 'Run unit tests'
+  env:
+    DATABRICKS_HOST: $(DATABRICKS_HOST)
+    DATABRICKS_TOKEN: $(DATABRICKS_TOKEN)
+  workingDirectory: '$(MODULE_PATH)'
+
+- script: |
+    ./bin/kustomize build config/default > $(Build.ArtifactStagingDirectory)/setup.yaml
+  continueOnError: 'false'
+  displayName: 'Prepare manifests for publish'
+  workingDirectory: '$(MODULE_PATH)'
+
+- script: docker build -t $(IMAGE_NAME) .  # add options to this command to meet your needs
+  condition: and(succeeded(), ne(variables['Build.SourceBranch'], 'refs/heads/master'))
+  displayName: 'Docker build'
+  workingDirectory: '$(MODULE_PATH)'
+
+- task: AzureCLI@1
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+  displayName: Push to Azure Container Registry
+  inputs:
+    azureSubscription: $(AZURE_SUBSCRIPTION)
+    scriptLocation: inlineScript
+    failOnStandardError: false
+    workingDirectory: '$(MODULE_PATH)'
+    inlineScript: az acr build --registry $(ACR_NAME) --image $(IMAGE_NAME) .
+
+- script: |
+    set -x
+    echo $(IMAGE_NAME) > $(Build.ArtifactStagingDirectory)/azure-databricks-operator.txt
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+
+- task: CopyFiles@2
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+  inputs:
+    contents: '$(MODULE_PATH)/config/crds/*'
+    targetFolder: $(Build.ArtifactStagingDirectory)
+
+
+- task: PublishBuildArtifacts@1
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+  inputs:
+    pathtoPublish: $(Build.ArtifactStagingDirectory)
+    artifactName: drop
