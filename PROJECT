@@ -1,3 +1,7 @@
-version: "1"
-domain: k8s.io
-repo: azure-databricks-operator
+version: "2"
+domain: microsoft.com
+repo: github.com/azure-databricks-operator
+resources:
+- group: jobs
+  version: v1
+  kind: NotebookJob
