@@ -39,7 +39,7 @@ type NotebookJobStatus struct {
 }
 
 // +genclient
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +kubebuilder:object:root=true
 
 // NotebookJob is the Schema for the notebookjobs API
 // +k8s:openapi-gen=true
@@ -78,7 +78,7 @@ func (nj *NotebookJob) RemoveFinalizer(finalizerName string) {
 	nj.ObjectMeta.Finalizers = removeString(nj.ObjectMeta.Finalizers, finalizerName)
 }
 
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +kubebuilder:object:root=true
 
 // NotebookJobList contains a list of NotebookJob
 type NotebookJobList struct {

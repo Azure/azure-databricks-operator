@@ -17,8 +17,12 @@ limitations under the License.
 package v1
 
 import (
+	"math/rand"
+	"time"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	dbmodels "github.com/xinsnake/databricks-sdk-golang/azure/models"
 
 	"golang.org/x/net/context"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -29,10 +33,8 @@ import (
 // http://onsi.github.io/ginkgo to learn more.
 
 var _ = Describe("NotebookJob", func() {
-	var (
-		key              types.NamespacedName
-		created, fetched *NotebookJob
-	)
+
+	const timeout = time.Second * 5
 
 	BeforeEach(func() {
 		// Add any setup steps that needs to be executed before each test
@@ -47,23 +49,22 @@ var _ = Describe("NotebookJob", func() {
 	// Avoid adding tests for vanilla CRUD operations because they would
 	// test Kubernetes API server, which isn't the goal here.
 	Context("Create API", func() {
-
 		It("should create an object successfully", func() {
-
-			key = types.NamespacedName{
-				Name:      "foo",
+			key := types.NamespacedName{
+				Name:      randomString(10),
 				Namespace: "default",
 			}
-			created = &NotebookJob{
+			created := &NotebookJob{
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      "foo",
-					Namespace: "default",
+					Name:      key.Name,
+					Namespace: key.Namespace,
 				}}
 
+			// Test Create
 			By("creating an API obj")
 			Expect(k8sClient.Create(context.TODO(), created)).To(Succeed())
 
-			fetched = &NotebookJob{}
+			fetched := &NotebookJob{}
 			Expect(k8sClient.Get(context.TODO(), key, fetched)).To(Succeed())
 			Expect(fetched).To(Equal(created))
 
@@ -71,7 +72,53 @@ var _ = Describe("NotebookJob", func() {
 			Expect(k8sClient.Delete(context.TODO(), created)).To(Succeed())
 			Expect(k8sClient.Get(context.TODO(), key, created)).ToNot(Succeed())
 		})
-
 	})
 
+	Context("API Status", func() {
+		It("should return being deleted", func() {
+			finalizer := "finalizer.domain.k8s.org"
+			finalizers := []string{finalizer}
+
+			key := types.NamespacedName{
+				Name:      randomString(10),
+				Namespace: "default",
+			}
+			notebookjob := &NotebookJob{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:       key.Name,
+					Namespace:  key.Namespace,
+					Finalizers: finalizers,
+				}}
+
+			defer func() {
+				k8sClient.Get(context.TODO(), key, notebookjob)
+				notebookjob.RemoveFinalizer(finalizer)
+				k8sClient.Update(context.TODO(), notebookjob)
+			}()
+
+			k8sClient.Create(context.TODO(), notebookjob)
+			k8sClient.Delete(context.TODO(), notebookjob)
+
+			Eventually(func() bool {
+				_ = k8sClient.Get(context.TODO(), key, notebookjob)
+				return notebookjob.IsBeingDeleted()
+			}, timeout,
+			).Should(BeTrue())
+		})
+
+		It("should return is running", func() {
+			notebookJob := &NotebookJob{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      randomString(10),
+					Namespace: "default",
+				}}
+			Expect(notebookJob.IsSubmitted()).To(BeFalse())
+
+			notebookJob.Status.Run = &dbmodels.Run{
+				RunID: int64(rand.Intn(100) + 1),
+			}
+
+			Expect(notebookJob.IsSubmitted()).To(BeTrue())
+		})
+	})
 })
