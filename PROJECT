@@ -2,6 +2,6 @@ version: "2"
 domain: microsoft.com
 repo: github.com/microsoft/azure-databricks-operator
 resources:
-- group: jobs
+- group: databricks
   version: v1
   kind: NotebookJob

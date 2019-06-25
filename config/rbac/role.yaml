@@ -27,7 +27,7 @@ rules:
   - update
   - patch
 - apiGroups:
-  - jobs.microsoft.com
+  - databricks.microsoft.com
   resources:
   - notebookjobs
   verbs:
@@ -39,7 +39,7 @@ rules:
   - patch
   - delete
 - apiGroups:
-  - jobs.microsoft.com
+  - databricks.microsoft.com
   resources:
   - notebookjobs/status
   verbs:
@@ -47,7 +47,7 @@ rules:
   - update
   - patch
 - apiGroups:
-  - jobs.microsoft.com
+  - databricks.microsoft.com
   resources:
   - events
   verbs:
