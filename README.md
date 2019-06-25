@@ -198,7 +198,7 @@ To Extend the operator `databricks-operator`:
 2. Paul Bouwer [Github](https://github.com/paulbouwer), [Linkedin](https://www.linkedin.com/in/pbouwer/)
 3. Lace Lofranco [Github](https://github.com/devlace), [Linkedin](https://www.linkedin.com/in/lacelofranco/)
 4. Allan Targino [Github](https://github.com/allantargino), [Linkedin](https://www.linkedin.com/in/allan-targino//)
-5. Xinyun (Jacob) Zhou[Github](https://github.com/xinsnake),[Linkedin](https://www.linkedin.com/in/xinyun-zhou/)
+5. Xinyun (Jacob) Zhou[Github](https://github.com/xinsnake), [Linkedin](https://www.linkedin.com/in/xinyun-zhou/)
 6. Jason Goodsell [Github](https://github.com/JasonTheDeveloper), [Linkedin](https://www.linkedin.com/in/jason-goodsell-2505a3b2/)
 7. Craig Rodger [Github](https://github.com/crrodger), [Linkedin](https://www.linkedin.com/in/craigrodger/)
 8. Justin Chizer [Github](https://github.com/justinchizer), [Linkedin](https://www.linkedin.com/in/jchizer/)
