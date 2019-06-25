@@ -21,11 +21,12 @@ import (
 	"fmt"
 	"os"
 
-	jobsv1 "github.com/microsoft/azure-databricks-operator/api/v1"
+	databricksv1 "github.com/microsoft/azure-databricks-operator/api/v1"
 	"github.com/microsoft/azure-databricks-operator/controllers"
 	db "github.com/xinsnake/databricks-sdk-golang"
 	dbazure "github.com/xinsnake/databricks-sdk-golang/azure"
 	"k8s.io/apimachinery/pkg/runtime"
+	kscheme "k8s.io/client-go/kubernetes/scheme"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
@@ -38,8 +39,8 @@ var (
 )
 
 func init() {
-
-	jobsv1.AddToScheme(scheme)
+	kscheme.AddToScheme(scheme)
+	databricksv1.AddToScheme(scheme)
 	// +kubebuilder:scaffold:scheme
 }
 

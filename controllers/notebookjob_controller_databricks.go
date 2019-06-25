@@ -126,7 +126,7 @@ func (r *NotebookJobReconciler) submitRunToDatabricks(instance *databricksv1.Not
 	for _, notebookSpecSecret := range instance.Spec.NotebookSpecSecrets {
 		secretName := notebookSpecSecret.SecretName
 		secret := &v1.Secret{}
-		err := r.Get(context.TODO(), types.NamespacedName{Name: secretName, Namespace: instance.Namespace}, secret)
+		err := r.Get(context.Background(), types.NamespacedName{Name: secretName, Namespace: instance.Namespace}, secret)
 		if err != nil {
 			return err
 		}
@@ -157,7 +157,7 @@ func (r *NotebookJobReconciler) submitRunToDatabricks(instance *databricksv1.Not
 
 	// write information back to instance
 	instance.Status.Run = &run
-	err = r.Update(context.TODO(), instance)
+	err = r.Update(context.Background(), instance)
 	if err != nil {
 		return fmt.Errorf("error when updating NotebookJob after submitting to API: %v", err)
 	}
@@ -174,7 +174,7 @@ func (r *NotebookJobReconciler) refreshDatabricksJob(instance *databricksv1.Note
 		return err
 	}
 	instance.Status.Run = &run
-	err = r.Update(context.TODO(), instance)
+	err = r.Update(context.Background(), instance)
 	if err != nil {
 		return fmt.Errorf("error when updating NotebookJob: %v", err)
 	}

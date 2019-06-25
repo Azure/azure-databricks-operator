@@ -45,8 +45,10 @@ type NotebookJobStatus struct {
 // +k8s:openapi-gen=true
 // +kubebuilder:resource:shortName=nbj,path=notebookjobs
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
+// +kubebuilder:printcolumn:name="JobID",type="integer",JSONPath=".status.run.job_id"
 // +kubebuilder:printcolumn:name="RunID",type="integer",JSONPath=".status.run.run_id"
 // +kubebuilder:printcolumn:name="State",type="string",JSONPath=".status.run.state.life_cycle_state"
+// +kubebuilder:printcolumn:name="NotebookPath",type="string",JSONPath=".status.run.task.notebook_task.notebook_path"
 type NotebookJob struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

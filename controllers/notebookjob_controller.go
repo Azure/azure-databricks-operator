@@ -29,8 +29,6 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-
-	jobsv1 "github.com/microsoft/azure-databricks-operator/api/v1"
 )
 
 // NotebookJobReconciler reconciles a NotebookJob object
@@ -45,9 +43,10 @@ type NotebookJobReconciler struct {
 // Reconcile is the main loop, and it should always requeue
 // +kubebuilder:rbac:groups=jobs.microsoft.com,resources=notebookjobs,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=jobs.microsoft.com,resources=notebookjobs/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=jobs.microsoft.com,resources=notebookjobs,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=jobs.microsoft.com,resources=notebookjobs/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=jobs.microsoft.com,resources=events,verbs=create;patch
+// +kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=apps,resources=deployments/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=core,resources=secrets,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=core,resources=events,verbs=create;watch
 func (r *NotebookJobReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	_ = context.Background()
@@ -55,7 +54,7 @@ func (r *NotebookJobReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error)
 
 	// Fetch the NotebookJob instance
 	instance := &databricksv1.NotebookJob{}
-	err := r.Get(context.TODO(), req.NamespacedName, instance)
+	err := r.Get(context.Background(), req.NamespacedName, instance)
 
 	if err != nil {
 		if errors.IsNotFound(err) {
@@ -99,6 +98,6 @@ func (r *NotebookJobReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error)
 
 func (r *NotebookJobReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&jobsv1.NotebookJob{}).
+		For(&databricksv1.NotebookJob{}).
 		Complete(r)
 }

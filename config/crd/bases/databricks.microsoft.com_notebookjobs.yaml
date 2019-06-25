@@ -10,11 +10,17 @@ spec:
   - JSONPath: .metadata.creationTimestamp
     name: Age
     type: date
+  - JSONPath: .status.run.job_id
+    name: JobID
+    type: integer
   - JSONPath: .status.run.run_id
     name: RunID
     type: integer
   - JSONPath: .status.run.state.life_cycle_state
     name: State
+    type: string
+  - JSONPath: .status.run.task.notebook_task.notebook_path
+    name: NotebookPath
     type: string
   group: databricks.microsoft.com
   names:

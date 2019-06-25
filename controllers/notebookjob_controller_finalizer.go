@@ -21,8 +21,6 @@ import (
 	"fmt"
 
 	databricksv1 "github.com/microsoft/azure-databricks-operator/api/v1"
-
-	"github.com/go-playground/log"
 )
 
 const finalizerName = "notebookjob.finalizers.databricks.microsoft.com"
@@ -55,7 +53,7 @@ func (r *NotebookJobReconciler) handleFinalizer(instance *databricksv1.NotebookJ
 
 func (r *NotebookJobReconciler) deleteExternalDependency(instance *databricksv1.NotebookJob) error {
 	if instance.Status.Run != nil {
-		log.Info(fmt.Sprintf("Deleting external dependencies (run_id: %d)", instance.Status.Run.RunID))
+		r.Log.Info(fmt.Sprintf("Deleting external dependencies (run_id: %d)", instance.Status.Run.RunID))
 	}
 	return r.deleteRunFromDatabricks(instance)
 }

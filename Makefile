@@ -8,7 +8,11 @@ all: manager
 
 # Run tests
 test: generate fmt vet manifests
-	go test ./api/... ./controllers/... -coverprofile cover.out
+	TEST_USE_EXISTING_CLUSTER=false go test ./api/... ./controllers/... -coverprofile cover.out
+
+# Run tests with existing cluster
+test-existing: generate fmt vet manifests
+	TEST_USE_EXISTING_CLUSTER=true go test ./api/... ./controllers/... -coverprofile cover.out
 
 # Build manager binary
 manager: generate fmt vet

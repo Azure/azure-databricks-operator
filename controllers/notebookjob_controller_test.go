@@ -22,7 +22,6 @@ import (
 	"time"
 
 	databricksv1 "github.com/microsoft/azure-databricks-operator/api/v1"
-
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	v1 "k8s.io/api/core/v1"
@@ -33,7 +32,6 @@ import (
 
 var _ = Describe("Notebookjob Controller", func() {
 
-	var namespacedName = types.NamespacedName{Name: databricksv1.RandomString(10), Namespace: "default"}
 	const timeout = time.Second * 60
 
 	BeforeEach(func() {
@@ -50,6 +48,8 @@ var _ = Describe("Notebookjob Controller", func() {
 	// test Kubernetes API server, which isn't the goal here.
 	Context("Create and Delete", func() {
 		It("should create and delete real jobs with secrets", func() {
+			var namespacedName = types.NamespacedName{Name: databricksv1.RandomString(10), Namespace: "default"}
+
 			secrets := make(map[string][]byte)
 			secrets["secret1"] = []byte("value1")
 			secret1 := &v1.Secret{Data: secrets, ObjectMeta: metav1.ObjectMeta{
@@ -91,28 +91,28 @@ var _ = Describe("Notebookjob Controller", func() {
 			}
 
 			// Create the secrets needed
-			k8sClient.Create(context.TODO(), secret1)
+			k8sClient.Create(context.Background(), secret1)
 			defer func() {
-				k8sClient.Delete(context.TODO(), secret1)
+				k8sClient.Delete(context.Background(), secret1)
 			}()
 
 			time.Sleep(1 * time.Second)
 
 			// Create the NotebookJob object and expect the Reconcile to be created
-			err := k8sClient.Create(context.TODO(), instance)
+			err := k8sClient.Create(context.Background(), instance)
 			// The instance object may not be a valid object because it might be missing some required fields.
 			// Please modify the instance object by adding required fields and then remove the following if statement.
 			Expect(apierrors.IsInvalid(err)).To(Equal(false))
 			Expect(err).NotTo(HaveOccurred())
 
 			Eventually(func() bool {
-				_ = k8sClient.Get(context.TODO(), namespacedName, instance)
+				_ = k8sClient.Get(context.Background(), namespacedName, instance)
 				return instance.HasFinalizer(finalizerName)
 			}, timeout,
 			).Should(BeTrue())
 
 			Eventually(func() bool {
-				_ = k8sClient.Get(context.TODO(), namespacedName, instance)
+				_ = k8sClient.Get(context.Background(), namespacedName, instance)
 				return instance.IsSubmitted()
 			}, timeout,
 			).Should(BeTrue())
@@ -120,13 +120,13 @@ var _ = Describe("Notebookjob Controller", func() {
 			time.Sleep(10 * time.Second)
 
 			instance2 := &databricksv1.NotebookJob{}
-			err = k8sClient.Get(context.TODO(), namespacedName, instance2)
+			err = k8sClient.Get(context.Background(), namespacedName, instance2)
 			Expect(err).NotTo(HaveOccurred())
-			err = k8sClient.Delete(context.TODO(), instance2)
+			err = k8sClient.Delete(context.Background(), instance2)
 			Expect(err).NotTo(HaveOccurred())
 
-			Eventually(func() error { return k8sClient.Get(context.TODO(), namespacedName, instance2) }, timeout).
-				Should(MatchError("NotebookJob.microsoft.k8s.io \"" + namespacedName.Name + "\" not found"))
+			Eventually(func() error { return k8sClient.Get(context.Background(), namespacedName, instance2) }, timeout).
+				Should(MatchError("NotebookJob.databricks.microsoft.com \"" + namespacedName.Name + "\" not found"))
 		})
 	})
 })
