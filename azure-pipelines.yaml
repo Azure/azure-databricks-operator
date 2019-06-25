@@ -24,7 +24,9 @@ steps:
 
 - script: |
     set -x
-    ls /usr/local/
+    export GO111MODULE=on
+
+    ls -l /usr/local/go*
 
     mkdir -p '$(GOBIN)'
     mkdir -p '$(GOPATH)/pkg'
@@ -49,6 +51,9 @@ steps:
 #   workingDirectory: $(MODULE_PATH)
 
 - script: |
+    set -x
+    export GO111MODULE=on
+
     make test
   continueOnError: 'false'
   displayName: 'Run unit tests'
