@@ -19,6 +19,7 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"strings"
 	"time"
 
@@ -173,12 +174,14 @@ func (r *NotebookJobReconciler) refreshDatabricksJob(instance *databricksv1.Note
 	if err != nil {
 		return err
 	}
-	instance.Status.Run = &run
-	err = r.Update(context.Background(), instance)
-	if err != nil {
-		return fmt.Errorf("error when updating NotebookJob: %v", err)
+	if !reflect.DeepEqual(instance.Status.Run, &run) {
+		instance.Status.Run = &run
+		err = r.Update(context.Background(), instance)
+		if err != nil {
+			return fmt.Errorf("error when updating NotebookJob: %v", err)
+		}
+		r.Recorder.Event(instance, "Normal", "Updated", "run status updated")
 	}
-	r.Recorder.Event(instance, "Normal", "Updated", "run status updated")
 	return nil
 }
 
