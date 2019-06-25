@@ -31,7 +31,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
-var _ = Describe("Helpers", func() {
+var _ = Describe("Notebookjob Controller", func() {
 
 	var namespacedName = types.NamespacedName{Name: databricksv1.RandomString(10), Namespace: "default"}
 	const timeout = time.Second * 60
@@ -48,8 +48,8 @@ var _ = Describe("Helpers", func() {
 	// your API definition.
 	// Avoid adding tests for vanilla CRUD operations because they would
 	// test Kubernetes API server, which isn't the goal here.
-	Context("Notebookjob Controller", func() {
-		It("should create real jobs with secrets", func() {
+	Context("Create and Delete", func() {
+		It("should create and delete real jobs with secrets", func() {
 			secrets := make(map[string][]byte)
 			secrets["secret1"] = []byte("value1")
 			secret1 := &v1.Secret{Data: secrets, ObjectMeta: metav1.ObjectMeta{
