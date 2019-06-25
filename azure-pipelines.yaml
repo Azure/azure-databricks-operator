@@ -52,10 +52,10 @@ steps:
     # download kubebuilder
     curl -sL https://go.kubebuilder.io/dl/2.0.0-alpha.4/${os}/${arch} | tar -xz -C $(MODULE_PATH)/bin
     mv $(MODULE_PATH)/bin/kubebuilder_2.0.0-alpha.4_${os}_${arch}/bin/* $(MODULE_PATH)/bin/
-
     # download kustomize
     curl -o $(MODULE_PATH)/bin/kustomize -sL https://go.kubebuilder.io/kustomize/${os}/${arch}
-
+    # set permission
+    chmod a+x $(MODULE_PATH)/bin/*
     # export path
     export PATH=$PATH:$(MODULE_PATH)/bin
 
