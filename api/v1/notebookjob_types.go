@@ -21,30 +21,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-type NotebookTask struct {
-	NotebookPath string `json:"notebookPath,omitempty"`
-}
-
-type NotebookStream struct {
-	Type string `json:"type,omitempty"`
-	Name string `json:"name,omitempty"`
-}
-
-type KeyMapping struct {
-	SecretKey string `json:"secretKey"`
-	OutputKey string `json:"outputKey"`
-}
-type NotebookSpecSecret struct {
-	SecretName string       `json:"secretName"`
-	Mapping    []KeyMapping `json:"mapping"`
-}
-
-type ClusterSpec struct {
-	SparkVersion string `json:"sparkVersion,omitempty"`
-	NodeTypeId   string `json:"nodeTypeId,omitempty"`
-	NumWorkers   int    `json:"numWorkers,omitempty"`
-}
-
 // NotebookJobSpec defines the desired state of NotebookJob
 type NotebookJobSpec struct {
 	NotebookTask                NotebookTask                `json:"notebookTask,omitempty"`
@@ -53,11 +29,6 @@ type NotebookJobSpec struct {
 	NotebookSpecSecrets         []NotebookSpecSecret        `json:"notebookSpecSecrets,omitempty"`
 	NotebookAdditionalLibraries []NotebookAdditionalLibrary `json:"notebookAdditionalLibraries,omitempty"`
 	ClusterSpec                 ClusterSpec                 `json:"clusterSpec,omitempty"`
-}
-
-type NotebookAdditionalLibrary struct {
-	Type       string            `json:"type"`
-	Properties map[string]string `json:"properties"`
 }
 
 // NotebookJobStatus defines the observed state of NotebookJob
@@ -84,19 +55,6 @@ type NotebookJob struct {
 	Status NotebookJobStatus `json:"status,omitempty"`
 }
 
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-
-// NotebookJobList contains a list of NotebookJob
-type NotebookJobList struct {
-	metav1.TypeMeta `json:",inline"`
-	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []NotebookJob `json:"items"`
-}
-
-func init() {
-	SchemeBuilder.Register(&NotebookJob{}, &NotebookJobList{})
-}
-
 func (nj *NotebookJob) IsBeingDeleted() bool {
 	return !nj.ObjectMeta.DeletionTimestamp.IsZero()
 }
@@ -120,21 +78,15 @@ func (nj *NotebookJob) RemoveFinalizer(finalizerName string) {
 	nj.ObjectMeta.Finalizers = removeString(nj.ObjectMeta.Finalizers, finalizerName)
 }
 
-func containsString(slice []string, s string) bool {
-	for _, item := range slice {
-		if item == s {
-			return true
-		}
-	}
-	return false
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+// NotebookJobList contains a list of NotebookJob
+type NotebookJobList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+	Items           []NotebookJob `json:"items"`
 }
 
-func removeString(slice []string, s string) (result []string) {
-	for _, item := range slice {
-		if item == s {
-			continue
-		}
-		result = append(result, item)
-	}
-	return
+func init() {
+	SchemeBuilder.Register(&NotebookJob{}, &NotebookJobList{})
 }

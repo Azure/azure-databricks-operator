@@ -58,7 +58,7 @@ docker-push:
 controller-gen:
 ifeq (, $(shell which controller-gen))
 	go get sigs.k8s.io/controller-tools/cmd/controller-gen@v0.2.0-beta.2
-CONTROLLER_GEN=$(shell go env GOPATH)/bin/controller-gen
+CONTROLLER_GEN="$(shell go env GOPATH)/bin/controller-gen"
 else
-CONTROLLER_GEN=$(shell which controller-gen)
+CONTROLLER_GEN="$(shell which controller-gen)"
 endif

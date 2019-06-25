@@ -1,6 +1,6 @@
 version: "2"
 domain: microsoft.com
-repo: github.com/azure-databricks-operator
+repo: github.com/microsoft/azure-databricks-operator
 resources:
 - group: jobs
   version: v1

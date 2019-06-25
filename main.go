@@ -1,4 +1,5 @@
 /*
+Copyright 2019 microsoft.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -17,10 +18,13 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"os"
 
-	jobsv1 "github.com/azure-databricks-operator/api/v1"
-	"github.com/azure-databricks-operator/controllers"
+	jobsv1 "github.com/microsoft/azure-databricks-operator/api/v1"
+	"github.com/microsoft/azure-databricks-operator/controllers"
+	db "github.com/xinsnake/databricks-sdk-golang"
+	dbazure "github.com/xinsnake/databricks-sdk-golang/azure"
 	"k8s.io/apimachinery/pkg/runtime"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -60,8 +64,22 @@ func main() {
 	}
 
 	err = (&controllers.NotebookJobReconciler{
-		Client: mgr.GetClient(),
-		Log:    ctrl.Log.WithName("controllers").WithName("NotebookJob"),
+		Client:   mgr.GetClient(),
+		Log:      ctrl.Log.WithName("controllers").WithName("NotebookJob"),
+		Recorder: mgr.GetEventRecorderFor("notebookjob-controller"),
+		APIClient: func() dbazure.DBClient {
+			host, token := os.Getenv("DATABRICKS_HOST"), os.Getenv("DATABRICKS_TOKEN")
+			if len(host) < 10 && len(token) < 10 {
+				err = fmt.Errorf("no valid databricks host / key configured")
+				setupLog.Error(err, "unable to start notebookjob controller")
+				os.Exit(1)
+			}
+			var apiClient dbazure.DBClient
+			return apiClient.Init(db.DBClientOption{
+				Host:  host,
+				Token: token,
+			})
+		}(),
 	}).SetupWithManager(mgr)
 	if err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "NotebookJob")
