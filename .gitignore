@@ -13,3 +13,7 @@
 
 .vscode/
 .env
+
+!/bin
+/bin/manager
+cmd/manager/__debug_bin

@@ -12,20 +12,16 @@
 
 Kubernetes offers the facility of extending it's API through the concept of 'Operators' ([Introducing Operators: Putting Operational Knowledge into Software](https://coreos.com/blog/introducing-operators.html)). This repository contains the resources and code to deploy an Azure Databricks Operator for Kubernetes.
 
-The Azure Databricks operator comprises two projects:
-- The golang application is a Kubernetes controller that watches Customer Resource Definitions (CRDs) that define a Databricks job, and,
-- A Python Flask App which sends commands to the Databricks clusters.
+It is a Kubernetes controller that watches Customer Resource Definitions (CRDs) that define a Databricks job.
 
 ![alt text](docs/images/azure-databricks-operator.jpg "high level architecture")
 
-The Databricks operator is useful in situations where Kubernetes hosted applications wish to launch and use Databricks data engineering and machine learning tasks. 
+The Databricks operator is useful in situations where Kubernetes hosted applications wish to launch and use Databricks data engineering and machine learning tasks.
 
 The project was built using
 
 1. [Kubebuilder](https://book.kubebuilder.io/)
-2. [Swagger Codegen](https://github.com/swagger-api/swagger-codegen)
-3. [Flask-RESTPlus](http://flask-restplus.readthedocs.io)
-4. [Flask](http://flask.pocoo.org/)
+2. [ Golang SDK for Azure DataBricks REST API 2.0](https://github.com/xinsnake/databricks-sdk-golang)
 
 ![alt text](docs/images/development-flow.jpg "development flow")
 
@@ -37,8 +33,6 @@ The project was built using
 
 * To configure a local Kubernetes cluster on your machine
     > You need to make sure a kubeconfig file is configured.
-
-3. [kustomize](https://github.com/kubernetes-sigs/kustomize) is also needed
 
 Basic commands to check your cluster
 
@@ -83,10 +77,10 @@ kubectl apply -f release/config
 5. Create a test secret, you can pass the value of Kubernetes secrets into your notebook as Databricks secrets
 
 ```sh
-kubectl create secret generic test --from-literal=my_secret_key="my_secret_value"
+kubectl create secret generic test-secret --from-literal=my_secret_key="my_secret_value"
 ```
 
-6. In Databricks, [create a new Python Notebook](https://docs.databricks.com/user-guide/notebooks/notebook-manage.html#create-a-notebook) called `testnotebook` in the root of your [Workspace](https://docs.databricks.com/user-guide/workspace.html#folders). Put the following in the first cell of the notebook:
+6. In Databricks, [create a new Python Notebook](https://docs.databricks.com/user-guide/notebooks/notebook-manage.html#create-a-notebook) called `test-notebook` in the root of your [Workspace](https://docs.databricks.com/user-guide/workspace.html#folders). Put the following in the first cell of the notebook:
 
 ```py
 run_name = dbutils.widgets.get("run_name")
@@ -107,22 +101,22 @@ kind: NotebookJob
 metadata:
   annotations:
     microsoft.k8s.io/author: azkhojan@microsoft.com
-  name: samplejob1
+  name: sample1run1
 spec:
   notebookTask:
-    notebookPath: "/testnotebook"
+    notebookPath: "/test-notebook"
   timeoutSeconds: 500
   notebookSpec:
-    "flag":  "true"
+    "flag": "true"
   notebookSpecSecrets:
-  - secretName: "test"
-    mapping: 
-    - "secretKey": "my_secret_key"
-      "outputKey": "dbricks_secret_key"
-  notebookAdditionalLibraries: 
+    - secretName: "test-secret"
+      mapping :
+        - "secretKey": "my_secret_key"
+          "outputKey": "dbricks_secret_key"
+  notebookAdditionalLibraries:
     - type: "maven"
       properties:
-        coordinates: "com.microsoft.azure:azure-eventhubs-spark_2.11:2.3.9" # installs the azure event hubs library
+        coordinates: "com.microsoft.azure:azure-eventhubs-spark_2.11:2.3.9"
   clusterSpec:
     sparkVersion: "5.2.x-scala2.11"
     nodeTypeId: "Standard_DS12_v2"
@@ -130,7 +124,7 @@ spec:
 ```
 
 8. Check the NotebookJob and Operator pod
-        
+
 ```sh
 # list all notebook jobs
 kubectl get notebookjob
@@ -146,15 +140,23 @@ kubectl -n databricks-operator-system logs databricks-operator-controller-manage
 
 ### Run Souce Code
 
-1. Clone the repo
+1. Clone the repo  - make sure your go path points to `microsoft\azure-databricks-operator`
 
-2. Install the NotebookJob CRD in the configured Kubernetes cluster folder ~/.kube/config, 
+2. Install the NotebookJob CRD in the configured Kubernetes cluster folder ~/.kube/config,
 run `kubectl apply -f databricks-operator/config/crds` or `make install -C databricks-operator`
 
-3. Create secrets for `DATABRICKS_HOST` and `DATABRICKS_TOKEN`
+3. set Environment variables for `DATABRICKS_HOST` and `DATABRICKS_TOKEN`
 
+    Windows command line:
     ```shell
-    kubectl  --namespace databricks-operator-system create secret generic dbrickssettings --from-literal=DatabricksHost="https://xxxx.azuredatabricks.net" --from-literal=DatabricksToken="xxxxx"
+    set DATABRICKS_TOKEN=xxxx
+    set DATABRICKS_HOST=https://xxxx.azuredatabricks.net
+    ```
+
+    bash:
+    ```shell
+    export DATABRICKS_TOKEN=xxxx
+    export DATABRICKS_HOST=https://xxxx.azuredatabricks.net
     ```
 
     Make sure your secret name is set correctly in `databricks-operator/config/default/azure_databricks_api_image_patch.yaml`
@@ -171,11 +173,11 @@ run `kubectl apply -f databricks-operator/config/crds` or `make install -C datab
 
 #### Updating the Databricks operator:
 
-This Repo is generated by [Kubebuilder](https://book.kubebuilder.io/).
+This Repo is generated by [Kubebuilder](https://book.kubebuilder.io/) `legacy version`.
 
 To Extend the operator `databricks-operator`:
 
-1. Run `dep ensure` to download dependencies. It doesn't show any progress bar and takes a while to download all of dependencies.
+1. Run `go mod tidy` to download dependencies. It doesn't show any progress bar and takes a while to download all of dependencies.
 2. Update `pkg\apis\microsoft\v1beta1\notebookjob_types.go`.
 3. Regenerate CRD `make manifests`.
 4. Install updated CRD `make install`
@@ -186,8 +188,8 @@ To Extend the operator `databricks-operator`:
 9. Deploy
 
     ```shell
-    make docker-build IMG=azadehkhojandi/databricks-operator
-    make docker-push IMG=azadehkhojandi/databricks-operator
+    make docker-build IMG={your-docker-image-name}
+    make docker-push IMG={your-docker-image-name}
     make deploy
     ```
 ## Main Contributors
@@ -196,15 +198,17 @@ To Extend the operator `databricks-operator`:
 2. Paul Bouwer [Github](https://github.com/paulbouwer), [Linkedin](https://www.linkedin.com/in/pbouwer/)
 3. Lace Lofranco [Github](https://github.com/devlace), [Linkedin](https://www.linkedin.com/in/lacelofranco/)
 4. Allan Targino [Github](https://github.com/allantargino), [Linkedin](https://www.linkedin.com/in/allan-targino//)
-6. Jason Goodselli [Github](https://github.com/JasonTheDeveloper), [Linkedin](https://www.linkedin.com/in/jason-goodsell-2505a3b2/)
+5. Xinyun (Jacob) Zhou[Github](https://github.com/xinsnake), [Linkedin](https://www.linkedin.com/in/xinyun-zhou/)
+6. Jason Goodsell [Github](https://github.com/JasonTheDeveloper), [Linkedin](https://www.linkedin.com/in/jason-goodsell-2505a3b2/)
 7. Craig Rodger [Github](https://github.com/crrodger), [Linkedin](https://www.linkedin.com/in/craigrodger/)
 8. Justin Chizer [Github](https://github.com/justinchizer), [Linkedin](https://www.linkedin.com/in/jchizer/)
-9. Azadeh Khojandi [Github](https://github.com/Azadehkhojandi), [Linkedin](https://www.linkedin.com/in/azadeh-khojandi-ba441b3/)
+9. Priya Kumaran [Github](https://github.com/priyakumarank), [Linkedin](https://www.linkedin.com/in/priyakumaran/)
+10. Azadeh Khojandi [Github](https://github.com/Azadehkhojandi), [Linkedin](https://www.linkedin.com/in/azadeh-khojandi-ba441b3/)
 
 ## Resources
 
 #### Kubernetes on WSL
-    
+
 On windows command line run `kubectl config view` to find the values of [windows-user-name],[minikubeip],[port]
 
 ```shell
