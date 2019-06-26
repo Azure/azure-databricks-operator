@@ -88,7 +88,7 @@ steps:
 
 - script: |
     ./bin/kustomize build config/default > $(Build.ArtifactStagingDirectory)/setup.yaml
-    et -x
+    set -x
     echo $(IMAGE_NAME) > $(Build.ArtifactStagingDirectory)/azure-databricks-operator.txt
     cp ./config/crd/bases/* $(Build.ArtifactStagingDirectory)
     ls $(Build.ArtifactStagingDirectory)
