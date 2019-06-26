@@ -88,25 +88,14 @@ steps:
 
 - script: |
     ./bin/kustomize build config/default > $(Build.ArtifactStagingDirectory)/setup.yaml
+    set -x
+    echo $(IMAGE_NAME) > $(Build.ArtifactStagingDirectory)/azure-databricks-operator.txt
+    cp ./config/crd/bases/* $(Build.ArtifactStagingDirectory)
+    ls $(Build.ArtifactStagingDirectory)
   continueOnError: 'false'
   displayName: 'Prepare manifests for publish'
   workingDirectory: '$(MODULE_PATH)'
   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master')) 
-
-- script: |
-    set -x
-    echo $(IMAGE_NAME) > $(Build.ArtifactStagingDirectory)/azure-databricks-operator.txt
-  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
-
-- task: CopyFiles@2
-  inputs:
-    contents: '$(MODULE_PATH)/config/crd/bases/*'
-    targetFolder: $(Build.ArtifactStagingDirectory)
-  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
-  
-- script: |
-    ls $(Build.ArtifactStagingDirectory)
-  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
 
 - task: PublishBuildArtifacts@1
   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
