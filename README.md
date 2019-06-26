@@ -94,11 +94,11 @@ print(value) # 'true'
 7. Define your Notebook job and apply it
 
 ```yaml
-apiVersion: microsoft.k8s.io/v1beta1
+apiVersion: databricks.microsoft.com/v1
 kind: NotebookJob
 metadata:
   annotations:
-    microsoft.k8s.io/author: azkhojan@microsoft.com
+    databricks.microsoft.com/author: azkhojan@microsoft.com
   name: sample1run1
 spec:
   notebookTask:
@@ -127,7 +127,7 @@ spec:
 # list all notebook jobs
 kubectl get notebookjob
 # describe a notebook job
-kubectl describe notebookjob samplejob1
+kubectl describe notebookjob sample1run1
 # describe the operator pod
 kubectl -n databricks-operator-system describe pod databricks-operator-controller-manager-0
 # get logs from the manager container
@@ -161,10 +161,10 @@ run `kubectl apply -f databricks-operator/config/crds` or `make install -C datab
 
 4. Deploy the controller in the configured Kubernetes cluster folder ~/.kube/config, run `kustomize build databricks-operator/config | kubectl apply -f -`
 
-5. Change the NotebookJob name from `sample1run1` to your desired name, set the Databricks notebook path and update the values in `microsoft_v1beta2_notebookjob.yaml` to reflect your Databricks environment
+5. Change the NotebookJob name from `sample1run1` to your desired name, set the Databricks notebook path and update the values in databricks_v1_notebookjob.yaml` to reflect your Databricks environment
 
     ```shell
-    kubectl apply -f databricks-operator/config/samples/microsoft_v1beta2_notebookjob.yaml
+    kubectl apply -f databricks-operator/config/samples/databricks_v1_notebookjob.yaml
     ```
 
 ### How to extend the operator and build your own images

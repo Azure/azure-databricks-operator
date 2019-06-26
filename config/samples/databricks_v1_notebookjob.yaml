@@ -2,7 +2,7 @@ apiVersion: databricks.microsoft.com/v1
 kind: NotebookJob
 metadata:
   annotations:
-    microsoft.k8s.io/author: azkhojan@microsoft.com
+    databricks.microsoft.com/author: azkhojan@microsoft.com
   name: sample1run1
 spec:
   notebookTask:
