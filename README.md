@@ -54,16 +54,16 @@ wget https://github.com/microsoft/azure-databricks-operator/releases/latest/down
 unzip release.zip
 ```
 
-2. Create the `databricks-operator-system` namespace
+2. Create the `azure-databricks-operator-system` namespace
 
 ```sh
-kubectl create namespace databricks-operator-system
+kubectl create namespace azure-databricks-operator-system
 ```
 
 3. [Generate a databricks token](https://docs.databricks.com/api/latest/authentication.html#generate-a-token), and create Kubernetes secrets with values for `DATABRICKS_HOST` and `DATABRICKS_TOKEN`
 
 ```shell
-    kubectl  --namespace databricks-operator-system create secret generic dbrickssettings --from-literal=DatabricksHost="https://xxxx.azuredatabricks.net" --from-literal=DatabricksToken="xxxxx"
+    kubectl  --namespace azure-databricks-operator-system create secret generic dbrickssettings --from-literal=DatabricksHost="https://xxxx.azuredatabricks.net" --from-literal=DatabricksToken="xxxxx"
 ```
 
 4. Apply the manifests for the CRD and Operator in `release/config`:
@@ -128,10 +128,12 @@ spec:
 kubectl get notebookjob
 # describe a notebook job
 kubectl describe notebookjob sample1run1
-# describe the operator pod
-kubectl -n databricks-operator-system describe pod databricks-operator-controller-manager-0
+# get pods
+kubectl -n azure-databricks-operator-system get pods
+# describe the manager pod
+azure-databricks-operator-controller-manager-xxxxx
 # get logs from the manager container
-kubectl -n databricks-operator-system logs databricks-operator-controller-manager-0 -c dbricks
+kubectl -n azure-databricks-operator-system logs databricks-operator-controller-manager-xxxxx -c manager
 ```
 
 9. Check the job ran with expected output in the Databricks UI.
@@ -143,7 +145,7 @@ kubectl -n databricks-operator-system logs databricks-operator-controller-manage
 2. Install the NotebookJob CRD in the configured Kubernetes cluster folder ~/.kube/config,
 run `kubectl apply -f databricks-operator/config/crds` or `make install -C databricks-operator`
 
-3. set Environment variables for `DATABRICKS_HOST` and `DATABRICKS_TOKEN`
+3. Set the Environment variables for `DATABRICKS_HOST` and `DATABRICKS_TOKEN`
 
     Windows command line:
     ```shell
@@ -157,9 +159,9 @@ run `kubectl apply -f databricks-operator/config/crds` or `make install -C datab
     export DATABRICKS_HOST=https://xxxx.azuredatabricks.net
     ```
 
-    Make sure your secret name is set correctly in `databricks-operator/config/default/azure_databricks_api_image_patch.yaml`
+    Make sure your secret mapping is set correctly in `config/default/manager_image_patch.yaml`
 
-4. Deploy the controller in the configured Kubernetes cluster folder ~/.kube/config, run `kustomize build databricks-operator/config | kubectl apply -f -`
+4.Install [Kustomize] (https://github.com/kubernetes-sigs/kustomize) and deploy the controller in the configured Kubernetes cluster folder ~/.kube/config, run `kustomize build config/default | kubectl apply -f -`
 
 5. Change the NotebookJob name from `sample1run1` to your desired name, set the Databricks notebook path and update the values in databricks_v1_notebookjob.yaml` to reflect your Databricks environment
 
@@ -212,7 +214,10 @@ On windows command line run `kubectl config view` to find the values of [windows
 ```shell
 mkdir ~/.kube \
 && cp /mnt/c/Users/[windows-user-name]/.kube/config ~/.kube
+```
 
+if you are using minikube you need to set bellow settings 
+```shell
 kubectl config set-cluster minikube --server=https://<minikubeip>:<port> --certificate-authority=/mnt/c/Users/<windows-user-name>/.minikube/ca.crt
 kubectl config set-credentials minikube --client-certificate=/mnt/c/Users/<windows-user-name>/.minikube/client.crt --client-key=/mnt/c/Users/<windows-user-name>/.minikube/client.key
 kubectl config set-context minikube --cluster=minikube --user=minikub
