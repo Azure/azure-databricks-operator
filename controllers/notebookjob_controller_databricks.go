@@ -139,6 +139,7 @@ func (r *NotebookJobReconciler) submitRunToDatabricks(instance *databricksv1.Not
 	}
 
 	secretScopeName := runName + "_scope"
+	jobTask.NotebookTask.BaseParameters["secret_scope"] = secretScopeName
 	r.Log.Info(fmt.Sprintf("Creating secret scope %s with %d secrets", secretScopeName, len(scopeSecrets)))
 	err := r.createSecretScopeWithSecrets(secretScopeName, scopeSecrets)
 	if err != nil {
