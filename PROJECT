@@ -5,3 +5,6 @@ resources:
 - group: databricks
   version: v1
   kind: NotebookJob
+- group: databricks
+  version: v1
+  kind: SecretScope
