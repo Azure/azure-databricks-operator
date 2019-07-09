@@ -29,46 +29,6 @@ rules:
 - apiGroups:
   - databricks.microsoft.com
   resources:
-  - notebookjobs
-  verbs:
-  - get
-  - list
-  - watch
-  - create
-  - update
-  - patch
-  - delete
-- apiGroups:
-  - databricks.microsoft.com
-  resources:
-  - notebookjobs/status
-  verbs:
-  - get
-  - update
-  - patch
-- apiGroups:
-  - databricks.microsoft.com
-  resources:
-  - secretscopes
-  verbs:
-  - get
-  - list
-  - watch
-  - create
-  - update
-  - patch
-  - delete
-- apiGroups:
-  - databricks.microsoft.com
-  resources:
-  - secretscopes/status
-  verbs:
-  - get
-  - update
-  - patch
-- apiGroups:
-  - databricks.microsoft.com
-  resources:
   - events
   verbs:
   - create
@@ -112,3 +72,43 @@ rules:
   verbs:
   - create
   - watch
+- apiGroups:
+  - databricks.microsoft.com
+  resources:
+  - notebookjobs
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - databricks.microsoft.com
+  resources:
+  - notebookjobs/status
+  verbs:
+  - get
+  - update
+  - patch
+- apiGroups:
+  - databricks.microsoft.com
+  resources:
+  - secretscopes
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - databricks.microsoft.com
+  resources:
+  - secretscopes/status
+  verbs:
+  - get
+  - update
+  - patch

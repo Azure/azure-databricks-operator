@@ -168,7 +168,7 @@ func (r *NotebookJobReconciler) submitRunToDatabricks(instance *databricksv1.Not
 	return nil
 }
 
-func (r *NotebookJobReconciler) refreshDatabricksJob(instance *databricksv1.NotebookJob) error {
+func (r *NotebookJobReconciler) refreshDatabricksRun(instance *databricksv1.NotebookJob) error {
 	r.Log.Info(fmt.Sprintf("Refreshing Databricks run_id %v", instance.Status.Run.RunID))
 	runID := instance.Status.Run.RunID
 	run, err := r.APIClient.Jobs().RunsGet(int64(runID))

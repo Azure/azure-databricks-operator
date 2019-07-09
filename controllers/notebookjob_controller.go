@@ -82,7 +82,7 @@ func (r *NotebookJobReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error)
 	}
 
 	if instance.IsSubmitted() {
-		err = r.refreshDatabricksJob(instance)
+		err = r.refreshDatabricksRun(instance)
 		if err != nil {
 			return ctrl.Result{}, fmt.Errorf("error when refreshing job to API: %v", err)
 		}

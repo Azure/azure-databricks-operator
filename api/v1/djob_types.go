@@ -17,6 +17,7 @@ limitations under the License.
 package v1
 
 import (
+	dbmodels "github.com/xinsnake/databricks-sdk-golang/azure/models"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -27,12 +28,14 @@ import (
 type DjobSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
+	*dbmodels.JobSettings `json:",inline"`
 }
 
 // DjobStatus defines the observed state of Djob
 type DjobStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
+	Job *dbmodels.Job `json:"job"`
 }
 
 // +kubebuilder:object:root=true
@@ -44,6 +47,29 @@ type Djob struct {
 
 	Spec   DjobSpec   `json:"spec,omitempty"`
 	Status DjobStatus `json:"status,omitempty"`
+}
+
+func (djob *Djob) IsBeingDeleted() bool {
+	return !djob.ObjectMeta.DeletionTimestamp.IsZero()
+}
+
+func (djob *Djob) IsSubmitted() bool {
+	if djob.Status.Job == nil {
+		return false
+	}
+	return djob.Status.Job.JobID > 0
+}
+
+func (djob *Djob) HasFinalizer(finalizerName string) bool {
+	return containsString(djob.ObjectMeta.Finalizers, finalizerName)
+}
+
+func (djob *Djob) AddFinalizer(finalizerName string) {
+	djob.ObjectMeta.Finalizers = append(djob.ObjectMeta.Finalizers, finalizerName)
+}
+
+func (djob *Djob) RemoveFinalizer(finalizerName string) {
+	djob.ObjectMeta.Finalizers = removeString(djob.ObjectMeta.Finalizers, finalizerName)
 }
 
 // +kubebuilder:object:root=true

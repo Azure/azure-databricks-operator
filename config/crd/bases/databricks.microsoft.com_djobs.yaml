@@ -384,8 +384,391 @@ spec:
               type: string
           type: object
         spec:
+          properties:
+            email_notifications:
+              properties:
+                no_alert_for_skipped_runs:
+                  type: boolean
+                on_failure:
+                  items:
+                    type: string
+                  type: array
+                on_start:
+                  items:
+                    type: string
+                  type: array
+                on_success:
+                  items:
+                    type: string
+                  type: array
+              type: object
+            existing_cluster_id:
+              type: string
+            libraries:
+              items:
+                properties:
+                  cran:
+                    properties:
+                      package:
+                        type: string
+                      repo:
+                        type: string
+                    type: object
+                  egg:
+                    type: string
+                  jar:
+                    type: string
+                  maven:
+                    properties:
+                      coordinates:
+                        type: string
+                      exclusions:
+                        items:
+                          type: string
+                        type: array
+                      repo:
+                        type: string
+                    type: object
+                  pypi:
+                    properties:
+                      package:
+                        type: string
+                      repo:
+                        type: string
+                    type: object
+                  whl:
+                    type: string
+                type: object
+              type: array
+            max_concurrent_runs:
+              format: int32
+              type: integer
+            max_retries:
+              format: int32
+              type: integer
+            min_retry_interval_millis:
+              format: int32
+              type: integer
+            name:
+              type: string
+            new_cluster:
+              properties:
+                autoscale:
+                  properties:
+                    max_workers:
+                      format: int32
+                      type: integer
+                    min_workers:
+                      format: int32
+                      type: integer
+                  type: object
+                cluster_log_conf:
+                  properties:
+                    dbfs:
+                      properties:
+                        destination:
+                          type: string
+                      type: object
+                  type: object
+                cluster_name:
+                  type: string
+                custom_tags:
+                  items:
+                    properties:
+                      key:
+                        type: string
+                      value:
+                        type: string
+                    type: object
+                  type: array
+                driver_node_type_id:
+                  type: string
+                enable_elastic_disk:
+                  type: boolean
+                init_scripts:
+                  items:
+                    properties:
+                      dbfs:
+                        properties:
+                          destination:
+                            type: string
+                        type: object
+                    type: object
+                  type: array
+                node_type_id:
+                  type: string
+                num_workers:
+                  format: int32
+                  type: integer
+                spark_conf:
+                  properties:
+                    key:
+                      type: string
+                    value:
+                      type: string
+                  type: object
+                spark_env_vars:
+                  additionalProperties:
+                    type: string
+                  type: object
+                spark_version:
+                  type: string
+                ssh_public_keys:
+                  items:
+                    type: string
+                  type: array
+              type: object
+            notebook_task:
+              properties:
+                base_parameters:
+                  additionalProperties:
+                    type: string
+                  type: object
+                notebook_path:
+                  type: string
+              type: object
+            retry_on_timeout:
+              type: boolean
+            schedule:
+              properties:
+                quartz_cron_expression:
+                  type: string
+                timezone_id:
+                  type: string
+              type: object
+            spark_jar_task:
+              properties:
+                jar_uri:
+                  type: string
+                main_class_name:
+                  type: string
+                parameters:
+                  items:
+                    type: string
+                  type: array
+              type: object
+            spark_python_task:
+              properties:
+                parameters:
+                  items:
+                    type: string
+                  type: array
+                python_file:
+                  type: string
+              type: object
+            spark_submit_task:
+              properties:
+                parameters:
+                  items:
+                    type: string
+                  type: array
+              type: object
+            timeout_seconds:
+              format: int32
+              type: integer
           type: object
         status:
+          properties:
+            job:
+              description: 'INSERT ADDITIONAL STATUS FIELD - define observed state
+                of cluster Important: Run "make" to regenerate code after modifying
+                this file'
+              properties:
+                created_time:
+                  format: int64
+                  type: integer
+                creator_user_name:
+                  type: string
+                job_id:
+                  format: int64
+                  type: integer
+                settings:
+                  properties:
+                    email_notifications:
+                      properties:
+                        no_alert_for_skipped_runs:
+                          type: boolean
+                        on_failure:
+                          items:
+                            type: string
+                          type: array
+                        on_start:
+                          items:
+                            type: string
+                          type: array
+                        on_success:
+                          items:
+                            type: string
+                          type: array
+                      type: object
+                    existing_cluster_id:
+                      type: string
+                    libraries:
+                      items:
+                        properties:
+                          cran:
+                            properties:
+                              package:
+                                type: string
+                              repo:
+                                type: string
+                            type: object
+                          egg:
+                            type: string
+                          jar:
+                            type: string
+                          maven:
+                            properties:
+                              coordinates:
+                                type: string
+                              exclusions:
+                                items:
+                                  type: string
+                                type: array
+                              repo:
+                                type: string
+                            type: object
+                          pypi:
+                            properties:
+                              package:
+                                type: string
+                              repo:
+                                type: string
+                            type: object
+                          whl:
+                            type: string
+                        type: object
+                      type: array
+                    max_concurrent_runs:
+                      format: int32
+                      type: integer
+                    max_retries:
+                      format: int32
+                      type: integer
+                    min_retry_interval_millis:
+                      format: int32
+                      type: integer
+                    name:
+                      type: string
+                    new_cluster:
+                      properties:
+                        autoscale:
+                          properties:
+                            max_workers:
+                              format: int32
+                              type: integer
+                            min_workers:
+                              format: int32
+                              type: integer
+                          type: object
+                        cluster_log_conf:
+                          properties:
+                            dbfs:
+                              properties:
+                                destination:
+                                  type: string
+                              type: object
+                          type: object
+                        cluster_name:
+                          type: string
+                        custom_tags:
+                          items:
+                            properties:
+                              key:
+                                type: string
+                              value:
+                                type: string
+                            type: object
+                          type: array
+                        driver_node_type_id:
+                          type: string
+                        enable_elastic_disk:
+                          type: boolean
+                        init_scripts:
+                          items:
+                            properties:
+                              dbfs:
+                                properties:
+                                  destination:
+                                    type: string
+                                type: object
+                            type: object
+                          type: array
+                        node_type_id:
+                          type: string
+                        num_workers:
+                          format: int32
+                          type: integer
+                        spark_conf:
+                          properties:
+                            key:
+                              type: string
+                            value:
+                              type: string
+                          type: object
+                        spark_env_vars:
+                          additionalProperties:
+                            type: string
+                          type: object
+                        spark_version:
+                          type: string
+                        ssh_public_keys:
+                          items:
+                            type: string
+                          type: array
+                      type: object
+                    notebook_task:
+                      properties:
+                        base_parameters:
+                          additionalProperties:
+                            type: string
+                          type: object
+                        notebook_path:
+                          type: string
+                      type: object
+                    retry_on_timeout:
+                      type: boolean
+                    schedule:
+                      properties:
+                        quartz_cron_expression:
+                          type: string
+                        timezone_id:
+                          type: string
+                      type: object
+                    spark_jar_task:
+                      properties:
+                        jar_uri:
+                          type: string
+                        main_class_name:
+                          type: string
+                        parameters:
+                          items:
+                            type: string
+                          type: array
+                      type: object
+                    spark_python_task:
+                      properties:
+                        parameters:
+                          items:
+                            type: string
+                          type: array
+                        python_file:
+                          type: string
+                      type: object
+                    spark_submit_task:
+                      properties:
+                        parameters:
+                          items:
+                            type: string
+                          type: array
+                      type: object
+                    timeout_seconds:
+                      format: int32
+                      type: integer
+                  type: object
+              type: object
+          required:
+          - job
           type: object
       type: object
   versions:
