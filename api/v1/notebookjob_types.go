@@ -38,7 +38,6 @@ type NotebookJobStatus struct {
 	Run *dbmodels.Run `json:"run,omitempty"`
 }
 
-// +genclient
 // +kubebuilder:object:root=true
 
 // NotebookJob is the Schema for the notebookjobs API

@@ -7,9 +7,9 @@ metadata:
   name: manager-role
 rules:
 - apiGroups:
-  - apps
+  - databricks.microsoft.com
   resources:
-  - deployments
+  - djobs
   verbs:
   - get
   - list
@@ -19,9 +19,9 @@ rules:
   - patch
   - delete
 - apiGroups:
-  - apps
+  - databricks.microsoft.com
   resources:
-  - deployments/status
+  - djobs/status
   verbs:
   - get
   - update
@@ -49,15 +49,34 @@ rules:
 - apiGroups:
   - databricks.microsoft.com
   resources:
+  - secretscopes
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - databricks.microsoft.com
+  resources:
+  - secretscopes/status
+  verbs:
+  - get
+  - update
+  - patch
+- apiGroups:
+  - databricks.microsoft.com
+  resources:
   - events
   verbs:
   - create
   - patch
 - apiGroups:
-  - admissionregistration.k8s.io
+  - apps
   resources:
-  - mutatingwebhookconfigurations
-  - validatingwebhookconfigurations
+  - deployments
   verbs:
   - get
   - list
@@ -66,22 +85,18 @@ rules:
   - update
   - patch
   - delete
+- apiGroups:
+  - apps
+  resources:
+  - deployments/status
+  verbs:
+  - get
+  - update
+  - patch
 - apiGroups:
   - ""
   resources:
   - secrets
-  verbs:
-  - get
-  - list
-  - watch
-  - create
-  - update
-  - patch
-  - delete
-- apiGroups:
-  - ""
-  resources:
-  - services
   verbs:
   - get
   - list

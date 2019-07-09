@@ -8,3 +8,6 @@ resources:
 - group: databricks
   version: v1
   kind: SecretScope
+- group: databricks
+  version: v1
+  kind: Djob

@@ -40,14 +40,9 @@ type NotebookJobReconciler struct {
 	APIClient dbazure.DBClient
 }
 
-// Reconcile is the main loop, and it should always requeue
 // +kubebuilder:rbac:groups=databricks.microsoft.com,resources=notebookjobs,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=databricks.microsoft.com,resources=notebookjobs/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=databricks.microsoft.com,resources=events,verbs=create;patch
-// +kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=apps,resources=deployments/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=core,resources=secrets,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=core,resources=events,verbs=create;watch
+
 func (r *NotebookJobReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	_ = context.Background()
 	_ = r.Log.WithValues("notebookjob", req.NamespacedName)

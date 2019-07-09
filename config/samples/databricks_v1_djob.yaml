@@ -1,0 +1,7 @@
+apiVersion: databricks.microsoft.com/v1
+kind: Djob
+metadata:
+  name: djob-sample
+spec:
+  # Add fields here
+  foo: bar

@@ -17,47 +17,44 @@ limitations under the License.
 package v1
 
 import (
-	dbmodels "github.com/xinsnake/databricks-sdk-golang/azure/models"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
-// SecretScopeSpec defines the desired state of SecretScope
-type SecretScopeSpec struct {
+// DjobSpec defines the desired state of Djob
+type DjobSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
-
 }
 
-// SecretScopeStatus defines the observed state of SecretScope
-type SecretScopeStatus struct {
+// DjobStatus defines the observed state of Djob
+type DjobStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
-	SecretScope *dbmodels.SecretScope `json:"secretscope,omitempty"`
 }
 
 // +kubebuilder:object:root=true
 
-// SecretScope is the Schema for the secretscopes API
-type SecretScope struct {
+// Djob is the Schema for the djobs API
+type Djob struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   SecretScopeSpec   `json:"spec,omitempty"`
-	Status SecretScopeStatus `json:"status,omitempty"`
+	Spec   DjobSpec   `json:"spec,omitempty"`
+	Status DjobStatus `json:"status,omitempty"`
 }
 
 // +kubebuilder:object:root=true
 
-// SecretScopeList contains a list of SecretScope
-type SecretScopeList struct {
+// DjobList contains a list of Djob
+type DjobList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []SecretScope `json:"items"`
+	Items           []Djob `json:"items"`
 }
 
 func init() {
-	SchemeBuilder.Register(&SecretScope{}, &SecretScopeList{})
+	SchemeBuilder.Register(&Djob{}, &DjobList{})
 }
