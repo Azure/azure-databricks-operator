@@ -24,20 +24,6 @@ import (
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
-// DjobSpec defines the desired state of Djob
-type DjobSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
-	JobSettings *dbmodels.JobSettings `json:"job_settings,omitempty"`
-}
-
-// DjobStatus defines the observed state of Djob
-type DjobStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
-	Job *dbmodels.Job `json:"job,omitempty"`
-}
-
 // +kubebuilder:object:root=true
 
 // Djob is the Schema for the djobs API
@@ -45,8 +31,8 @@ type Djob struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   DjobSpec   `json:"spec,omitempty"`
-	Status DjobStatus `json:"status,omitempty"`
+	Spec   *dbmodels.JobSettings `json:"spec,omitempty"`
+	Status *dbmodels.Job         `json:"status,omitempty"`
 }
 
 func (djob *Djob) IsBeingDeleted() bool {
@@ -54,10 +40,10 @@ func (djob *Djob) IsBeingDeleted() bool {
 }
 
 func (djob *Djob) IsSubmitted() bool {
-	if djob.Status.Job == nil {
+	if djob.Status == nil || djob.Status.JobID == 0 {
 		return false
 	}
-	return djob.Status.Job.JobID > 0
+	return djob.Status.JobID > 0
 }
 
 const DjobFinalizerName = "djob.finalizers.databricks.microsoft.com"

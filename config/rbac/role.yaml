@@ -95,6 +95,26 @@ rules:
 - apiGroups:
   - databricks.microsoft.com
   resources:
+  - runs
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - databricks.microsoft.com
+  resources:
+  - runs/status
+  verbs:
+  - get
+  - update
+  - patch
+- apiGroups:
+  - databricks.microsoft.com
+  resources:
   - secretscopes
   verbs:
   - get

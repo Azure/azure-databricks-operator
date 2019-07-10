@@ -28,8 +28,8 @@ import (
 func (r *DjobReconciler) submitJobToDatabricks(instance *databricksv1.Djob) error {
 	r.Log.Info("Submitting job " + instance.GetName())
 
-	instance.Spec.JobSettings.Name = instance.GetName()
-	job, err := r.APIClient.Jobs().Create(*instance.Spec.JobSettings)
+	instance.Spec.Name = instance.GetName()
+	job, err := r.APIClient.Jobs().Create(*instance.Spec)
 	if err != nil {
 		return err
 	}
@@ -37,7 +37,7 @@ func (r *DjobReconciler) submitJobToDatabricks(instance *databricksv1.Djob) erro
 		return fmt.Errorf("result from API didn't return any values")
 	}
 
-	instance.Status.Job = &job
+	instance.Status = &job
 	err = r.Update(context.Background(), instance)
 	if err != nil {
 		return fmt.Errorf("error when updating job after submitting to API: %v", err)
@@ -50,13 +50,13 @@ func (r *DjobReconciler) submitJobToDatabricks(instance *databricksv1.Djob) erro
 func (r *DjobReconciler) refreshDatabricksJob(instance *databricksv1.Djob) error {
 	r.Log.Info("Refreshing job " + instance.GetName())
 
-	jobID := instance.Status.Job.JobID
+	jobID := instance.Status.JobID
 	job, err := r.APIClient.Jobs().Get(jobID)
 	if err != nil {
 		return err
 	}
-	if !reflect.DeepEqual(instance.Status.Job, &job) {
-		instance.Status.Job = &job
+	if !reflect.DeepEqual(instance.Status, &job) {
+		instance.Status = &job
 		err = r.Update(context.Background(), instance)
 		if err != nil {
 			return fmt.Errorf("error when updating job: %v", err)
@@ -69,10 +69,10 @@ func (r *DjobReconciler) refreshDatabricksJob(instance *databricksv1.Djob) error
 func (r *DjobReconciler) deleteJobFromDatabricks(instance *databricksv1.Djob) error {
 	r.Log.Info("Deleting job " + instance.GetName())
 
-	if instance.Status.Job == nil {
+	if instance.Status == nil {
 		return nil
 	}
-	jobID := instance.Status.Job.JobID
+	jobID := instance.Status.JobID
 	_, err := r.APIClient.Jobs().Get(jobID)
 	if err == nil {
 		err = r.APIClient.Jobs().Delete(jobID)
