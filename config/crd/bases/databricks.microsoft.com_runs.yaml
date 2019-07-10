@@ -4,35 +4,16 @@ apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
   creationTimestamp: null
-  name: notebookjobs.databricks.microsoft.com
+  name: runs.databricks.microsoft.com
 spec:
-  additionalPrinterColumns:
-  - JSONPath: .metadata.creationTimestamp
-    name: Age
-    type: date
-  - JSONPath: .status.run.job_id
-    name: JobID
-    type: integer
-  - JSONPath: .status.run.run_id
-    name: RunID
-    type: integer
-  - JSONPath: .status.run.state.life_cycle_state
-    name: State
-    type: string
-  - JSONPath: .status.run.task.notebook_task.notebook_path
-    name: NotebookPath
-    type: string
   group: databricks.microsoft.com
   names:
-    kind: NotebookJob
-    plural: notebookjobs
-    shortNames:
-    - nbj
-  scope: Namespaced
-  subresources: {}
+    kind: Run
+    plural: runs
+  scope: ""
   validation:
     openAPIV3Schema:
-      description: NotebookJob is the Schema for the notebookjobs API
+      description: Run is the Schema for the runs API
       properties:
         apiVersion:
           description: 'APIVersion defines the versioned schema of this representation
@@ -404,69 +385,178 @@ spec:
           type: object
         spec:
           properties:
-            clusterSpec:
-              properties:
-                nodeTypeId:
-                  type: string
-                numWorkers:
-                  type: integer
-                sparkVersion:
-                  type: string
-              type: object
-            notebookAdditionalLibraries:
+            existing_cluster_id:
+              type: string
+            jar_params:
+              items:
+                type: string
+              type: array
+            job_name:
+              description: dedicated for job run
+              type: string
+            libraries:
               items:
                 properties:
-                  properties:
-                    additionalProperties:
-                      type: string
+                  cran:
+                    properties:
+                      package:
+                        type: string
+                      repo:
+                        type: string
                     type: object
-                  type:
+                  egg:
                     type: string
-                required:
-                - type
-                - properties
+                  jar:
+                    type: string
+                  maven:
+                    properties:
+                      coordinates:
+                        type: string
+                      exclusions:
+                        items:
+                          type: string
+                        type: array
+                      repo:
+                        type: string
+                    type: object
+                  pypi:
+                    properties:
+                      package:
+                        type: string
+                      repo:
+                        type: string
+                    type: object
+                  whl:
+                    type: string
                 type: object
               type: array
-            notebookSpec:
+            new_cluster:
+              properties:
+                autoscale:
+                  properties:
+                    max_workers:
+                      format: int32
+                      type: integer
+                    min_workers:
+                      format: int32
+                      type: integer
+                  type: object
+                cluster_log_conf:
+                  properties:
+                    dbfs:
+                      properties:
+                        destination:
+                          type: string
+                      type: object
+                  type: object
+                cluster_name:
+                  type: string
+                custom_tags:
+                  items:
+                    properties:
+                      key:
+                        type: string
+                      value:
+                        type: string
+                    type: object
+                  type: array
+                driver_node_type_id:
+                  type: string
+                enable_elastic_disk:
+                  type: boolean
+                init_scripts:
+                  items:
+                    properties:
+                      dbfs:
+                        properties:
+                          destination:
+                            type: string
+                        type: object
+                    type: object
+                  type: array
+                node_type_id:
+                  type: string
+                num_workers:
+                  format: int32
+                  type: integer
+                spark_conf:
+                  properties:
+                    key:
+                      type: string
+                    value:
+                      type: string
+                  type: object
+                spark_env_vars:
+                  additionalProperties:
+                    type: string
+                  type: object
+                spark_version:
+                  type: string
+                ssh_public_keys:
+                  items:
+                    type: string
+                  type: array
+              type: object
+            notebook_params:
               additionalProperties:
                 type: string
               type: object
-            notebookSpecSecrets:
-              items:
-                properties:
-                  mapping:
-                    items:
-                      properties:
-                        outputKey:
-                          type: string
-                        secretKey:
-                          type: string
-                      required:
-                      - secretKey
-                      - outputKey
-                      type: object
-                    type: array
-                  secretName:
-                    type: string
-                required:
-                - secretName
-                - mapping
-                type: object
-              type: array
-            notebookTask:
+            notebook_task:
               properties:
-                notebookPath:
+                base_parameters:
+                  additionalProperties:
+                    type: string
+                  type: object
+                notebook_path:
                   type: string
               type: object
-            timeoutSeconds:
+            python_params:
+              items:
+                type: string
+              type: array
+            run_name:
+              description: dedicated for direct run
+              type: string
+            spark_jar_task:
+              properties:
+                jar_uri:
+                  type: string
+                main_class_name:
+                  type: string
+                parameters:
+                  items:
+                    type: string
+                  type: array
+              type: object
+            spark_python_task:
+              properties:
+                parameters:
+                  items:
+                    type: string
+                  type: array
+                python_file:
+                  type: string
+              type: object
+            spark_submit_params:
+              items:
+                type: string
+              type: array
+            spark_submit_task:
+              properties:
+                parameters:
+                  items:
+                    type: string
+                  type: array
+              type: object
+            timeout_seconds:
+              format: int32
               type: integer
           type: object
         status:
           properties:
-            run:
-              description: 'INSERT ADDITIONAL STATUS FIELD - define observed state
-                of cluster Important: Run "make" to regenerate code after modifying
-                this file'
+            error:
+              type: string
+            metadata:
               properties:
                 cleanup_duration:
                   format: int64
@@ -685,6 +775,13 @@ spec:
                   type: object
                 trigger:
                   type: string
+              type: object
+            notebook_output:
+              properties:
+                result:
+                  type: string
+                truncated:
+                  type: boolean
               type: object
           type: object
       type: object
