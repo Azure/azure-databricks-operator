@@ -83,6 +83,10 @@ github.com/xinsnake/databricks-sdk-golang v0.0.0-20190625012826-3a272d083f0b h1:
 github.com/xinsnake/databricks-sdk-golang v0.0.0-20190625012826-3a272d083f0b/go.mod h1:8RROKFtXYmb3l4nmJeWWlHmMRYh+V6ha0ugrMSxm2A0=
 github.com/xinsnake/databricks-sdk-golang v0.0.0-20190710004521-6088137a4132 h1:QoUdetv44DD0ZiNvKLWDtFjj96ep34hMK9LqPyQxH8g=
 github.com/xinsnake/databricks-sdk-golang v0.0.0-20190710004521-6088137a4132/go.mod h1:XIb6uFAlAU2i7eJPfggkdZjfy9eF7mUPi+dB68OsZHE=
+github.com/xinsnake/databricks-sdk-golang v0.0.0-20190710045110-e3bc21446bcf h1:FsqUln7E3B3YLbtbhTl7jt+jCOhKVCNfu5Pg9n9VhGs=
+github.com/xinsnake/databricks-sdk-golang v0.0.0-20190710045110-e3bc21446bcf/go.mod h1:XIb6uFAlAU2i7eJPfggkdZjfy9eF7mUPi+dB68OsZHE=
+github.com/xinsnake/databricks-sdk-golang v0.0.0-20190710050711-2bf6429fad96 h1:Ib7nv80CWrIW8ni7r2ejDiOpJJK962Ltxpqiput3j4Y=
+github.com/xinsnake/databricks-sdk-golang v0.0.0-20190710050711-2bf6429fad96/go.mod h1:XIb6uFAlAU2i7eJPfggkdZjfy9eF7mUPi+dB68OsZHE=
 go.uber.org/atomic v1.3.2 h1:2Oa65PReHzfn29GpvgsYwloV9AVFHPDk8tYxt2c2tr4=
 go.uber.org/atomic v1.3.2/go.mod h1:gD2HeocX3+yG+ygLZcrzQJaqmWj9AIm7n08wl/qW/PE=
 go.uber.org/multierr v1.1.0 h1:HoEmRHQPVSqub6w2z2d2EOVs2fjyFRGyofhKuyDq0QI=

@@ -8,7 +8,7 @@ require (
 	github.com/go-playground/log v6.3.0+incompatible
 	github.com/onsi/ginkgo v1.6.0
 	github.com/onsi/gomega v1.4.2
-	github.com/xinsnake/databricks-sdk-golang v0.0.0-20190710004521-6088137a4132
+	github.com/xinsnake/databricks-sdk-golang v0.0.0-20190710050711-2bf6429fad96
 	golang.org/x/crypto v0.0.0-20190701094942-4def268fd1a4 // indirect
 	golang.org/x/net v0.0.0-20190628185345-da137c7871d7
 	golang.org/x/sys v0.0.0-20190626221950-04f50cda93cb // indirect
