@@ -18,18 +18,25 @@ package controllers
 
 import (
 	"context"
+	"fmt"
+	"time"
 
 	"github.com/go-logr/logr"
+	"k8s.io/apimachinery/pkg/api/errors"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	databricksv1 "github.com/microsoft/azure-databricks-operator/api/v1"
+	dbazure "github.com/xinsnake/databricks-sdk-golang/azure"
 )
 
 // SecretScopeReconciler reconciles a SecretScope object
 type SecretScopeReconciler struct {
 	client.Client
 	Log logr.Logger
+
+	APIClient dbazure.DBClient
 }
 
 // +kubebuilder:rbac:groups=databricks.microsoft.com,resources=secretscopes,verbs=get;list;watch;create;update;patch;delete
@@ -40,8 +47,23 @@ func (r *SecretScopeReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error)
 	_ = r.Log.WithValues("secretscope", req.NamespacedName)
 
 	// your logic here
+	instance := &databricksv1.SecretScope{}
+	err := r.Get(context.Background(), req.NamespacedName, instance)
 
-	return ctrl.Result{}, nil
+	if err != nil {
+		if errors.IsNotFound(err) {
+			return reconcile.Result{}, err
+		}
+	}
+
+	if !instance.IsSubmitted() {
+		err = r.submit(instance)
+		if err != nil {
+			return ctrl.Result{}, fmt.Errorf("error when submitting job to API: %v", err)
+		}
+	}
+
+	return ctrl.Result{RequeueAfter: 30 * time.Second}, nil
 }
 
 func (r *SecretScopeReconciler) SetupWithManager(mgr ctrl.Manager) error {

@@ -28,7 +28,9 @@ import (
 type SecretScopeSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
-
+	InitialManagePrincipal string              `json:"initial_manage_permission,omitempty"`
+	SecretScopeSecrets     []SecretScopeSecret `json:"secrets,omitempty"`
+	SecretScopeACLs        []SecretScopeACL    `json:"acls,omitempty"`
 }
 
 // SecretScopeStatus defines the observed state of SecretScope
@@ -47,6 +49,10 @@ type SecretScope struct {
 
 	Spec   SecretScopeSpec   `json:"spec,omitempty"`
 	Status SecretScopeStatus `json:"status,omitempty"`
+}
+
+func (ss *SecretScope) IsSubmitted() bool {
+	return ss.Status.SecretScope == nil
 }
 
 // +kubebuilder:object:root=true
