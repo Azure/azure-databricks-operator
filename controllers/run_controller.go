@@ -18,12 +18,16 @@ package controllers
 
 import (
 	"context"
+	"fmt"
+	"time"
 
 	"github.com/go-logr/logr"
 	dbazure "github.com/xinsnake/databricks-sdk-golang/azure"
+	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	databricksv1 "github.com/microsoft/azure-databricks-operator/api/v1"
 )
@@ -44,9 +48,48 @@ func (r *RunReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	_ = context.Background()
 	_ = r.Log.WithValues("run", req.NamespacedName)
 
-	// your logic here
+	// Fetch the Run instance
+	instance := &databricksv1.Run{}
+	err := r.Get(context.Background(), req.NamespacedName, instance)
 
-	return ctrl.Result{}, nil
+	if err != nil {
+		if errors.IsNotFound(err) {
+			return reconcile.Result{}, nil
+		}
+		return reconcile.Result{}, err
+	}
+
+	if instance.IsBeingDeleted() {
+		err := r.handleFinalizer(instance)
+		if err != nil {
+			return reconcile.Result{}, fmt.Errorf("error when handling finalizer: %v", err)
+		}
+		return ctrl.Result{}, nil
+	}
+
+	if !instance.HasFinalizer(databricksv1.RunFinalizerName) {
+		err = r.addFinalizer(instance)
+		if err != nil {
+			return ctrl.Result{}, fmt.Errorf("error when removing finalizer: %v", err)
+		}
+		return ctrl.Result{}, nil
+	}
+
+	if !instance.IsSubmitted() {
+		err = r.submitRunToDatabricks(instance)
+		if err != nil {
+			return ctrl.Result{}, fmt.Errorf("error when submitting run to API: %v", err)
+		}
+	}
+
+	if instance.IsSubmitted() {
+		err = r.refreshDatabricksRun(instance)
+		if err != nil {
+			return ctrl.Result{}, fmt.Errorf("error when refreshing run to API: %v", err)
+		}
+	}
+
+	return ctrl.Result{RequeueAfter: 30 * time.Second}, nil
 }
 
 func (r *RunReconciler) SetupWithManager(mgr ctrl.Manager) error {

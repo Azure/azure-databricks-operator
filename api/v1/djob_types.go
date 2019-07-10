@@ -27,6 +27,8 @@ import (
 // +kubebuilder:object:root=true
 
 // Djob is the Schema for the djobs API
+// +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".status.created_time"
+// +kubebuilder:printcolumn:name="JobID",type="integer",JSONPath=".status.job_id"
 type Djob struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

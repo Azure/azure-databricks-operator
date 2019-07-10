@@ -498,14 +498,9 @@ spec:
                   type: array
               type: object
             notebook_params:
-              items:
-                properties:
-                  key:
-                    type: string
-                  value:
-                    type: string
-                type: object
-              type: array
+              additionalProperties:
+                type: string
+              type: object
             notebook_task:
               properties:
                 base_parameters:
@@ -702,14 +697,9 @@ spec:
                         type: string
                       type: array
                     notebook_params:
-                      items:
-                        properties:
-                          key:
-                            type: string
-                          value:
-                            type: string
-                        type: object
-                      type: array
+                      additionalProperties:
+                        type: string
+                      type: object
                     python_params:
                       items:
                         type: string

@@ -6,11 +6,19 @@ metadata:
   creationTimestamp: null
   name: djobs.databricks.microsoft.com
 spec:
+  additionalPrinterColumns:
+  - JSONPath: .status.created_time
+    name: Age
+    type: date
+  - JSONPath: .status.job_id
+    name: JobID
+    type: integer
   group: databricks.microsoft.com
   names:
     kind: Djob
     plural: djobs
   scope: ""
+  subresources: {}
   validation:
     openAPIV3Schema:
       description: Djob is the Schema for the djobs API

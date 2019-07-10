@@ -40,6 +40,7 @@ func (r *RunReconciler) submitRunToDatabricks(instance *databricksv1.Run) error 
 
 	var k8sJob databricksv1.Djob
 
+	instance.Spec.RunName = instance.GetName()
 	if instance.Spec.JobName != "" {
 		// run existing job
 		runParameters := dbmodels.RunParameters{
@@ -48,12 +49,31 @@ func (r *RunReconciler) submitRunToDatabricks(instance *databricksv1.Run) error 
 			PythonParams:      instance.Spec.PythonParams,
 			SparkSubmitParams: instance.Spec.SparkSubmitParams,
 		}
+
 		k8sJobNamespacedName := types.NamespacedName{Namespace: instance.GetNamespace(), Name: instance.Spec.JobName}
 		err = r.Client.Get(context.Background(), k8sJobNamespacedName, &k8sJob)
 		if err != nil {
 			return err
 		}
+
 		run, err = r.APIClient.Jobs().RunNow(k8sJob.Status.JobID, runParameters)
+		if err != nil {
+			return err
+		}
+
+		runOutput, err = r.APIClient.Jobs().RunsGetOutput(run.RunID)
+		if err != nil {
+			return err
+		}
+
+		instance.ObjectMeta.SetOwnerReferences([]metav1.OwnerReference{
+			metav1.OwnerReference{
+				APIVersion: "v1",
+				Kind:       "Djob",
+				Name:       k8sJob.GetName(),
+				UID:        k8sJob.GetUID(),
+			},
+		})
 	} else {
 		// run directly
 		clusterSpec := dbmodels.ClusterSpec{
@@ -67,49 +87,19 @@ func (r *RunReconciler) submitRunToDatabricks(instance *databricksv1.Run) error 
 			SparkPythonTask: instance.Spec.SparkPythonTask,
 			SparkSubmitTask: instance.Spec.SparkSubmitTask,
 		}
-		run, err = r.APIClient.Jobs().RunsSubmit(instance.Spec.RunName, clusterSpec, jobTask, instance.Spec.TimeoutSeconds)
+
+		runResp, err := r.APIClient.Jobs().RunsSubmit(instance.Spec.RunName, clusterSpec, jobTask, instance.Spec.TimeoutSeconds)
 		if err != nil {
 			return err
 		}
-		job, err := r.APIClient.Jobs().Get(run.JobID)
+
+		runOutput, err = r.APIClient.Jobs().RunsGetOutput(runResp.RunID)
 		if err != nil {
 			return err
 		}
-		k8sJob = databricksv1.Djob{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      job.Settings.Name,
-				Namespace: instance.GetNamespace(),
-			},
-			TypeMeta: metav1.TypeMeta{
-				Kind:       "Djob",
-				APIVersion: databricksv1.GroupVersion.Version,
-			},
-			Spec:   job.Settings,
-			Status: &job,
-		}
-		err = r.Client.Create(context.Background(), &k8sJob)
-	}
-	if err != nil {
-		return err
-	}
-
-	time.Sleep(3 * time.Second)
-
-	runOutput, err = r.APIClient.Jobs().RunsGetOutput(run.RunID)
-	if err != nil {
-		return err
 	}
 
 	instance.Status = &runOutput
-	instance.ObjectMeta.SetOwnerReferences([]metav1.OwnerReference{
-		metav1.OwnerReference{
-			APIVersion: k8sJob.APIVersion,
-			Kind:       k8sJob.TypeMeta.Kind,
-			Name:       k8sJob.Name,
-			UID:        k8sJob.UID,
-		},
-	})
-
 	err = r.Update(context.Background(), instance)
 	if err != nil {
 		return fmt.Errorf("error when updating run after submitting to API: %v", err)
@@ -146,7 +136,8 @@ func (r *RunReconciler) deleteRunFromDatabricks(instance *databricksv1.Run) erro
 	}
 	runID := instance.Status.Metadata.RunID
 	_, err := r.APIClient.Jobs().RunsGet(runID)
-	if err == nil || strings.Contains(err.Error(), "does not exist") {
+
+	if err != nil && strings.Contains(err.Error(), "does not exist") {
 		return nil
 	}
 
@@ -154,6 +145,7 @@ func (r *RunReconciler) deleteRunFromDatabricks(instance *databricksv1.Run) erro
 		err = r.APIClient.Jobs().RunsCancel(runID)
 		time.Sleep(15 * time.Second)
 	}
+
 	if err == nil {
 		err = r.APIClient.Jobs().RunsDelete(runID)
 	}

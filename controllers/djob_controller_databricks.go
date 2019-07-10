@@ -63,6 +63,7 @@ func (r *DjobReconciler) refreshDatabricksJob(instance *databricksv1.Djob) error
 		}
 		r.Recorder.Event(instance, "Normal", "Updated", "job status updated")
 	}
+
 	return nil
 }
 

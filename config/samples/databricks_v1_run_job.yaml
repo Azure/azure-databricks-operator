@@ -5,6 +5,6 @@ metadata:
 spec:
   # run an existing job with job id
   job_name: nightly-model-training
-  notebook_params:
-    dry-run: 'true'
-    oldest-time-to-consider: '1457570074236'
+  jar_params:
+    - "test"
+    - "test_param2"

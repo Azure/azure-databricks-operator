@@ -87,6 +87,8 @@ github.com/xinsnake/databricks-sdk-golang v0.0.0-20190710045110-e3bc21446bcf h1:
 github.com/xinsnake/databricks-sdk-golang v0.0.0-20190710045110-e3bc21446bcf/go.mod h1:XIb6uFAlAU2i7eJPfggkdZjfy9eF7mUPi+dB68OsZHE=
 github.com/xinsnake/databricks-sdk-golang v0.0.0-20190710050711-2bf6429fad96 h1:Ib7nv80CWrIW8ni7r2ejDiOpJJK962Ltxpqiput3j4Y=
 github.com/xinsnake/databricks-sdk-golang v0.0.0-20190710050711-2bf6429fad96/go.mod h1:XIb6uFAlAU2i7eJPfggkdZjfy9eF7mUPi+dB68OsZHE=
+github.com/xinsnake/databricks-sdk-golang v0.0.0-20190710053313-b92a552450b1 h1:TE1SscNQgzx++TxxAed+dT5hhyg2/QM6QY9yJbCGHmg=
+github.com/xinsnake/databricks-sdk-golang v0.0.0-20190710053313-b92a552450b1/go.mod h1:XIb6uFAlAU2i7eJPfggkdZjfy9eF7mUPi+dB68OsZHE=
 go.uber.org/atomic v1.3.2 h1:2Oa65PReHzfn29GpvgsYwloV9AVFHPDk8tYxt2c2tr4=
 go.uber.org/atomic v1.3.2/go.mod h1:gD2HeocX3+yG+ygLZcrzQJaqmWj9AIm7n08wl/qW/PE=
 go.uber.org/multierr v1.1.0 h1:HoEmRHQPVSqub6w2z2d2EOVs2fjyFRGyofhKuyDq0QI=
