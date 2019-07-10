@@ -4,7 +4,7 @@ metadata:
   name: run-sample
 spec:
   # run an existing job with job id
-  job_id: 1
+  job_name: nightly-model-training
   notebook_params:
     dry-run: 'true'
     oldest-time-to-consider: '1457570074236'
