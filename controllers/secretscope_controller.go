@@ -59,7 +59,14 @@ func (r *SecretScopeReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error)
 	if !instance.IsSubmitted() {
 		err = r.submit(instance)
 		if err != nil {
-			return ctrl.Result{}, fmt.Errorf("error when submitting job to API: %v", err)
+			return ctrl.Result{}, fmt.Errorf("error when submitting secret scope to the API: %v", err)
+		}
+	}
+
+	if instance.IsSubmitted() {
+		err  =  r.refresh(instance)
+		if err != nil {
+			return ctrl.Result{}, fmt.Errorf("error when refreshing secret scope with the API: %v", err)
 		}
 	}
 
