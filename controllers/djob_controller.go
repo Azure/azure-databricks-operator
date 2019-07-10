@@ -67,7 +67,7 @@ func (r *DjobReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		return ctrl.Result{}, nil
 	}
 
-	if !instance.HasFinalizer(finalizerName) {
+	if !instance.HasFinalizer(databricksv1.DjobFinalizerName) {
 		err = r.addFinalizer(instance)
 		if err != nil {
 			return ctrl.Result{}, fmt.Errorf("error when removing finalizer: %v", err)

@@ -28,14 +28,14 @@ import (
 type DjobSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
-	*dbmodels.JobSettings `json:",inline"`
+	JobSettings *dbmodels.JobSettings `json:"job_settings,omitempty"`
 }
 
 // DjobStatus defines the observed state of Djob
 type DjobStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
-	Job *dbmodels.Job `json:"job"`
+	Job *dbmodels.Job `json:"job,omitempty"`
 }
 
 // +kubebuilder:object:root=true
@@ -59,6 +59,8 @@ func (djob *Djob) IsSubmitted() bool {
 	}
 	return djob.Status.Job.JobID > 0
 }
+
+const DjobFinalizerName = "djob.finalizers.databricks.microsoft.com"
 
 func (djob *Djob) HasFinalizer(finalizerName string) bool {
 	return containsString(djob.ObjectMeta.Finalizers, finalizerName)

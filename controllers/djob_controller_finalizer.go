@@ -23,26 +23,24 @@ import (
 	databricksv1 "github.com/microsoft/azure-databricks-operator/api/v1"
 )
 
-const djobFinalizerName = "djob.finalizers.databricks.microsoft.com"
-
 func (r *DjobReconciler) addFinalizer(instance *databricksv1.Djob) error {
-	instance.AddFinalizer(djobFinalizerName)
+	instance.AddFinalizer(databricksv1.DjobFinalizerName)
 	err := r.Update(context.Background(), instance)
 	if err != nil {
 		return fmt.Errorf("failed to update finalizer: %v", err)
 	}
-	r.Recorder.Event(instance, "Normal", "Updated", fmt.Sprintf("finalizer %s added", djobFinalizerName))
+	r.Recorder.Event(instance, "Normal", "Updated", fmt.Sprintf("finalizer %s added", databricksv1.DjobFinalizerName))
 	return nil
 }
 
 func (r *DjobReconciler) handleFinalizer(instance *databricksv1.Djob) error {
-	if instance.HasFinalizer(djobFinalizerName) {
+	if instance.HasFinalizer(databricksv1.DjobFinalizerName) {
 		// our finalizer is present, so lets handle our external dependency
 		if err := r.deleteExternalDependency(instance); err != nil {
 			return err
 		}
 
-		instance.RemoveFinalizer(djobFinalizerName)
+		instance.RemoveFinalizer(databricksv1.DjobFinalizerName)
 		if err := r.Update(context.Background(), instance); err != nil {
 			return err
 		}
