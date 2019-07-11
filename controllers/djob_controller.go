@@ -27,7 +27,6 @@ import (
 	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	databricksv1 "github.com/microsoft/azure-databricks-operator/api/v1"
 )
@@ -48,45 +47,42 @@ func (r *DjobReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	_ = context.Background()
 	_ = r.Log.WithValues("djob", req.NamespacedName)
 
-	// Fetch the Djob instance
 	instance := &databricksv1.Djob{}
-	err := r.Get(context.Background(), req.NamespacedName, instance)
-
-	if err != nil {
+	if err := r.Get(context.Background(), req.NamespacedName, instance); err != nil {
 		if errors.IsNotFound(err) {
-			return reconcile.Result{}, nil
+			return ctrl.Result{}, nil
 		}
-		return reconcile.Result{}, err
+		return ctrl.Result{}, err
 	}
 
 	if instance.IsBeingDeleted() {
-		err := r.handleFinalizer(instance)
-		if err != nil {
-			return reconcile.Result{}, fmt.Errorf("error when handling finalizer: %v", err)
+		if err := r.handleFinalizer(instance); err != nil {
+			return ctrl.Result{}, fmt.Errorf("error when handling finalizer: %v", err)
 		}
+		r.Recorder.Event(instance, "Normal", "Deleted", "Object finalizer is deleted")
 		return ctrl.Result{}, nil
 	}
 
 	if !instance.HasFinalizer(databricksv1.DjobFinalizerName) {
-		err = r.addFinalizer(instance)
-		if err != nil {
-			return ctrl.Result{}, fmt.Errorf("error when removing finalizer: %v", err)
+		if err := r.addFinalizer(instance); err != nil {
+			return ctrl.Result{}, fmt.Errorf("error when adding finalizer: %v", err)
 		}
+		r.Recorder.Event(instance, "Normal", "Added", "Object finalizer is added")
 		return ctrl.Result{}, nil
 	}
 
 	if !instance.IsSubmitted() {
-		err = r.submitJobToDatabricks(instance)
-		if err != nil {
-			return ctrl.Result{}, fmt.Errorf("error when submitting job to API: %v", err)
+		if err := r.submitDataBricksJob(instance); err != nil {
+			return ctrl.Result{}, fmt.Errorf("error when submitting job: %v", err)
 		}
+		r.Recorder.Event(instance, "Normal", "Submitted", "Object is submitted")
 	}
 
 	if instance.IsSubmitted() {
-		err = r.refreshDatabricksJob(instance)
-		if err != nil {
-			return ctrl.Result{}, fmt.Errorf("error when refreshing job to API: %v", err)
+		if err := r.refreshDataBricksJob(instance); err != nil {
+			return ctrl.Result{}, fmt.Errorf("error when refreshing job: %v", err)
 		}
+		r.Recorder.Event(instance, "Normal", "Refreshed", "Object is refreshed")
 	}
 
 	return ctrl.Result{RequeueAfter: 30 * time.Second}, nil

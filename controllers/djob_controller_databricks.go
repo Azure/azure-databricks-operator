@@ -25,61 +25,62 @@ import (
 	databricksv1 "github.com/microsoft/azure-databricks-operator/api/v1"
 )
 
-func (r *DjobReconciler) submitJobToDatabricks(instance *databricksv1.Djob) error {
-	r.Log.Info("Submitting job " + instance.GetName())
+func (r *DjobReconciler) submitDataBricksJob(instance *databricksv1.Djob) error {
+	r.Log.Info(fmt.Sprintf("Submitting job %s", instance.GetName()))
 
-	instance.Spec.Name = instance.GetName()
 	job, err := r.APIClient.Jobs().Create(*instance.Spec)
 	if err != nil {
 		return err
 	}
 	if job.JobID == 0 {
-		return fmt.Errorf("result from API didn't return any values")
+		return fmt.Errorf("No valid Job ID was returned from DataBricks")
 	}
 
-	instance.Status = &job
-	err = r.Update(context.Background(), instance)
-	if err != nil {
-		return fmt.Errorf("error when updating job after submitting to API: %v", err)
-	}
-
-	r.Recorder.Event(instance, "Normal", "Updated", "jobID added")
-	return nil
+	instance.Spec.Name = instance.GetName()
+	instance.Status.JobStatus = &job
+	return r.Update(context.Background(), instance)
 }
 
-func (r *DjobReconciler) refreshDatabricksJob(instance *databricksv1.Djob) error {
-	r.Log.Info("Refreshing job " + instance.GetName())
+func (r *DjobReconciler) refreshDataBricksJob(instance *databricksv1.Djob) error {
+	r.Log.Info(fmt.Sprintf("Refreshing job %s", instance.GetName()))
 
-	jobID := instance.Status.JobID
+	jobID := instance.Status.JobStatus.JobID
+
 	job, err := r.APIClient.Jobs().Get(jobID)
 	if err != nil {
 		return err
 	}
-	if !reflect.DeepEqual(instance.Status, &job) {
-		instance.Status = &job
-		err = r.Update(context.Background(), instance)
-		if err != nil {
-			return fmt.Errorf("error when updating job: %v", err)
-		}
-		r.Recorder.Event(instance, "Normal", "Updated", "job status updated")
+
+	// Refresh job also needs to get a list of historic runs under this job
+	jobRunListResponse, err := r.APIClient.Jobs().RunsList(false, false, jobID, 0, 10)
+	if err != nil {
+		return err
 	}
 
-	return nil
-}
-
-func (r *DjobReconciler) deleteJobFromDatabricks(instance *databricksv1.Djob) error {
-	r.Log.Info("Deleting job " + instance.GetName())
-
-	if instance.Status == nil {
+	if reflect.DeepEqual(instance.Status.JobStatus, &job) &&
+		reflect.DeepEqual(instance.Status.Last10Runs, jobRunListResponse.Runs) {
 		return nil
 	}
-	jobID := instance.Status.JobID
-	_, err := r.APIClient.Jobs().Get(jobID)
-	if err == nil {
-		err = r.APIClient.Jobs().Delete(jobID)
+
+	instance.Status.JobStatus = &job
+	instance.Status.Last10Runs = jobRunListResponse.Runs
+	return r.Update(context.Background(), instance)
+}
+
+func (r *DjobReconciler) deleteDataBricksJob(instance *databricksv1.Djob) error {
+	r.Log.Info(fmt.Sprintf("Deleting job %s", instance.GetName()))
+
+	if instance.Status == nil || instance.Status.JobStatus == nil {
+		return nil
 	}
+
+	jobID := instance.Status.JobStatus.JobID
+
+	// Check if the job exists before trying to delete it
+	_, err := r.APIClient.Jobs().Get(jobID)
 	if err == nil || strings.Contains(err.Error(), "does not exist") {
 		return nil
 	}
-	return err
+
+	return r.APIClient.Jobs().Delete(jobID)
 }

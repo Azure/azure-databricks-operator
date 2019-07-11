@@ -21,8 +21,10 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
+type DjobStatus struct {
+	JobStatus  *dbmodels.Job  `json:"job_status,omitempty"`
+	Last10Runs []dbmodels.Run `json:"last_10_runs,omitempty"`
+}
 
 // +kubebuilder:object:root=true
 
@@ -34,7 +36,7 @@ type Djob struct {
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
 	Spec   *dbmodels.JobSettings `json:"spec,omitempty"`
-	Status *dbmodels.Job         `json:"status,omitempty"`
+	Status *DjobStatus           `json:"status,omitempty"`
 }
 
 func (djob *Djob) IsBeingDeleted() bool {
@@ -42,10 +44,10 @@ func (djob *Djob) IsBeingDeleted() bool {
 }
 
 func (djob *Djob) IsSubmitted() bool {
-	if djob.Status == nil || djob.Status.JobID == 0 {
+	if djob.Status == nil || djob.Status.JobStatus.JobID == 0 {
 		return false
 	}
-	return djob.Status.JobID > 0
+	return djob.Status.JobStatus.JobID > 0
 }
 
 const DjobFinalizerName = "djob.finalizers.databricks.microsoft.com"

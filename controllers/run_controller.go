@@ -48,11 +48,8 @@ func (r *RunReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	_ = context.Background()
 	_ = r.Log.WithValues("run", req.NamespacedName)
 
-	// Fetch the Run instance
 	instance := &databricksv1.Run{}
-	err := r.Get(context.Background(), req.NamespacedName, instance)
-
-	if err != nil {
+	if err := r.Get(context.Background(), req.NamespacedName, instance); err != nil {
 		if errors.IsNotFound(err) {
 			return reconcile.Result{}, nil
 		}
@@ -60,33 +57,33 @@ func (r *RunReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	}
 
 	if instance.IsBeingDeleted() {
-		err := r.handleFinalizer(instance)
-		if err != nil {
+		if err := r.handleFinalizer(instance); err != nil {
 			return reconcile.Result{}, fmt.Errorf("error when handling finalizer: %v", err)
 		}
+		r.Recorder.Event(instance, "Normal", "Deleted", "Object finalizer is deleted")
 		return ctrl.Result{}, nil
 	}
 
 	if !instance.HasFinalizer(databricksv1.RunFinalizerName) {
-		err = r.addFinalizer(instance)
-		if err != nil {
-			return ctrl.Result{}, fmt.Errorf("error when removing finalizer: %v", err)
+		if err := r.addFinalizer(instance); err != nil {
+			return ctrl.Result{}, fmt.Errorf("error when adding finalizer: %v", err)
 		}
+		r.Recorder.Event(instance, "Normal", "Added", "Object finalizer is added")
 		return ctrl.Result{}, nil
 	}
 
 	if !instance.IsSubmitted() {
-		err = r.submitRunToDatabricks(instance)
-		if err != nil {
-			return ctrl.Result{}, fmt.Errorf("error when submitting run to API: %v", err)
+		if err := r.submitDataBricksRun(instance); err != nil {
+			return ctrl.Result{}, fmt.Errorf("error when submitting run: %v", err)
 		}
+		r.Recorder.Event(instance, "Normal", "Submitted", "Object is submitted")
 	}
 
 	if instance.IsSubmitted() {
-		err = r.refreshDatabricksRun(instance)
-		if err != nil {
-			return ctrl.Result{}, fmt.Errorf("error when refreshing run to API: %v", err)
+		if err := r.refreshDatabricksRun(instance); err != nil {
+			return ctrl.Result{}, fmt.Errorf("error when refreshing run: %v", err)
 		}
+		r.Recorder.Event(instance, "Normal", "Refreshed", "Object is refreshed")
 	}
 
 	return ctrl.Result{RequeueAfter: 30 * time.Second}, nil

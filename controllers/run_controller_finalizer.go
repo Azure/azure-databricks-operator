@@ -18,40 +18,23 @@ package controllers
 
 import (
 	"context"
-	"fmt"
 
 	databricksv1 "github.com/microsoft/azure-databricks-operator/api/v1"
 )
 
 func (r *RunReconciler) addFinalizer(instance *databricksv1.Run) error {
 	instance.AddFinalizer(databricksv1.RunFinalizerName)
-	err := r.Update(context.Background(), instance)
-	if err != nil {
-		return fmt.Errorf("failed to update finalizer: %v", err)
-	}
-	r.Recorder.Event(instance, "Normal", "Updated", fmt.Sprintf("finalizer %s added", databricksv1.RunFinalizerName))
-	return nil
+	return r.Update(context.Background(), instance)
 }
 
 func (r *RunReconciler) handleFinalizer(instance *databricksv1.Run) error {
-	if instance.HasFinalizer(databricksv1.RunFinalizerName) {
-		// our finalizer is present, so lets handle our external dependency
-		if err := r.deleteExternalDependency(instance); err != nil {
-			return err
-		}
-
-		instance.RemoveFinalizer(databricksv1.RunFinalizerName)
-		if err := r.Update(context.Background(), instance); err != nil {
-			return err
-		}
+	if !instance.HasFinalizer(databricksv1.RunFinalizerName) {
+		return nil
 	}
-	// Our finalizer has finished, so the reconciler can do nothing.
-	return nil
-}
 
-func (r *RunReconciler) deleteExternalDependency(instance *databricksv1.Run) error {
-	if instance.Status != nil {
-		r.Log.Info(fmt.Sprintf("Deleting external dependencies (job_id: %d)", instance.Status.Metadata.JobID))
+	if err := r.deleteRunFromDatabricks(instance); err != nil {
+		return err
 	}
-	return r.deleteRunFromDatabricks(instance)
+	instance.RemoveFinalizer(databricksv1.RunFinalizerName)
+	return r.Update(context.Background(), instance)
 }

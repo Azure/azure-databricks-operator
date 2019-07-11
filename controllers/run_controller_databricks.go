@@ -24,25 +24,24 @@ import (
 	"time"
 
 	databricksv1 "github.com/microsoft/azure-databricks-operator/api/v1"
-	dbazure "github.com/xinsnake/databricks-sdk-golang/azure"
 	dbmodels "github.com/xinsnake/databricks-sdk-golang/azure/models"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"k8s.io/apimachinery/pkg/types"
 )
 
-func (r *RunReconciler) submitRunToDatabricks(instance *databricksv1.Run) error {
-	r.Log.Info("Submitting job " + instance.GetName())
+func (r *RunReconciler) submitDataBricksRun(instance *databricksv1.Run) error {
+	r.Log.Info(fmt.Sprintf("Submitting run %s", instance.GetName()))
 
-	var runOutput dbazure.JobsRunsGetOutputResponse
 	var run dbmodels.Run
 	var err error
 
-	var k8sJob databricksv1.Djob
-
 	instance.Spec.RunName = instance.GetName()
+
+	// If the run is not linked to a job, submit using RunsSubmit,
+	// otherwise submit it as RunNow under the job, and make the
+	// job the owner of the run
 	if instance.Spec.JobName != "" {
-		// run existing job
 		runParameters := dbmodels.RunParameters{
 			JarParams:         instance.Spec.JarParams,
 			NotebookParams:    instance.Spec.NotebookParams,
@@ -50,32 +49,24 @@ func (r *RunReconciler) submitRunToDatabricks(instance *databricksv1.Run) error 
 			SparkSubmitParams: instance.Spec.SparkSubmitParams,
 		}
 
+		// Here we set the owner attribute
 		k8sJobNamespacedName := types.NamespacedName{Namespace: instance.GetNamespace(), Name: instance.Spec.JobName}
-		err = r.Client.Get(context.Background(), k8sJobNamespacedName, &k8sJob)
-		if err != nil {
+		var k8sJob databricksv1.Djob
+		if err := r.Client.Get(context.Background(), k8sJobNamespacedName, &k8sJob); err != nil {
 			return err
 		}
-
-		run, err = r.APIClient.Jobs().RunNow(k8sJob.Status.JobID, runParameters)
-		if err != nil {
-			return err
-		}
-
-		runOutput, err = r.APIClient.Jobs().RunsGetOutput(run.RunID)
-		if err != nil {
-			return err
-		}
-
 		instance.ObjectMeta.SetOwnerReferences([]metav1.OwnerReference{
 			metav1.OwnerReference{
-				APIVersion: "v1",
-				Kind:       "Djob",
+				APIVersion: "v1",   // TODO should this be a referenced value?
+				Kind:       "Djob", // TODO should this be a referenced value?
 				Name:       k8sJob.GetName(),
 				UID:        k8sJob.GetUID(),
 			},
 		})
+
+		run, err = r.APIClient.Jobs().
+			RunNow(k8sJob.Status.JobStatus.JobID, runParameters)
 	} else {
-		// run directly
 		clusterSpec := dbmodels.ClusterSpec{
 			NewCluster:        instance.Spec.NewCluster,
 			ExistingClusterID: instance.Spec.ExistingClusterID,
@@ -87,67 +78,64 @@ func (r *RunReconciler) submitRunToDatabricks(instance *databricksv1.Run) error 
 			SparkPythonTask: instance.Spec.SparkPythonTask,
 			SparkSubmitTask: instance.Spec.SparkSubmitTask,
 		}
+		run, err = r.APIClient.Jobs().
+			RunsSubmit(instance.Spec.RunName, clusterSpec, jobTask, instance.Spec.TimeoutSeconds)
+	}
 
-		runResp, err := r.APIClient.Jobs().RunsSubmit(instance.Spec.RunName, clusterSpec, jobTask, instance.Spec.TimeoutSeconds)
-		if err != nil {
-			return err
-		}
+	if err != nil {
+		return err
+	}
 
-		runOutput, err = r.APIClient.Jobs().RunsGetOutput(runResp.RunID)
-		if err != nil {
-			return err
-		}
+	runOutput, err := r.APIClient.Jobs().RunsGetOutput(run.RunID)
+	if err != nil {
+		return err
 	}
 
 	instance.Status = &runOutput
-	err = r.Update(context.Background(), instance)
-	if err != nil {
-		return fmt.Errorf("error when updating run after submitting to API: %v", err)
-	}
-
-	r.Recorder.Event(instance, "Normal", "Updated", "run submitted")
-	return nil
+	return r.Update(context.Background(), instance)
 }
 
 func (r *RunReconciler) refreshDatabricksRun(instance *databricksv1.Run) error {
-	r.Log.Info("Refreshing run " + instance.GetName())
+	r.Log.Info(fmt.Sprintf("Refreshing run %s", instance.GetName()))
 
 	runID := instance.Status.Metadata.RunID
+
 	runOutput, err := r.APIClient.Jobs().RunsGetOutput(runID)
 	if err != nil {
 		return err
 	}
-	if !reflect.DeepEqual(instance.Status, &runOutput) {
-		instance.Status = &runOutput
-		err = r.Update(context.Background(), instance)
-		if err != nil {
-			return fmt.Errorf("error when updating run: %v", err)
-		}
-		r.Recorder.Event(instance, "Normal", "Updated", "run status updated")
+
+	if reflect.DeepEqual(instance.Status, &runOutput) {
+		return nil
 	}
-	return nil
+
+	instance.Status = &runOutput
+	return r.Update(context.Background(), instance)
 }
 
 func (r *RunReconciler) deleteRunFromDatabricks(instance *databricksv1.Run) error {
-	r.Log.Info("Deleting run " + instance.GetName())
+	r.Log.Info(fmt.Sprintf("Deleting run %s", instance.GetName()))
 
 	if instance.Status == nil {
 		return nil
 	}
+
 	runID := instance.Status.Metadata.RunID
-	_, err := r.APIClient.Jobs().RunsGet(runID)
 
-	if err != nil && strings.Contains(err.Error(), "does not exist") {
-		return nil
+	// Check if the run exists before trying to delete it
+	if _, err := r.APIClient.Jobs().RunsGet(runID); err != nil {
+		if strings.Contains(err.Error(), "does not exist") {
+			return nil
+		}
+		return err
 	}
 
-	if err == nil {
-		err = r.APIClient.Jobs().RunsCancel(runID)
-		time.Sleep(15 * time.Second)
-	}
+	// We will not check for error when cancelling a job,
+	// if it fails just let it be
+	r.APIClient.Jobs().RunsCancel(runID)
 
-	if err == nil {
-		err = r.APIClient.Jobs().RunsDelete(runID)
-	}
-	return err
+	// It takes time for DataBricks to cancel a run
+	time.Sleep(15 * time.Second)
+
+	return r.APIClient.Jobs().RunsDelete(runID)
 }
