@@ -19,7 +19,7 @@ package controllers
 import (
 	"context"
 	"fmt"
-	"reflect"
+	"strings"
 
 	databricksv1 "github.com/microsoft/azure-databricks-operator/api/v1"
 	dbmodels "github.com/xinsnake/databricks-sdk-golang/azure/models"
@@ -164,7 +164,7 @@ func (r *SecretScopeReconciler) refresh(instance *databricksv1.SecretScope) erro
 		return err
 	}
 
-	if !reflect.DeepEqual(instance.Status.SecretScope, remoteScope) {
+	if remoteScope != nil {
 		instance.Status.SecretScope = remoteScope
 		err = r.update(instance)
 		if err != nil {
@@ -175,6 +175,17 @@ func (r *SecretScopeReconciler) refresh(instance *databricksv1.SecretScope) erro
 	err = r.Update(context.Background(), instance)
 	if err != nil {
 		return fmt.Errorf("error when updating SecretScope instance after updating the remote: %v", err)
+	}
+	return nil
+}
+
+func (r *SecretScopeReconciler) delete(instance *databricksv1.SecretScope) error {
+	scope := instance.Status.SecretScope.Name
+	if instance.Status.SecretScope != nil {
+		err := r.APIClient.Secrets().DeleteSecretScope(scope)
+		if err != nil && !strings.Contains(err.Error(), "does not exist") {
+			return err
+		}
 	}
 	return nil
 }

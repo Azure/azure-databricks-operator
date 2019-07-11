@@ -52,7 +52,23 @@ type SecretScope struct {
 }
 
 func (ss *SecretScope) IsSubmitted() bool {
-	return ss.Status.SecretScope == nil
+	return ss.Status.SecretScope != nil
+}
+
+func (ss *SecretScope) IsBeingDeleted() bool {
+	return !ss.ObjectMeta.DeletionTimestamp.IsZero()
+}
+
+func (ss *SecretScope) HasFinalizer(finalizerName string) bool {
+	return containsString(ss.ObjectMeta.Finalizers, finalizerName)
+}
+
+func (ss *SecretScope) AddFinalizer(finalizerName string) {
+	ss.ObjectMeta.Finalizers = append(ss.ObjectMeta.Finalizers, finalizerName)
+}
+
+func (ss *SecretScope) RemoveFinalizer(finalizerName string) {
+	ss.ObjectMeta.Finalizers = removeString(ss.ObjectMeta.Finalizers, finalizerName)
 }
 
 // +kubebuilder:object:root=true
