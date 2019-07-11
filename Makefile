@@ -8,11 +8,19 @@ all: manager
 
 # Run tests
 test: generate fmt vet manifests
-	TEST_USE_EXISTING_CLUSTER=false go test ./api/... ./controllers/... -coverprofile cover.out
+	rm -f cover.out cover.out.tmp
+	TEST_USE_EXISTING_CLUSTER=false go test ./api/... ./controllers/... -coverprofile cover.out.tmp
+	cat cover.out.tmp | grep -v "_generated.deepcopy.go" > cover.out
+	go tool cover -func cover.out
+	rm -f cover.out.tmp
 
 # Run tests with existing cluster
 test-existing: generate fmt vet manifests
-	TEST_USE_EXISTING_CLUSTER=true go test ./api/... ./controllers/... -coverprofile cover.out
+	rm -f cover.out cover.out.tmp
+	TEST_USE_EXISTING_CLUSTER=true go test ./api/... ./controllers/... -coverprofile cover.out.tmp
+	cat cover.out.tmp | grep -v "_generated.deepcopy.go" > cover.out
+	go tool cover -func cover.out
+	rm -f cover.out.tmp
 
 # Build manager binary
 manager: generate fmt vet
