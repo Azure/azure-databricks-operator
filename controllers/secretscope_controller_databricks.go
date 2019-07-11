@@ -17,11 +17,33 @@ limitations under the License.
 package controllers
 
 import (
+	"context"
 	"fmt"
+	"strings"
 
 	databricksv1 "github.com/microsoft/azure-databricks-operator/api/v1"
 	dbmodels "github.com/xinsnake/databricks-sdk-golang/azure/models"
 )
+
+func (r *SecretScopeReconciler) get(scope string) (*dbmodels.SecretScope, error) {
+	scopes, err := r.APIClient.Secrets().ListSecretScopes()
+	if err != nil {
+		return nil, err
+	}
+
+	matchingScope := dbmodels.SecretScope{}
+	for _, existingScope := range scopes {
+		if existingScope.Name == scope {
+			matchingScope = existingScope
+		}
+	}
+
+	if (dbmodels.SecretScope{}) == matchingScope {
+		return nil, fmt.Errorf("get for secret scope failed. scope not found: %s", scope)
+	} else {
+		return &matchingScope, nil
+	}
+}
 
 func (r *SecretScopeReconciler) submitSecrets(instance *databricksv1.SecretScope) error {
 	scope := instance.ObjectMeta.Name
@@ -108,5 +130,62 @@ func (r *SecretScopeReconciler) submit(instance *databricksv1.SecretScope) error
 		return err
 	}
 
+	remoteScope, err := r.get(scope)
+	if err != nil {
+		return err
+	}
+
+	instance.Status.SecretScope = remoteScope
+	err = r.Update(context.Background(), instance)
+	if err != nil {
+		return fmt.Errorf("error when updating SecretScope instance after updating the remote: %v", err)
+	}
+	return nil
+}
+
+func (r *SecretScopeReconciler) update(instance *databricksv1.SecretScope) error {
+	err := r.submitSecrets(instance)
+	if err != nil {
+		return err
+	}
+
+	err = r.submitACLs(instance)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *SecretScopeReconciler) refresh(instance *databricksv1.SecretScope) error {
+	scope := instance.Status.SecretScope.Name
+	remoteScope, err := r.get(scope)
+	if err != nil {
+		return err
+	}
+
+	if remoteScope != nil {
+		instance.Status.SecretScope = remoteScope
+		err = r.update(instance)
+		if err != nil {
+			return fmt.Errorf("error when refreshing SecretScope: %v", err)
+		}
+	}
+
+	err = r.Update(context.Background(), instance)
+	if err != nil {
+		return fmt.Errorf("error when updating SecretScope instance after updating the remote: %v", err)
+	}
+	return nil
+}
+
+func (r *SecretScopeReconciler) delete(instance *databricksv1.SecretScope) error {
+	scope := instance.Status.SecretScope.Name
+	if instance.Status.SecretScope != nil {
+		err := r.APIClient.Secrets().DeleteSecretScope(scope)
+		if err != nil && !strings.Contains(err.Error(), "does not exist") {
+			return err
+		}
+	}
 	return nil
 }

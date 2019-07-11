@@ -52,14 +52,38 @@ func (r *SecretScopeReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error)
 
 	if err != nil {
 		if errors.IsNotFound(err) {
-			return reconcile.Result{}, err
+			return reconcile.Result{}, nil
 		}
+		return reconcile.Result{}, err
+	}
+
+	if instance.IsBeingDeleted() {
+		err := r.handleFinalizer(instance)
+		if err != nil {
+			return reconcile.Result{}, fmt.Errorf("error when handling finalizer: %v", err)
+		}
+		return ctrl.Result{}, nil
+	}
+
+	if !instance.HasFinalizer(secretScopeFinalizerName) {
+		err = r.addFinalizer(instance)
+		if err != nil {
+			return reconcile.Result{}, fmt.Errorf("error when handling secret scope finalizer: %v", err)
+		}
+		return ctrl.Result{}, nil
 	}
 
 	if !instance.IsSubmitted() {
 		err = r.submit(instance)
 		if err != nil {
-			return ctrl.Result{}, fmt.Errorf("error when submitting job to API: %v", err)
+			return ctrl.Result{}, fmt.Errorf("error when submitting secret scope to the API: %v", err)
+		}
+	}
+
+	if instance.IsSubmitted() {
+		err = r.refresh(instance)
+		if err != nil {
+			return ctrl.Result{}, fmt.Errorf("error when refreshing secret scope with the API: %v", err)
 		}
 	}
 
