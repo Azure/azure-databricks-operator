@@ -28,6 +28,8 @@ import (
 func (r *DjobReconciler) submitDataBricksJob(instance *databricksv1.Djob) error {
 	r.Log.Info(fmt.Sprintf("Submitting job %s", instance.GetName()))
 
+	instance.Spec.Name = instance.GetName()
+
 	job, err := r.APIClient.Jobs().Create(*instance.Spec)
 	if err != nil {
 		return err
@@ -37,7 +39,9 @@ func (r *DjobReconciler) submitDataBricksJob(instance *databricksv1.Djob) error 
 	}
 
 	instance.Spec.Name = instance.GetName()
-	instance.Status.JobStatus = &job
+	instance.Status = &databricksv1.DjobStatus{
+		JobStatus: &job,
+	}
 	return r.Update(context.Background(), instance)
 }
 
@@ -62,8 +66,10 @@ func (r *DjobReconciler) refreshDataBricksJob(instance *databricksv1.Djob) error
 		return nil
 	}
 
-	instance.Status.JobStatus = &job
-	instance.Status.Last10Runs = jobRunListResponse.Runs
+	instance.Status = &databricksv1.DjobStatus{
+		JobStatus:  &job,
+		Last10Runs: jobRunListResponse.Runs,
+	}
 	return r.Update(context.Background(), instance)
 }
 
@@ -77,9 +83,11 @@ func (r *DjobReconciler) deleteDataBricksJob(instance *databricksv1.Djob) error 
 	jobID := instance.Status.JobStatus.JobID
 
 	// Check if the job exists before trying to delete it
-	_, err := r.APIClient.Jobs().Get(jobID)
-	if err == nil || strings.Contains(err.Error(), "does not exist") {
-		return nil
+	if _, err := r.APIClient.Jobs().Get(jobID); err != nil {
+		if strings.Contains(err.Error(), "does not exist") {
+			return nil
+		}
+		return err
 	}
 
 	return r.APIClient.Jobs().Delete(jobID)

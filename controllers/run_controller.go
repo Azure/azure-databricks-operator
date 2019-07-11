@@ -27,7 +27,6 @@ import (
 	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	databricksv1 "github.com/microsoft/azure-databricks-operator/api/v1"
 )
@@ -51,14 +50,14 @@ func (r *RunReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	instance := &databricksv1.Run{}
 	if err := r.Get(context.Background(), req.NamespacedName, instance); err != nil {
 		if errors.IsNotFound(err) {
-			return reconcile.Result{}, nil
+			return ctrl.Result{}, nil
 		}
-		return reconcile.Result{}, err
+		return ctrl.Result{}, err
 	}
 
 	if instance.IsBeingDeleted() {
 		if err := r.handleFinalizer(instance); err != nil {
-			return reconcile.Result{}, fmt.Errorf("error when handling finalizer: %v", err)
+			return ctrl.Result{}, fmt.Errorf("error when handling finalizer: %v", err)
 		}
 		r.Recorder.Event(instance, "Normal", "Deleted", "Object finalizer is deleted")
 		return ctrl.Result{}, nil

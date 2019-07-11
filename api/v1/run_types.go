@@ -40,6 +40,9 @@ type RunSpec struct {
 // +kubebuilder:object:root=true
 
 // Run is the Schema for the runs API
+// +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
+// +kubebuilder:printcolumn:name="RunID",type="integer",JSONPath=".status.metadata.run_id"
+// +kubebuilder:printcolumn:name="State",type="string",JSONPath=".status.metadata.state.life_cycle_state"
 type Run struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

@@ -6,11 +6,22 @@ metadata:
   creationTimestamp: null
   name: runs.databricks.microsoft.com
 spec:
+  additionalPrinterColumns:
+  - JSONPath: .metadata.creationTimestamp
+    name: Age
+    type: date
+  - JSONPath: .status.metadata.run_id
+    name: RunID
+    type: integer
+  - JSONPath: .status.metadata.state.life_cycle_state
+    name: State
+    type: string
   group: databricks.microsoft.com
   names:
     kind: Run
     plural: runs
   scope: ""
+  subresources: {}
   validation:
     openAPIV3Schema:
       description: Run is the Schema for the runs API

@@ -7,10 +7,10 @@ metadata:
   name: djobs.databricks.microsoft.com
 spec:
   additionalPrinterColumns:
-  - JSONPath: .status.created_time
+  - JSONPath: .metadata.creationTimestamp
     name: Age
     type: date
-  - JSONPath: .status.job_id
+  - JSONPath: .status.job_status.job_id
     name: JobID
     type: integer
   group: databricks.microsoft.com
