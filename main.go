@@ -68,7 +68,7 @@ func main() {
 		host, token := os.Getenv("DATABRICKS_HOST"), os.Getenv("DATABRICKS_TOKEN")
 		if len(host) < 10 && len(token) < 10 {
 			err = fmt.Errorf("no valid databricks host / key configured")
-			setupLog.Error(err, "unable to start notebookjob controller")
+			setupLog.Error(err, "unable to initialise databricks api client")
 			os.Exit(1)
 		}
 		var apiClient dbazure.DBClient
@@ -78,16 +78,6 @@ func main() {
 		})
 	}()
 
-	err = (&controllers.NotebookJobReconciler{
-		Client:    mgr.GetClient(),
-		Log:       ctrl.Log.WithName("controllers").WithName("NotebookJob"),
-		Recorder:  mgr.GetEventRecorderFor("notebookjob-controller"),
-		APIClient: apiClient,
-	}).SetupWithManager(mgr)
-	if err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "NotebookJob")
-		os.Exit(1)
-	}
 	err = (&controllers.SecretScopeReconciler{
 		Client:    mgr.GetClient(),
 		Log:       ctrl.Log.WithName("controllers").WithName("SecretScope"),

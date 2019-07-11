@@ -82,18 +82,36 @@ var _ = BeforeSuite(func(done Done) {
 		Scheme: scheme.Scheme,
 	})
 	Expect(err).ToNot(HaveOccurred())
-	err = (&NotebookJobReconciler{
-		Client:   k8sManager.GetClient(),
-		Log:      ctrl.Log.WithName("controllers").WithName("NotebookJob"),
-		Recorder: k8sManager.GetEventRecorderFor("notebookjob-controller"),
-		APIClient: func() dbazure.DBClient {
-			host, token := os.Getenv("DATABRICKS_HOST"), os.Getenv("DATABRICKS_TOKEN")
-			var apiClient dbazure.DBClient
-			return apiClient.Init(db.DBClientOption{
-				Host:  host,
-				Token: token,
-			})
-		}(),
+
+	apiClient := func() dbazure.DBClient {
+		host, token := os.Getenv("DATABRICKS_HOST"), os.Getenv("DATABRICKS_TOKEN")
+		var apiClient dbazure.DBClient
+		return apiClient.Init(db.DBClientOption{
+			Host:  host,
+			Token: token,
+		})
+	}()
+
+	err = (&SecretScopeReconciler{
+		Client:    k8sManager.GetClient(),
+		Log:       ctrl.Log.WithName("controllers").WithName("SecretScope"),
+		APIClient: apiClient,
+	}).SetupWithManager(k8sManager)
+	Expect(err).ToNot(HaveOccurred())
+
+	err = (&DjobReconciler{
+		Client:    k8sManager.GetClient(),
+		Log:       ctrl.Log.WithName("controllers").WithName("Djob"),
+		Recorder:  k8sManager.GetEventRecorderFor("djob-controller"),
+		APIClient: apiClient,
+	}).SetupWithManager(k8sManager)
+	Expect(err).ToNot(HaveOccurred())
+
+	err = (&RunReconciler{
+		Client:    k8sManager.GetClient(),
+		Log:       ctrl.Log.WithName("controllers").WithName("Run"),
+		Recorder:  k8sManager.GetEventRecorderFor("run-controller"),
+		APIClient: apiClient,
 	}).SetupWithManager(k8sManager)
 	Expect(err).ToNot(HaveOccurred())
 
