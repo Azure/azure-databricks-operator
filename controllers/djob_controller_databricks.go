@@ -25,7 +25,7 @@ import (
 	databricksv1 "github.com/microsoft/azure-databricks-operator/api/v1"
 )
 
-func (r *DjobReconciler) submitDataBricksJob(instance *databricksv1.Djob) error {
+func (r *DjobReconciler) submit(instance *databricksv1.Djob) error {
 	r.Log.Info(fmt.Sprintf("Submitting job %s", instance.GetName()))
 
 	instance.Spec.Name = instance.GetName()
@@ -45,7 +45,7 @@ func (r *DjobReconciler) submitDataBricksJob(instance *databricksv1.Djob) error 
 	return r.Update(context.Background(), instance)
 }
 
-func (r *DjobReconciler) refreshDataBricksJob(instance *databricksv1.Djob) error {
+func (r *DjobReconciler) refresh(instance *databricksv1.Djob) error {
 	r.Log.Info(fmt.Sprintf("Refreshing job %s", instance.GetName()))
 
 	jobID := instance.Status.JobStatus.JobID
@@ -73,7 +73,7 @@ func (r *DjobReconciler) refreshDataBricksJob(instance *databricksv1.Djob) error
 	return r.Update(context.Background(), instance)
 }
 
-func (r *DjobReconciler) deleteDataBricksJob(instance *databricksv1.Djob) error {
+func (r *DjobReconciler) delete(instance *databricksv1.Djob) error {
 	r.Log.Info(fmt.Sprintf("Deleting job %s", instance.GetName()))
 
 	if instance.Status == nil || instance.Status.JobStatus == nil {

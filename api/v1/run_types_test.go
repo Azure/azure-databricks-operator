@@ -74,4 +74,15 @@ var _ = Describe("Run", func() {
 
 	})
 
+	It("should correctly handle finalizers", func() {
+		run := &Run{}
+
+		run.AddFinalizer(RunFinalizerName)
+		Expect(len(run.GetFinalizers())).To(Equal(1))
+		Expect(run.HasFinalizer(RunFinalizerName)).To(Equal(true))
+
+		run.RemoveFinalizer(RunFinalizerName)
+		Expect(len(run.GetFinalizers())).To(Equal(0))
+		Expect(run.HasFinalizer(RunFinalizerName)).To(Equal(false))
+	})
 })

@@ -32,7 +32,7 @@ func (r *DjobReconciler) handleFinalizer(instance *databricksv1.Djob) error {
 		return nil
 	}
 
-	if err := r.deleteDataBricksJob(instance); err != nil {
+	if err := r.delete(instance); err != nil {
 		return err
 	}
 	instance.RemoveFinalizer(databricksv1.DjobFinalizerName)

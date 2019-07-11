@@ -32,7 +32,7 @@ func (r *RunReconciler) handleFinalizer(instance *databricksv1.Run) error {
 		return nil
 	}
 
-	if err := r.deleteRunFromDatabricks(instance); err != nil {
+	if err := r.delete(instance); err != nil {
 		return err
 	}
 	instance.RemoveFinalizer(databricksv1.RunFinalizerName)

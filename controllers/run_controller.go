@@ -72,14 +72,14 @@ func (r *RunReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	}
 
 	if !instance.IsSubmitted() {
-		if err := r.submitDataBricksRun(instance); err != nil {
+		if err := r.submit(instance); err != nil {
 			return ctrl.Result{}, fmt.Errorf("error when submitting run: %v", err)
 		}
 		r.Recorder.Event(instance, "Normal", "Submitted", "Object is submitted")
 	}
 
 	if instance.IsSubmitted() {
-		if err := r.refreshDatabricksRun(instance); err != nil {
+		if err := r.refresh(instance); err != nil {
 			return ctrl.Result{}, fmt.Errorf("error when refreshing run: %v", err)
 		}
 		r.Recorder.Event(instance, "Normal", "Refreshed", "Object is refreshed")

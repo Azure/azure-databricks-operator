@@ -72,6 +72,17 @@ var _ = Describe("Djob", func() {
 			Expect(k8sClient.Get(context.TODO(), key, created)).ToNot(Succeed())
 		})
 
+		It("should correctly handle finalizers", func() {
+			djob := &Djob{}
+
+			djob.AddFinalizer(DjobFinalizerName)
+			Expect(len(djob.GetFinalizers())).To(Equal(1))
+			Expect(djob.HasFinalizer(DjobFinalizerName)).To(Equal(true))
+
+			djob.RemoveFinalizer(DjobFinalizerName)
+			Expect(len(djob.GetFinalizers())).To(Equal(0))
+			Expect(djob.HasFinalizer(DjobFinalizerName)).To(Equal(false))
+		})
 	})
 
 })

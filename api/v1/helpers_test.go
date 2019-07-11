@@ -70,5 +70,15 @@ var _ = Describe("Helpers", func() {
 
 			Expect(len(slice)).To(BeIdenticalTo(0))
 		})
+
+		It("should create random string matches length", func() {
+			a1 := RandomString(5)
+			a2 := RandomString(5)
+			b1 := RandomString(10)
+
+			Expect(a1).ToNot(Equal(a2))
+			Expect(len(a1)).To(Equal(len(a2)))
+			Expect(len(b1)).To(Equal(10))
+		})
 	})
 })

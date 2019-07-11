@@ -30,7 +30,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
-func (r *RunReconciler) submitDataBricksRun(instance *databricksv1.Run) error {
+func (r *RunReconciler) submit(instance *databricksv1.Run) error {
 	r.Log.Info(fmt.Sprintf("Submitting run %s", instance.GetName()))
 
 	var run dbmodels.Run
@@ -95,7 +95,7 @@ func (r *RunReconciler) submitDataBricksRun(instance *databricksv1.Run) error {
 	return r.Update(context.Background(), instance)
 }
 
-func (r *RunReconciler) refreshDatabricksRun(instance *databricksv1.Run) error {
+func (r *RunReconciler) refresh(instance *databricksv1.Run) error {
 	r.Log.Info(fmt.Sprintf("Refreshing run %s", instance.GetName()))
 
 	runID := instance.Status.Metadata.RunID
@@ -113,7 +113,7 @@ func (r *RunReconciler) refreshDatabricksRun(instance *databricksv1.Run) error {
 	return r.Update(context.Background(), instance)
 }
 
-func (r *RunReconciler) deleteRunFromDatabricks(instance *databricksv1.Run) error {
+func (r *RunReconciler) delete(instance *databricksv1.Run) error {
 	r.Log.Info(fmt.Sprintf("Deleting run %s", instance.GetName()))
 
 	if instance.Status == nil {

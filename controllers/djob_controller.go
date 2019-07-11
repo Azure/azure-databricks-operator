@@ -72,14 +72,14 @@ func (r *DjobReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	}
 
 	if !instance.IsSubmitted() {
-		if err := r.submitDataBricksJob(instance); err != nil {
+		if err := r.submit(instance); err != nil {
 			return ctrl.Result{}, fmt.Errorf("error when submitting job: %v", err)
 		}
 		r.Recorder.Event(instance, "Normal", "Submitted", "Object is submitted")
 	}
 
 	if instance.IsSubmitted() {
-		if err := r.refreshDataBricksJob(instance); err != nil {
+		if err := r.refresh(instance); err != nil {
 			return ctrl.Result{}, fmt.Errorf("error when refreshing job: %v", err)
 		}
 		r.Recorder.Event(instance, "Normal", "Refreshed", "Object is refreshed")
