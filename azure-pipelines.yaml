@@ -58,7 +58,13 @@ steps:
     chmod a+x $(MODULE_PATH)/bin/*
     # export path
     export PATH=$PATH:$(MODULE_PATH)/bin
-
+    # install test dependencies
+    go mod download
+    go get -u github.com/axw/gocov/gocov
+    go get -u golang.org/x/tools/cmd/cover
+    go get -u github.com/AlekSi/gocov-xml
+    go get -u github.com/matm/gocov-html
+    # run test
     make test
   continueOnError: 'false'
   displayName: 'Install kubebuilder, kustomize and Run unit tests'
