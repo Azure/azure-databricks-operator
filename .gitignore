@@ -9,9 +9,8 @@
 *.test
 
 # Output of the go coverage tool, specifically when used with LiteIDE
-cover.out
-cover.out.tmp
-cover.html
+/cover.*
+/cover/
 
 .vscode/
 .env
