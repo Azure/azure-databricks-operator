@@ -23,6 +23,8 @@ import (
 
 	databricksv1 "github.com/microsoft/azure-databricks-operator/api/v1"
 	dbmodels "github.com/xinsnake/databricks-sdk-golang/azure/models"
+	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/types"
 )
 
 func (r *SecretScopeReconciler) get(scope string) (*dbmodels.SecretScope, error) {
@@ -47,6 +49,7 @@ func (r *SecretScopeReconciler) get(scope string) (*dbmodels.SecretScope, error)
 
 func (r *SecretScopeReconciler) submitSecrets(instance *databricksv1.SecretScope) error {
 	scope := instance.ObjectMeta.Name
+	namespace := instance.Namespace
 	scopeSecrets, err := r.APIClient.Secrets().ListSecrets(scope)
 	if err != nil {
 		return err
@@ -64,13 +67,41 @@ func (r *SecretScopeReconciler) submitSecrets(instance *databricksv1.SecretScope
 	}
 
 	for _, secret := range instance.Spec.SecretScopeSecrets {
-		err = r.APIClient.Secrets().PutSecretString(secret.Value, scope, secret.Key)
-		if err != nil {
-			return err
+		if secret.Value != nil {
+			err = r.APIClient.Secrets().PutSecretString(*secret.Value, scope, secret.Key)
+			if err != nil {
+				return err
+			}
+		} else if &secret.ValueFrom != nil {
+			value, err := r.getSecretValueFrom(namespace, secret)
+			if err != nil {
+				return err
+			}
+
+			err = r.APIClient.Secrets().PutSecretString(value, scope, secret.Key)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
 	return nil
+}
+
+func (r *SecretScopeReconciler) getSecretValueFrom(namespace string, scopeSecret databricksv1.SecretScopeSecret) (string, error) {
+	if &scopeSecret.ValueFrom != nil {
+		namespacedName := types.NamespacedName{Namespace: namespace, Name: scopeSecret.ValueFrom.SecretKeyRef.Name}
+		secret := &v1.Secret{}
+		err := r.Get(context.Background(), namespacedName, secret)
+		if err != nil {
+			return "", err
+		}
+
+		value := string(secret.Data[scopeSecret.ValueFrom.SecretKeyRef.Key])
+		return value, nil
+	} else {
+		return "", fmt.Errorf("No ValueFrom present to extract secret")
+	}
 }
 
 func (r *SecretScopeReconciler) submitACLs(instance *databricksv1.SecretScope) error {

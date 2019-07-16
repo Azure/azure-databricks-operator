@@ -17,11 +17,21 @@ limitations under the License.
 package v1
 
 type SecretScopeSecret struct {
-	Key   string `json:"key,omitempty"`
-	Value string `json:"value,omitempty"`
+	Key       string                `json:"key,omitempty"`
+	Value     *string               `json:"value,omitempty"`
+	ValueFrom *SecretScopeValueFrom `json:"value_from,omitempty"`
 }
 
 type SecretScopeACL struct {
 	Principal  string `json:"principal,omitempty"`
 	Permission string `json:"permission,omitempty"`
+}
+
+type SecretScopeValueFrom struct {
+	SecretKeyRef SecretScopeKeyRef `json:"secret_key_ref,omitempty"`
+}
+
+type SecretScopeKeyRef struct {
+	Name string `json:"name,omitempty"`
+	Key  string `json:"key,omitempty"`
 }
