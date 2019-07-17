@@ -20,9 +20,11 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/onsi/gomega/gexec"
 	db "github.com/xinsnake/databricks-sdk-golang"
 	dbazure "github.com/xinsnake/databricks-sdk-golang/azure"
 
@@ -128,6 +130,7 @@ var _ = BeforeSuite(func(done Done) {
 
 var _ = AfterSuite(func() {
 	By("tearing down the test environment")
+	gexec.KillAndWait(5 * time.Second)
 	err := testEnv.Stop()
 	Expect(err).ToNot(HaveOccurred())
 })

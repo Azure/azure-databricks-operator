@@ -31,8 +31,8 @@ import (
 
 var _ = Describe("Djob Controller", func() {
 
-	const timeout = time.Second * 15
-	const interval = time.Millisecond * 200
+	const timeout = time.Second * 5
+	const interval = time.Second * 1
 
 	BeforeEach(func() {
 		// Add any setup steps that needs to be executed before each test
@@ -90,27 +90,36 @@ var _ = Describe("Djob Controller", func() {
 			}
 
 			// Create
-			k8sClient.Create(context.TODO(), created)
+			k8sClient.Create(context.Background(), created)
 
-			fetched := &databricksv1.Djob{}
+			By("Expecting submitted")
 			Eventually(func() bool {
-				k8sClient.Get(context.TODO(), key, fetched)
-				return fetched.IsSubmitted()
+				f := &databricksv1.Djob{}
+				k8sClient.Get(context.Background(), key, f)
+				return f.IsSubmitted()
 			}, timeout, interval).Should(BeTrue())
 
 			// Delete
+			By("Expecting to delete successfully")
 			Eventually(func() error {
-				k8sClient.Get(context.TODO(), key, fetched)
-				return k8sClient.Delete(context.TODO(), fetched)
+				f := &databricksv1.Djob{}
+				k8sClient.Get(context.Background(), key, f)
+				return k8sClient.Delete(context.Background(), f)
 			}, timeout, interval).Should(Succeed())
+
+			By("Expecting is deleted true")
 			Eventually(func() bool {
-				k8sClient.Get(context.TODO(), key, fetched)
-				return fetched.IsBeingDeleted()
+				f := &databricksv1.Djob{}
+				k8sClient.Get(context.Background(), key, f)
+				return f.IsBeingDeleted()
 			}, timeout, interval).Should(BeTrue())
+
+			By("Expecting finaliser be removed")
 			Eventually(func() bool {
-				k8sClient.Get(context.TODO(), key, fetched)
-				return fetched.HasFinalizer(databricksv1.DjobFinalizerName)
+				f := &databricksv1.Djob{}
+				k8sClient.Get(context.Background(), key, f)
+				return f.HasFinalizer(databricksv1.DjobFinalizerName)
 			}, timeout, interval).Should(BeFalse())
-		})
+		}, 60)
 	})
 })

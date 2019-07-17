@@ -48,6 +48,10 @@ func (r *DjobReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	_ = r.Log.WithValues("djob", req.NamespacedName)
 
 	instance := &databricksv1.Djob{}
+
+	r.Log.Info(fmt.Sprintf("Starting reconcile loop for %v", req.NamespacedName))
+	defer r.Log.Info(fmt.Sprintf("Finish reconcile loop for %v", req.NamespacedName))
+
 	if err := r.Get(context.Background(), req.NamespacedName, instance); err != nil {
 		if errors.IsNotFound(err) {
 			return ctrl.Result{}, nil
@@ -56,6 +60,7 @@ func (r *DjobReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	}
 
 	if instance.IsBeingDeleted() {
+		r.Log.Info(fmt.Sprintf("HandleFinalizer for %v", req.NamespacedName))
 		if err := r.handleFinalizer(instance); err != nil {
 			return ctrl.Result{}, fmt.Errorf("error when handling finalizer: %v", err)
 		}
@@ -64,6 +69,7 @@ func (r *DjobReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	}
 
 	if !instance.HasFinalizer(databricksv1.DjobFinalizerName) {
+		r.Log.Info(fmt.Sprintf("AddFinalizer for %v", req.NamespacedName))
 		if err := r.addFinalizer(instance); err != nil {
 			return ctrl.Result{}, fmt.Errorf("error when adding finalizer: %v", err)
 		}
@@ -72,6 +78,7 @@ func (r *DjobReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	}
 
 	if !instance.IsSubmitted() {
+		r.Log.Info(fmt.Sprintf("Submit for %v", req.NamespacedName))
 		if err := r.submit(instance); err != nil {
 			return ctrl.Result{}, fmt.Errorf("error when submitting job: %v", err)
 		}
@@ -79,6 +86,7 @@ func (r *DjobReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	}
 
 	if instance.IsSubmitted() {
+		r.Log.Info(fmt.Sprintf("Refresh for %v", req.NamespacedName))
 		if err := r.refresh(instance); err != nil {
 			return ctrl.Result{}, fmt.Errorf("error when refreshing job: %v", err)
 		}

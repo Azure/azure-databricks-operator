@@ -23,6 +23,7 @@ import (
 	"strings"
 
 	databricksv1 "github.com/microsoft/azure-databricks-operator/api/v1"
+	"k8s.io/apimachinery/pkg/types"
 )
 
 func (r *DjobReconciler) submit(instance *databricksv1.Djob) error {
@@ -57,6 +58,14 @@ func (r *DjobReconciler) refresh(instance *databricksv1.Djob) error {
 
 	// Refresh job also needs to get a list of historic runs under this job
 	jobRunListResponse, err := r.APIClient.Jobs().RunsList(false, false, jobID, 0, 10)
+	if err != nil {
+		return err
+	}
+
+	err = r.Get(context.Background(), types.NamespacedName{
+		Name:      instance.GetName(),
+		Namespace: instance.GetNamespace(),
+	}, instance)
 	if err != nil {
 		return err
 	}
