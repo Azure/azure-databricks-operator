@@ -31,7 +31,7 @@ import (
 
 var _ = Describe("Djob Controller", func() {
 
-	const timeout = time.Second * 5
+	const timeout = time.Second * 30
 	const interval = time.Second * 1
 
 	BeforeEach(func() {
@@ -90,7 +90,7 @@ var _ = Describe("Djob Controller", func() {
 			}
 
 			// Create
-			k8sClient.Create(context.Background(), created)
+			Expect(k8sClient.Create(context.Background(), created)).Should(Succeed())
 
 			By("Expecting submitted")
 			Eventually(func() bool {
@@ -120,6 +120,6 @@ var _ = Describe("Djob Controller", func() {
 				k8sClient.Get(context.Background(), key, f)
 				return f.HasFinalizer(databricksv1.DjobFinalizerName)
 			}, timeout, interval).Should(BeFalse())
-		}, 60)
+		})
 	})
 })

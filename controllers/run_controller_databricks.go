@@ -64,8 +64,7 @@ func (r *RunReconciler) submit(instance *databricksv1.Run) error {
 			},
 		})
 
-		run, err = r.APIClient.Jobs().
-			RunNow(k8sJob.Status.JobStatus.JobID, runParameters)
+		run, err = r.APIClient.Jobs().RunNow(k8sJob.Status.JobStatus.JobID, runParameters)
 	} else {
 		clusterSpec := dbmodels.ClusterSpec{
 			NewCluster:        instance.Spec.NewCluster,
@@ -101,6 +100,14 @@ func (r *RunReconciler) refresh(instance *databricksv1.Run) error {
 	runID := instance.Status.Metadata.RunID
 
 	runOutput, err := r.APIClient.Jobs().RunsGetOutput(runID)
+	if err != nil {
+		return err
+	}
+
+	err = r.Get(context.Background(), types.NamespacedName{
+		Name:      instance.GetName(),
+		Namespace: instance.GetNamespace(),
+	}, instance)
 	if err != nil {
 		return err
 	}
