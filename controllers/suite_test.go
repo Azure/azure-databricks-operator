@@ -101,7 +101,7 @@ var _ = BeforeSuite(func(done Done) {
 	err = (&SecretScopeReconciler{
 		Client:    k8sManager.GetClient(),
 		Log:       ctrl.Log.WithName("controllers").WithName("SecretScope"),
-		Recorder:  k8sManager.GetEventRecorderFor("djob-controller"),
+		Recorder:  k8sManager.GetEventRecorderFor("secretscope-controller"),
 		APIClient: apiClient,
 	}).SetupWithManager(k8sManager)
 	Expect(err).ToNot(HaveOccurred())
