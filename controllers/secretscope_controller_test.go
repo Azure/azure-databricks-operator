@@ -31,7 +31,7 @@ import (
 
 var _ = Describe("SecretScope Controller", func() {
 
-	const timeout = time.Second * 5
+	const timeout = time.Second * 10
 	const interval = time.Millisecond * 20
 
 	BeforeEach(func() {
