@@ -85,8 +85,12 @@ var _ = BeforeSuite(func(done Done) {
 	})
 	Expect(err).ToNot(HaveOccurred())
 
+	host, token := os.Getenv("DATABRICKS_HOST"), os.Getenv("DATABRICKS_TOKEN")
+	if host == "" || token == "" {
+		Fail("Missing environment variable required for tests. DATABRICKS_HOST and DATABRICKS_TOKEN must both be set.")
+	}
+
 	apiClient := func() dbazure.DBClient {
-		host, token := os.Getenv("DATABRICKS_HOST"), os.Getenv("DATABRICKS_TOKEN")
 		var apiClient dbazure.DBClient
 		return apiClient.Init(db.DBClientOption{
 			Host:  host,

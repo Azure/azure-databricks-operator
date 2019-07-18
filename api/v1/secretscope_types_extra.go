@@ -17,9 +17,10 @@ limitations under the License.
 package v1
 
 type SecretScopeSecret struct {
-	Key       string                `json:"key,omitempty"`
-	Value     *string               `json:"value,omitempty"`
-	ValueFrom *SecretScopeValueFrom `json:"value_from,omitempty"`
+	Key         string                `json:"key,omitempty"`
+	StringValue *string               `json:"string_value,omitempty"`
+	ByteValue   *[]byte               `json:"byte_value,omitempty"`
+	ValueFrom   *SecretScopeValueFrom `json:"value_from,omitempty"`
 }
 
 type SecretScopeACL struct {

@@ -65,7 +65,7 @@ func (r *SecretScopeReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error)
 		return ctrl.Result{}, nil
 	}
 
-	if !instance.HasFinalizer(secretScopeFinalizerName) {
+	if !instance.HasFinalizer(databricksv1.SecretScopeFinalizerName) {
 		err = r.addFinalizer(instance)
 		if err != nil {
 			return reconcile.Result{}, fmt.Errorf("error when handling secret scope finalizer: %v", err)

@@ -67,12 +67,17 @@ func (r *SecretScopeReconciler) submitSecrets(instance *databricksv1.SecretScope
 	}
 
 	for _, secret := range instance.Spec.SecretScopeSecrets {
-		if secret.Value != nil {
-			err = r.APIClient.Secrets().PutSecretString(*secret.Value, scope, secret.Key)
+		if secret.StringValue != nil {
+			err = r.APIClient.Secrets().PutSecretString(*secret.StringValue, scope, secret.Key)
 			if err != nil {
 				return err
 			}
-		} else if &secret.ValueFrom != nil {
+		} else if secret.ByteValue != nil {
+			err = r.APIClient.Secrets().PutSecret(*secret.ByteValue, scope, secret.Key)
+			if err != nil {
+				return err
+			}
+		} else if secret.ValueFrom != nil {
 			value, err := r.getSecretValueFrom(namespace, secret)
 			if err != nil {
 				return err

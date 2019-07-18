@@ -59,6 +59,8 @@ func (ss *SecretScope) IsBeingDeleted() bool {
 	return !ss.ObjectMeta.DeletionTimestamp.IsZero()
 }
 
+const SecretScopeFinalizerName = "secretscope.finalizers.databricks.microsoft.com"
+
 func (ss *SecretScope) HasFinalizer(finalizerName string) bool {
 	return containsString(ss.ObjectMeta.Finalizers, finalizerName)
 }
