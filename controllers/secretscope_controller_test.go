@@ -31,8 +31,8 @@ import (
 
 var _ = Describe("SecretScope Controller", func() {
 
-	const timeout = time.Second * 30
-	const interval = time.Millisecond * 20
+	const timeout = time.Second * 60
+	const interval = time.Second * 1
 
 	BeforeEach(func() {
 		// Add any setup steps that needs to be executed before each test
