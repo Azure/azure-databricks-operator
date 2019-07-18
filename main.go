@@ -81,6 +81,7 @@ func main() {
 	err = (&controllers.SecretScopeReconciler{
 		Client:    mgr.GetClient(),
 		Log:       ctrl.Log.WithName("controllers").WithName("SecretScope"),
+		Recorder:  mgr.GetEventRecorderFor("secretscope-controller"),
 		APIClient: apiClient,
 	}).SetupWithManager(mgr)
 	if err != nil {

@@ -23,6 +23,7 @@ import (
 
 	"github.com/go-logr/logr"
 	"k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -36,6 +37,7 @@ type SecretScopeReconciler struct {
 	client.Client
 	Log logr.Logger
 
+	Recorder  record.EventRecorder
 	APIClient dbazure.DBClient
 }
 
@@ -50,6 +52,9 @@ func (r *SecretScopeReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error)
 	instance := &databricksv1.SecretScope{}
 	err := r.Get(context.Background(), req.NamespacedName, instance)
 
+	r.Log.Info(fmt.Sprintf("Starting reconcile loop for %v", req.NamespacedName))
+	defer r.Log.Info(fmt.Sprintf("Finish reconcile loop for %v", req.NamespacedName))
+
 	if err != nil {
 		if errors.IsNotFound(err) {
 			return reconcile.Result{}, nil
@@ -62,6 +67,7 @@ func (r *SecretScopeReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error)
 		if err != nil {
 			return reconcile.Result{}, fmt.Errorf("error when handling finalizer: %v", err)
 		}
+		r.Recorder.Event(instance, "Normal", "Deleted", "Object finalizer is deleted")
 		return ctrl.Result{}, nil
 	}
 
@@ -70,6 +76,7 @@ func (r *SecretScopeReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error)
 		if err != nil {
 			return reconcile.Result{}, fmt.Errorf("error when handling secret scope finalizer: %v", err)
 		}
+		r.Recorder.Event(instance, "Normal", "Added", "Object finalizer is added")
 		return ctrl.Result{}, nil
 	}
 
@@ -78,6 +85,7 @@ func (r *SecretScopeReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error)
 		if err != nil {
 			return ctrl.Result{}, fmt.Errorf("error when submitting secret scope to the API: %v", err)
 		}
+		r.Recorder.Event(instance, "Normal", "Submitted", "Object is submitted")
 	}
 
 	if instance.IsSubmitted() {
@@ -85,6 +93,7 @@ func (r *SecretScopeReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error)
 		if err != nil {
 			return ctrl.Result{}, fmt.Errorf("error when refreshing secret scope with the API: %v", err)
 		}
+		r.Recorder.Event(instance, "Normal", "Refreshed", "Object is refreshed")
 	}
 
 	return ctrl.Result{RequeueAfter: 30 * time.Second}, nil
