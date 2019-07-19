@@ -1,95 +1,91 @@
-# How to use the operator
+# Deploy the operator
 
-*Documentation is a work in progress*
+## Prerequests
 
-## Quick start
+- You have `kubectl` configured pointing to the target Kubernetes cluster.
+- You have access to a DataBricks cluster and able to generate PAT token. To generate a token, check
+  [generate a DataBricks token](https://docs.databricks.com/api/latest/authentication.html#generate-a-token).
 
-1. Download [latest release.zip](https://github.com/microsoft/azure-databricks-operator/releases)
+## Step-by-step guide
+
+This will deploy the operator in namespace `azure-databricks-operator-system`. If you want to customise
+the namespace, you can either search-replace the namespace, or use `kustomise` by following the next
+section.
+
+1. Download [the latest release manifests](https://github.com/microsoft/azure-databricks-operator/releases):
 
 ```sh
 wget https://github.com/microsoft/azure-databricks-operator/releases/latest/download/release.zip
 unzip release.zip
 ```
 
-2. Create the `azure-databricks-operator-system` namespace
+2. Create the `azure-databricks-operator-system` namespace:
 
 ```sh
 kubectl create namespace azure-databricks-operator-system
 ```
 
-3. [Generate a databricks token](https://docs.databricks.com/api/latest/authentication.html#generate-a-token), and create Kubernetes secrets with values for `DATABRICKS_HOST` and `DATABRICKS_TOKEN`
+3. Create Kubernetes secrets with values for `DATABRICKS_HOST` and `DATABRICKS_TOKEN`:
 
 ```shell
-    kubectl  --namespace azure-databricks-operator-system create secret generic dbrickssettings --from-literal=DatabricksHost="https://xxxx.azuredatabricks.net" --from-literal=DatabricksToken="xxxxx"
+kubectl --namespace azure-databricks-operator-system \
+    create secret generic dbrickssettings \
+    --from-literal=DatabricksHost="https://xxxx.azuredatabricks.net" \
+    --from-literal=DatabricksToken="xxxxx"
 ```
 
-4. Apply the manifests for the CRD and Operator in `release/config`:
+4. Apply the manifests for the Operator and CRDs in `release/config`:
 
 ```sh
 kubectl apply -f release/config
 ```
 
-5. Create a test secret, you can pass the value of Kubernetes secrets into your notebook as Databricks secrets
+## Use kustomise to customise your deployment
+
+1. Clone the source code:
 
 ```sh
-kubectl create secret generic test-secret --from-literal=my_secret_key="my_secret_value"
+git clone git@github.com:microsoft/azure-databricks-operator.git
 ```
 
-6. In Databricks, [create a new Python Notebook](https://docs.databricks.com/user-guide/notebooks/notebook-manage.html#create-a-notebook) called `test-notebook` in the root of your [Workspace](https://docs.databricks.com/user-guide/workspace.html#folders). Put the following in the first cell of the notebook:
+2. Edit file `config/default/kustomization.yaml` file to change your preferences
 
-```py
-secret_scope = dbutils.widgets.get("secret_scope")
-
-secret_value = dbutils.secrets.get(scope=secret_scope, key="dbricks_secret_key") # this will come from a kubernetes secret
-print(secret_value) # will be redacted
-
-value = dbutils.widgets.get("flag")
-print(value) # 'true'
-```
-
-7. Define your Notebook job and apply it
-
-```yaml
-apiVersion: databricks.microsoft.com/v1
-kind: NotebookJob
-metadata:
-  annotations:
-    databricks.microsoft.com/author: azkhojan@microsoft.com
-  name: sample1run1
-spec:
-  notebookTask:
-    notebookPath: "/test-notebook"
-  timeoutSeconds: 500
-  notebookSpec:
-    "flag": "true"
-  notebookSpecSecrets:
-    - secretName: "test-secret"
-      mapping :
-        - "secretKey": "my_secret_key"
-          "outputKey": "dbricks_secret_key"
-  notebookAdditionalLibraries:
-    - type: "maven"
-      properties:
-        coordinates: "com.microsoft.azure:azure-eventhubs-spark_2.11:2.3.9"
-  clusterSpec:
-    sparkVersion: "5.2.x-scala2.11"
-    nodeTypeId: "Standard_DS12_v2"
-    numWorkers: 1
-```
-
-8. Check the NotebookJob and Operator pod
+3. Use `kustomise` to generate the final manifests and deploy:
 
 ```sh
-# list all notebook jobs
-kubectl get notebookjob
-# describe a notebook job
-kubectl describe notebookjob sample1run1
-# get pods
-kubectl -n azure-databricks-operator-system get pods
-# describe the manager pod
-azure-databricks-operator-controller-manager-xxxxx
-# get logs from the manager container
-kubectl -n azure-databricks-operator-system logs databricks-operator-controller-manager-xxxxx -c manager
+kustomize build config/default | kubectl apply -f -
 ```
 
-9. Check the job ran with expected output in the Databricks UI.
+4. Deploy the CRDs:
+
+```sh
+kubectl apply -f config/crd/bases
+```
+
+## Test your deployment
+
+1. Deploy a sample job, this will create a job in the default namespace:
+
+```sh
+curl https://raw.githubusercontent.com/microsoft/azure-databricks-operator/master/config/samples/databricks_v1_djob.yaml | kubectl apply -f -
+```
+
+2. Check the Job in Kubernetes:
+
+```sh
+kubectl get djob
+```
+
+3. Check the job is created successfully in DataBricks.
+
+## Troubleshooting
+
+If you encounter any issue, you can check the log of the operator by pulling it from Kubernetes:
+
+```sh
+# get the pod name of your operator
+kubectl --namespace azure-databricks-operator-system get pods
+
+# pull the logs
+kubectl --namespace azure-databricks-operator-system logs -f [name_of_the_operator_pod]
+```
