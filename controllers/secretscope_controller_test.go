@@ -31,11 +31,18 @@ import (
 
 var _ = Describe("SecretScope Controller", func() {
 
-	const timeout = time.Second * 60
+	const timeout = time.Second * 30
 	const interval = time.Second * 1
 
+	const aclKeyName = "secretscope-with-acls"
+	const secretsKeyName = "secretscope-with-secrets"
+
 	BeforeEach(func() {
-		// Add any setup steps that needs to be executed before each test
+		// failed test runs that don't clean up leave resources behind.
+		keys := []string{aclKeyName, secretsKeyName}
+		for _, value := range keys {
+			apiClient.Secrets().DeleteSecretScope(value)
+		}
 	})
 
 	AfterEach(func() {
@@ -59,7 +66,7 @@ var _ = Describe("SecretScope Controller", func() {
 			}
 
 			key := types.NamespacedName{
-				Name:      "secretscope-with-acls",
+				Name:      aclKeyName,
 				Namespace: "default",
 			}
 
@@ -172,7 +179,7 @@ var _ = Describe("SecretScope Controller", func() {
 			}
 
 			key := types.NamespacedName{
-				Name:      "secretscope-with-secrets",
+				Name:      secretsKeyName,
 				Namespace: "default",
 			}
 

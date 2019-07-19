@@ -46,6 +46,7 @@ var cfg *rest.Config
 var k8sClient client.Client
 var k8sManager ctrl.Manager
 var testEnv *envtest.Environment
+var apiClient dbazure.DBClient
 
 func TestAPIs(t *testing.T) {
 	RegisterFailHandler(Fail)
@@ -90,7 +91,7 @@ var _ = BeforeSuite(func(done Done) {
 		Fail("Missing environment variable required for tests. DATABRICKS_HOST and DATABRICKS_TOKEN must both be set.")
 	}
 
-	apiClient := func() dbazure.DBClient {
+	apiClient = func() dbazure.DBClient {
 		var apiClient dbazure.DBClient
 		return apiClient.Init(db.DBClientOption{
 			Host:  host,
