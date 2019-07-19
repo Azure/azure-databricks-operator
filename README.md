@@ -81,8 +81,7 @@ kubectl create secret generic test-secret --from-literal=my_secret_key="my_secre
 6. In Databricks, [create a new Python Notebook](https://docs.databricks.com/user-guide/notebooks/notebook-manage.html#create-a-notebook) called `test-notebook` in the root of your [Workspace](https://docs.databricks.com/user-guide/workspace.html#folders). Put the following in the first cell of the notebook:
 
 ```py
-run_name = dbutils.widgets.get("run_name")
-secret_scope = run_name + "_scope"
+secret_scope = dbutils.widgets.get("secret_scope")
 
 secret_value = dbutils.secrets.get(scope=secret_scope, key="dbricks_secret_key") # this will come from a kubernetes secret
 print(secret_value) # will be redacted
