@@ -19,11 +19,23 @@ The Databricks operator is useful in situations where Kubernetes hosted applicat
 The project was built using
 
 1. [Kubebuilder](https://book.kubebuilder.io/)
-2. [Golang SDK for Azure DataBricks REST API 2.0](https://github.com/xinsnake/databricks-sdk-golang)
+2. [Golang SDK for DataBricks](https://github.com/xinsnake/databricks-sdk-golang)
 
-![alt text](docs/images/development-flow.jpg "development flow")
+## Quick start
+
+For deployment gudes please see [deploy.md](https://github.com/microsoft/azure-databricks-operator/blob/master/docs/deploy.md)
+
+## Resources
+
+Few topics are discussed in the [resources.md](https://github.com/microsoft/azure-databricks-operator/blob/master/docs/resources.md)
+
+- Kubernetes on WSL
+- Build pipelines
 
 ## Contributing
+
+For instructions about setting up your environment to develop and extend the operator, please see
+[contributing.md](https://github.com/microsoft/azure-databricks-operator/blob/master/docs/contributing.md)
 
 This project welcomes contributions and suggestions.  Most contributions require you to agree to a
 Contributor License Agreement (CLA) declaring that you have the right to, and actually do, grant us

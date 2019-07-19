@@ -16,6 +16,8 @@ Basic commands to check your cluster
     kubectl get pods -n kube-system
 ```
 
+![alt text](docs/images/development-flow.jpg "development flow")
+
 # Run Souce Code
 
 1. Clone the repo  - make sure your go path points to `microsoft\azure-databricks-operator`
