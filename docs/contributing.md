@@ -1,87 +1,93 @@
-# Prerequisites And Assumptions
+# Requirements
+If you're interested in contributing to this project, you'll need:
+* Go installed - see this [Getting Started](https://golang.org/doc/install) guide for Go.
+* `Kubebuilder` -  see this [Quick Start](https://book.kubebuilder.io/quick-start.html) guide for installation instructions.
+* Kubernetes command-line tool `kubectl` 
+* Access to a Kubernetes cluster. Some options are:
+	* Locally hosted cluster, such as 
+		* [Minikube](https://kubernetes.io/docs/tasks/tools/install-minikube/)
+		* [Kind](https://github.com/kubernetes-sigs/kind)
+		* Docker for desktop installed localy with RBAC enabled.
+	* Azure Kubernetes Service ([AKS](https://azure.microsoft.com/en-au/services/kubernetes-service/))
+		* The [Azure CLI](https://docs.microsoft.com/en-us/cli/azure/?view=azure-cli-latest) will be helpful here
+		* Retrieve the config for the AKS cluster with `az aks get-credentials --resource-group $RG_NAME --name $Cluster_NAME`
+* Setup access to your cluster using a `kubeconfig` file.  See [here](https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig/) for more details
+* Access to an Azure DataBricks instance.
 
-1. You have the kubectl command line (kubectl CLI) installed.
-
-2. You have acess to a Kubernetes cluster. It can be a local hosted Cluster like [Minikube](https://kubernetes.io/docs/tasks/tools/install-minikube/), [Kind](https://github.com/kubernetes-sigs/kind) or, Docker for desktop installed localy with RBAC enabled. if you opt for Azure Kubernetes Service ([AKS](https://azure.microsoft.com/en-au/services/kubernetes-service/)), you can use: `az aks get-credentials --resource-group $RG_NAME --name $Cluster_NAME`
-
-* To configure a local Kubernetes cluster on your machine
-    > You need to make sure a kubeconfig file is configured.
-
-Basic commands to check your cluster
-
-```shell
-    kubectl config get-contexts
-    kubectl cluster-info
-    kubectl version
-    kubectl get pods -n kube-system
+Here are a few `kubectl` commands you can run to verify your `kubectl` installation and cluster setup
+```
+$ kubectl version
+$ kubectl config get-contexts
+$ kubectl config current-context
+$ kubectl cluster-info
+$ kubectl get pods -n kube-system
 ```
 
-![alt text](docs/images/development-flow.jpg "development flow")
+# Environment Variables
+You will need to set some environment variables so that the operator knows what Azure DataBricks instance to reconcile with. 
+```
+$ export DATABRICKS_HOST=https://xxxx.azuredatabricks.net
+$ export DATABRICKS_TOKEN=xxxxx
+```
 
-# Run Souce Code
+# Building and Running the operator
 
-1. Clone the repo  - make sure your go path points to `microsoft\azure-databricks-operator`
+## Basics
+The scaffolding for the project is generated using `Kubebuilder`. It is a good idea to become familiar with this [project](https://github.com/kubernetes-sigs/kubebuilder). The [quick start](https://book.kubebuilder.io/quick-start.html) guide is also quite useful.
 
-2. Install the NotebookJob CRD in the configured Kubernetes cluster folder ~/.kube/config,
-run `kubectl apply -f databricks-operator/config/crds` or `make install -C databricks-operator`
+See `Makefile` at the root directory of the project. By default, executing `make` will build the project and produce an executable at `./bin/manager`
 
-3. Set the Environment variables for `DATABRICKS_HOST` and `DATABRICKS_TOKEN`
+For example, to quick start 
+>this assumes dependencies have been downloaded and existing CRDs have been installed. See next section
+```
+$ git clone https://github.com/microsoft/azure-databricks-operator.git
+$ cd azure-databricks-operator
+$ make
+$ ./bin/manager
+```
 
-    Windows command line:
-    ```shell
-    set DATABRICKS_TOKEN=xxxx
-    set DATABRICKS_HOST=https://xxxx.azuredatabricks.net
-    ```
+Other tasks are defined in the `Makefile`. It would be good to familiarise yourself with them.
 
-    bash:
-    ```shell
-    export DATABRICKS_TOKEN=xxxx
-    export DATABRICKS_HOST=https://xxxx.azuredatabricks.net
-    ```
+## Dependencies
+The project uses external Go modules that are required to build/run. In addition, to run successfully, any CRDs defined in the project should be regenerated and installed. 
 
-    Make sure your secret mapping is set correctly in `config/default/manager_image_patch.yaml`
+The following steps should illustrate what is required before the project can be run:
+1. `go mod tidy` - download the dependencies (this can take a while and there is no progress bar - need to be patient for this one)
+2. `make manifests` - regenerates the CRD manifests
+3. `make install` -  installs the CRDs into the cluster
+4. `make generate` - generate the code
 
-4.Install [Kustomize] (https://github.com/kubernetes-sigs/kustomize) and deploy the controller in the configured Kubernetes cluster folder ~/.kube/config, run `kustomize build config/default | kubectl apply -f -`
+At this point you will be able to build the binary with `go build -o bin/manager main.go`. Alternatively, this step and the required `make generate` step before hand is covered with the default `make`. 
 
-5. Change the NotebookJob name from `sample1run1` to your desired name, set the Databricks notebook path and update the values in databricks_v1_notebookjob.yaml` to reflect your Databricks environment
+## Running Tests
+Running e2e tests require a configure Kubernetes cluster and Azure DataBricks connection (through specified environment variables)
+```
+make test
+```
 
-    ```shell
-    kubectl apply -f databricks-operator/config/samples/databricks_v1_notebookjob.yaml
-    ```
+# Extending the Library
+*This is a work in progress*
 
-# How to extend the operator and build your own images
+As previously mentioned, familiarity with `kubebuilder` is required for developing this operator. Kubebuilder generates the scaffolding for new Kubernetes APIs. 
+```
+$ kubebuilder create api --group databricks --version v1 --kind SecretScope
+                                                                                                                Create Resource [y/n]
+y
+Create Controller [y/n]
+y
+Writing scaffold for you to edit...
+api/v1/secretscope_types.go
+controllers/secretscope_controller.go
+Running make...
+/Users/d886442/go/bin/controller-gen object:headerFile=./hack/boilerplate.go.txt paths=./api/...
+go fmt ./...
+go vet ./...
+go build -o bin/manager main.go
 
-## Updating the Databricks operator:
+$ 
+```
+You'll notice in the output above that the following files have been created:
+* `api/v1/secretscope_types.go`
+* `controllers/secretscope_controller.go`
 
-This Repo is generated by [Kubebuilder](https://book.kubebuilder.io/), version:`2.0.0-alpha.4`.
-
-To Extend the operator `databricks-operator`:
-
-1. Run `go mod tidy` to download dependencies. It doesn't show any progress bar and takes a while to download all of dependencies.
-2. Update `api\v1\notebookjob_types.go`.
-3. Regenerate CRD `make manifests`.
-4. Install updated CRD `make install`
-5. Generate code `make generate`
-6. Update operator `controllers\notebookjob_controller.go`
-7. Update tests and run `make test`
-8. Build `make build`
-9. Deploy
-
-    ```shell
-    make docker-build IMG={your-docker-image-name}
-    make docker-push IMG={your-docker-image-name}
-    make deploy
-    ```
-
-# Main Contributors
-
-1. Jordan Knight [Github](https://github.com/jakkaj), [Linkedin](https://www.linkedin.com/in/jakkaj/)
-2. Paul Bouwer [Github](https://github.com/paulbouwer), [Linkedin](https://www.linkedin.com/in/pbouwer/)
-3. Lace Lofranco [Github](https://github.com/devlace), [Linkedin](https://www.linkedin.com/in/lacelofranco/)
-4. Allan Targino [Github](https://github.com/allantargino), [Linkedin](https://www.linkedin.com/in/allan-targino//)
-5. Xinyun (Jacob) Zhou [Github](https://github.com/xinsnake), [Linkedin](https://www.linkedin.com/in/xinyun-zhou/)
-6. Jason Goodsell [Github](https://github.com/JasonTheDeveloper), [Linkedin](https://www.linkedin.com/in/jason-goodsell-2505a3b2/)
-7. Craig Rodger [Github](https://github.com/crrodger), [Linkedin](https://www.linkedin.com/in/craigrodger/)
-8. Justin Chizer [Github](https://github.com/justinchizer), [Linkedin](https://www.linkedin.com/in/jchizer/)
-9. Priya Kumaran [Github](https://github.com/priyakumarank), [Linkedin](https://www.linkedin.com/in/priyakumaran/)
-10. Azadeh Khojandi [Github](https://github.com/Azadehkhojandi), [Linkedin](https://www.linkedin.com/in/azadeh-khojandi-ba441b3/)
+These files are ready for you to fill in with the logic appropriate to the new resource you're creating. Once you've developed your API, ensure to regenerate and install your CRDs. See [Dependencies](#dependencies)
