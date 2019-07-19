@@ -25,6 +25,10 @@ The project was built using
 
 For deployment gudes please see [deploy.md](https://github.com/microsoft/azure-databricks-operator/blob/master/docs/deploy.md)
 
+## Roadmap
+
+Check [roadmap.md](https://github.com/microsoft/azure-databricks-operator/blob/master/docs/roadmap.md) for what has been supported and what's coming.
+
 ## Resources
 
 Few topics are discussed in the [resources.md](https://github.com/microsoft/azure-databricks-operator/blob/master/docs/resources.md)
