@@ -91,10 +91,10 @@ var _ = Describe("Run Controller", func() {
 			}
 
 			Expect(k8sClient.Create(context.Background(), job)).Should(Succeed())
-			time.Sleep(time.Second * 5)
+			time.Sleep(time.Second * 30)
 			defer func() {
 				Expect(k8sClient.Delete(context.Background(), job)).Should(Succeed())
-				time.Sleep(time.Second * 5)
+				time.Sleep(time.Second * 30)
 			}()
 
 			By("Create the run itself")
