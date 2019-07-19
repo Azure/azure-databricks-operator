@@ -71,7 +71,8 @@ make test
 As previously mentioned, familiarity with `kubebuilder` is required for developing this operator. Kubebuilder generates the scaffolding for new Kubernetes APIs. 
 ```
 $ kubebuilder create api --group databricks --version v1 --kind SecretScope
-                                                                                                                Create Resource [y/n]
+ 
+Create Resource [y/n]
 y
 Create Controller [y/n]
 y
