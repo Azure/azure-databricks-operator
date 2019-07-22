@@ -15,3 +15,4 @@ spec:
         coordinates: 'org.jsoup:jsoup:1.7.2'
   spark_jar_task:
     main_class_name: com.databricks.ComputeModels
+ 
