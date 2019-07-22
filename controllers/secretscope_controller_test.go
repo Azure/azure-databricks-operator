@@ -59,9 +59,9 @@ var _ = Describe("SecretScope Controller", func() {
 				InitialManagePrincipal: "users",
 				SecretScopeSecrets:     make([]databricksv1.SecretScopeSecret, 0),
 				SecretScopeACLs: []databricksv1.SecretScopeACL{
-					databricksv1.SecretScopeACL{Principal: "joshua.agudo@team.telstra.com", Permission: "WRITE"},
-					databricksv1.SecretScopeACL{Principal: "joshua.agudo@team.telstra.com", Permission: "READ"},
-					databricksv1.SecretScopeACL{Principal: "joshua.agudo@team.telstra.com", Permission: "MANAGE"},
+					databricksv1.SecretScopeACL{Principal: "admins", Permission: "WRITE"},
+					databricksv1.SecretScopeACL{Principal: "admins", Permission: "READ"},
+					databricksv1.SecretScopeACL{Principal: "admins", Permission: "MANAGE"},
 				},
 			}
 
@@ -90,7 +90,7 @@ var _ = Describe("SecretScope Controller", func() {
 
 			By("Updating ACLs successfully")
 			updatedACLs := []databricksv1.SecretScopeACL{
-				databricksv1.SecretScopeACL{Principal: "joshua.agudo@team.telstra.com", Permission: "READ"},
+				databricksv1.SecretScopeACL{Principal: "admins", Permission: "READ"},
 			}
 
 			updateSpec := databricksv1.SecretScopeSpec{
