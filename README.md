@@ -23,7 +23,7 @@ The project was built using
 
 ## Quick start
 
-For deployment gudes please see [deploy.md](https://github.com/microsoft/azure-databricks-operator/blob/master/docs/deploy.md)
+For deployment guides please see [deploy.md](https://github.com/microsoft/azure-databricks-operator/blob/master/docs/deploy.md)
 
 ## Roadmap
 
