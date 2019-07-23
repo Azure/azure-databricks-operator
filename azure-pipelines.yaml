@@ -58,7 +58,13 @@ steps:
     chmod a+x $(MODULE_PATH)/bin/*
     # export path
     export PATH=$PATH:$(MODULE_PATH)/bin
-
+    # install test dependencies
+    go mod download
+    go get -u github.com/axw/gocov/gocov
+    go get -u golang.org/x/tools/cmd/cover
+    go get -u github.com/AlekSi/gocov-xml
+    go get -u github.com/matm/gocov-html
+    # run test
     make test
   continueOnError: 'false'
   displayName: 'Install kubebuilder, kustomize and Run unit tests'
@@ -69,6 +75,12 @@ steps:
     DATABRICKS_TOKEN: $(DATABRICKS_TOKEN)
   workingDirectory: '$(MODULE_PATH)'
 
+  
+- task: PublishCodeCoverageResults@1
+  inputs:
+    codeCoverageTool: Cobertura 
+    summaryFileLocation: $(System.DefaultWorkingDirectory)/**/cover.xml
+    reportDirectory: $(System.DefaultWorkingDirectory)/**/cover
 
 
 - script: docker build -t $(IMAGE_NAME) .  # add options to this command to meet your needs

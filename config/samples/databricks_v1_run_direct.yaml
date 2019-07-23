@@ -1,0 +1,18 @@
+apiVersion: databricks.microsoft.com/v1
+kind: Run
+metadata:
+  name: run-sample
+spec:
+  # create a run directly without a job
+  run_name: my spark task
+  new_cluster:
+    spark_version: 5.3.x-scala2.11
+    node_type_id: Standard_D3_v2
+    num_workers: 10
+  libraries:
+    - jar: 'dbfs:/my-jar.jar'
+    - maven:
+        coordinates: 'org.jsoup:jsoup:1.7.2'
+  spark_jar_task:
+    main_class_name: com.databricks.ComputeModels
+ 

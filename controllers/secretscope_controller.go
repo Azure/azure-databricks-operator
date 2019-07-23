@@ -22,17 +22,18 @@ import (
 	"time"
 
 	"github.com/go-logr/logr"
-	databricksv1 "github.com/microsoft/azure-databricks-operator/api/v1"
-	dbazure "github.com/xinsnake/databricks-sdk-golang/azure"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+
+	databricksv1 "github.com/microsoft/azure-databricks-operator/api/v1"
+	dbazure "github.com/xinsnake/databricks-sdk-golang/azure"
 )
 
-// NotebookJobReconciler reconciles a NotebookJob object
-type NotebookJobReconciler struct {
+// SecretScopeReconciler reconciles a SecretScope object
+type SecretScopeReconciler struct {
 	client.Client
 	Log logr.Logger
 
@@ -40,21 +41,19 @@ type NotebookJobReconciler struct {
 	APIClient dbazure.DBClient
 }
 
-// Reconcile is the main loop, and it should always requeue
-// +kubebuilder:rbac:groups=databricks.microsoft.com,resources=notebookjobs,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=databricks.microsoft.com,resources=notebookjobs/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=databricks.microsoft.com,resources=events,verbs=create;patch
-// +kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=apps,resources=deployments/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=core,resources=secrets,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=core,resources=events,verbs=create;watch
-func (r *NotebookJobReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
-	_ = context.Background()
-	_ = r.Log.WithValues("notebookjob", req.NamespacedName)
+// +kubebuilder:rbac:groups=databricks.microsoft.com,resources=secretscopes,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=databricks.microsoft.com,resources=secretscopes/status,verbs=get;update;patch
 
-	// Fetch the NotebookJob instance
-	instance := &databricksv1.NotebookJob{}
+func (r *SecretScopeReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
+	_ = context.Background()
+	_ = r.Log.WithValues("secretscope", req.NamespacedName)
+
+	// your logic here
+	instance := &databricksv1.SecretScope{}
 	err := r.Get(context.Background(), req.NamespacedName, instance)
+
+	r.Log.Info(fmt.Sprintf("Starting reconcile loop for %v", req.NamespacedName))
+	defer r.Log.Info(fmt.Sprintf("Finish reconcile loop for %v", req.NamespacedName))
 
 	if err != nil {
 		if errors.IsNotFound(err) {
@@ -68,36 +67,40 @@ func (r *NotebookJobReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error)
 		if err != nil {
 			return reconcile.Result{}, fmt.Errorf("error when handling finalizer: %v", err)
 		}
+		r.Recorder.Event(instance, "Normal", "Deleted", "Object finalizer is deleted")
 		return ctrl.Result{}, nil
 	}
 
-	if !instance.HasFinalizer(finalizerName) {
+	if !instance.HasFinalizer(databricksv1.SecretScopeFinalizerName) {
 		err = r.addFinalizer(instance)
 		if err != nil {
-			return ctrl.Result{}, fmt.Errorf("error when removing finalizer: %v", err)
+			return reconcile.Result{}, fmt.Errorf("error when handling secret scope finalizer: %v", err)
 		}
+		r.Recorder.Event(instance, "Normal", "Added", "Object finalizer is added")
 		return ctrl.Result{}, nil
 	}
 
 	if !instance.IsSubmitted() {
-		err = r.submitRunToDatabricks(instance)
+		err = r.submit(instance)
 		if err != nil {
-			return ctrl.Result{}, fmt.Errorf("error when submitting job to API: %v", err)
+			return ctrl.Result{}, fmt.Errorf("error when submitting secret scope to the API: %v", err)
 		}
+		r.Recorder.Event(instance, "Normal", "Submitted", "Object is submitted")
 	}
 
 	if instance.IsSubmitted() {
-		err = r.refreshDatabricksJob(instance)
+		err = r.refresh(instance)
 		if err != nil {
-			return ctrl.Result{}, fmt.Errorf("error when refreshing job to API: %v", err)
+			return ctrl.Result{}, fmt.Errorf("error when refreshing secret scope with the API: %v", err)
 		}
+		r.Recorder.Event(instance, "Normal", "Refreshed", "Object is refreshed")
 	}
 
 	return ctrl.Result{RequeueAfter: 30 * time.Second}, nil
 }
 
-func (r *NotebookJobReconciler) SetupWithManager(mgr ctrl.Manager) error {
+func (r *SecretScopeReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&databricksv1.NotebookJob{}).
+		For(&databricksv1.SecretScope{}).
 		Complete(r)
 }

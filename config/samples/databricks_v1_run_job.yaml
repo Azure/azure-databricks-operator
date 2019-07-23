@@ -1,0 +1,10 @@
+apiVersion: databricks.microsoft.com/v1
+kind: Run
+metadata:
+  name: run-sample
+spec:
+  # run an existing job with job id
+  job_name: nightly-model-training
+  jar_params:
+    - "test"
+    - "test_param2"

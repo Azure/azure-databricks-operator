@@ -4,4 +4,10 @@ repo: github.com/microsoft/azure-databricks-operator
 resources:
 - group: databricks
   version: v1
-  kind: NotebookJob
+  kind: SecretScope
+- group: databricks
+  version: v1
+  kind: Djob
+- group: databricks
+  version: v1
+  kind: Run

@@ -20,9 +20,11 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/onsi/gomega/gexec"
 	db "github.com/xinsnake/databricks-sdk-golang"
 	dbazure "github.com/xinsnake/databricks-sdk-golang/azure"
 
@@ -44,6 +46,7 @@ var cfg *rest.Config
 var k8sClient client.Client
 var k8sManager ctrl.Manager
 var testEnv *envtest.Environment
+var apiClient dbazure.DBClient
 
 func TestAPIs(t *testing.T) {
 	RegisterFailHandler(Fail)
@@ -82,18 +85,41 @@ var _ = BeforeSuite(func(done Done) {
 		Scheme: scheme.Scheme,
 	})
 	Expect(err).ToNot(HaveOccurred())
-	err = (&NotebookJobReconciler{
-		Client:   k8sManager.GetClient(),
-		Log:      ctrl.Log.WithName("controllers").WithName("NotebookJob"),
-		Recorder: k8sManager.GetEventRecorderFor("notebookjob-controller"),
-		APIClient: func() dbazure.DBClient {
-			host, token := os.Getenv("DATABRICKS_HOST"), os.Getenv("DATABRICKS_TOKEN")
-			var apiClient dbazure.DBClient
-			return apiClient.Init(db.DBClientOption{
-				Host:  host,
-				Token: token,
-			})
-		}(),
+
+	host, token := os.Getenv("DATABRICKS_HOST"), os.Getenv("DATABRICKS_TOKEN")
+	if host == "" || token == "" {
+		Fail("Missing environment variable required for tests. DATABRICKS_HOST and DATABRICKS_TOKEN must both be set.")
+	}
+
+	apiClient = func() dbazure.DBClient {
+		var apiClient dbazure.DBClient
+		return apiClient.Init(db.DBClientOption{
+			Host:  host,
+			Token: token,
+		})
+	}()
+
+	err = (&SecretScopeReconciler{
+		Client:    k8sManager.GetClient(),
+		Log:       ctrl.Log.WithName("controllers").WithName("SecretScope"),
+		Recorder:  k8sManager.GetEventRecorderFor("secretscope-controller"),
+		APIClient: apiClient,
+	}).SetupWithManager(k8sManager)
+	Expect(err).ToNot(HaveOccurred())
+
+	err = (&DjobReconciler{
+		Client:    k8sManager.GetClient(),
+		Log:       ctrl.Log.WithName("controllers").WithName("Djob"),
+		Recorder:  k8sManager.GetEventRecorderFor("djob-controller"),
+		APIClient: apiClient,
+	}).SetupWithManager(k8sManager)
+	Expect(err).ToNot(HaveOccurred())
+
+	err = (&RunReconciler{
+		Client:    k8sManager.GetClient(),
+		Log:       ctrl.Log.WithName("controllers").WithName("Run"),
+		Recorder:  k8sManager.GetEventRecorderFor("run-controller"),
+		APIClient: apiClient,
 	}).SetupWithManager(k8sManager)
 	Expect(err).ToNot(HaveOccurred())
 
@@ -110,6 +136,7 @@ var _ = BeforeSuite(func(done Done) {
 
 var _ = AfterSuite(func() {
 	By("tearing down the test environment")
+	gexec.KillAndWait(5 * time.Second)
 	err := testEnv.Stop()
 	Expect(err).ToNot(HaveOccurred())
 })

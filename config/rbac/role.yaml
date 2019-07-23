@@ -7,6 +7,33 @@ metadata:
   name: manager-role
 rules:
 - apiGroups:
+  - databricks.microsoft.com
+  resources:
+  - djobs
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - databricks.microsoft.com
+  resources:
+  - djobs/status
+  verbs:
+  - get
+  - update
+  - patch
+- apiGroups:
+  - databricks.microsoft.com
+  resources:
+  - events
+  verbs:
+  - create
+  - patch
+- apiGroups:
   - apps
   resources:
   - deployments
@@ -27,46 +54,6 @@ rules:
   - update
   - patch
 - apiGroups:
-  - databricks.microsoft.com
-  resources:
-  - notebookjobs
-  verbs:
-  - get
-  - list
-  - watch
-  - create
-  - update
-  - patch
-  - delete
-- apiGroups:
-  - databricks.microsoft.com
-  resources:
-  - notebookjobs/status
-  verbs:
-  - get
-  - update
-  - patch
-- apiGroups:
-  - databricks.microsoft.com
-  resources:
-  - events
-  verbs:
-  - create
-  - patch
-- apiGroups:
-  - admissionregistration.k8s.io
-  resources:
-  - mutatingwebhookconfigurations
-  - validatingwebhookconfigurations
-  verbs:
-  - get
-  - list
-  - watch
-  - create
-  - update
-  - patch
-  - delete
-- apiGroups:
   - ""
   resources:
   - secrets
@@ -81,7 +68,14 @@ rules:
 - apiGroups:
   - ""
   resources:
-  - services
+  - events
+  verbs:
+  - create
+  - watch
+- apiGroups:
+  - databricks.microsoft.com
+  resources:
+  - runs
   verbs:
   - get
   - list
@@ -91,9 +85,30 @@ rules:
   - patch
   - delete
 - apiGroups:
-  - ""
+  - databricks.microsoft.com
   resources:
-  - events
+  - runs/status
   verbs:
-  - create
+  - get
+  - update
+  - patch
+- apiGroups:
+  - databricks.microsoft.com
+  resources:
+  - secretscopes
+  verbs:
+  - get
+  - list
   - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - databricks.microsoft.com
+  resources:
+  - secretscopes/status
+  verbs:
+  - get
+  - update
+  - patch

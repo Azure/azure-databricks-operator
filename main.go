@@ -64,26 +64,48 @@ func main() {
 		os.Exit(1)
 	}
 
-	err = (&controllers.NotebookJobReconciler{
-		Client:   mgr.GetClient(),
-		Log:      ctrl.Log.WithName("controllers").WithName("NotebookJob"),
-		Recorder: mgr.GetEventRecorderFor("notebookjob-controller"),
-		APIClient: func() dbazure.DBClient {
-			host, token := os.Getenv("DATABRICKS_HOST"), os.Getenv("DATABRICKS_TOKEN")
-			if len(host) < 10 && len(token) < 10 {
-				err = fmt.Errorf("no valid databricks host / key configured")
-				setupLog.Error(err, "unable to start notebookjob controller")
-				os.Exit(1)
-			}
-			var apiClient dbazure.DBClient
-			return apiClient.Init(db.DBClientOption{
-				Host:  host,
-				Token: token,
-			})
-		}(),
+	apiClient := func() dbazure.DBClient {
+		host, token := os.Getenv("DATABRICKS_HOST"), os.Getenv("DATABRICKS_TOKEN")
+		if len(host) < 10 && len(token) < 10 {
+			err = fmt.Errorf("no valid databricks host / key configured")
+			setupLog.Error(err, "unable to initialise databricks api client")
+			os.Exit(1)
+		}
+		var apiClient dbazure.DBClient
+		return apiClient.Init(db.DBClientOption{
+			Host:  host,
+			Token: token,
+		})
+	}()
+
+	err = (&controllers.SecretScopeReconciler{
+		Client:    mgr.GetClient(),
+		Log:       ctrl.Log.WithName("controllers").WithName("SecretScope"),
+		Recorder:  mgr.GetEventRecorderFor("secretscope-controller"),
+		APIClient: apiClient,
 	}).SetupWithManager(mgr)
 	if err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "NotebookJob")
+		setupLog.Error(err, "unable to create controller", "controller", "SecretScope")
+		os.Exit(1)
+	}
+	err = (&controllers.DjobReconciler{
+		Client:    mgr.GetClient(),
+		Log:       ctrl.Log.WithName("controllers").WithName("Djob"),
+		Recorder:  mgr.GetEventRecorderFor("djob-controller"),
+		APIClient: apiClient,
+	}).SetupWithManager(mgr)
+	if err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "Djob")
+		os.Exit(1)
+	}
+	err = (&controllers.RunReconciler{
+		Client:    mgr.GetClient(),
+		Log:       ctrl.Log.WithName("controllers").WithName("Run"),
+		Recorder:  mgr.GetEventRecorderFor("run-controller"),
+		APIClient: apiClient,
+	}).SetupWithManager(mgr)
+	if err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "Run")
 		os.Exit(1)
 	}
 	// +kubebuilder:scaffold:builder

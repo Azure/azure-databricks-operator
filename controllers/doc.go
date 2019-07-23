@@ -14,17 +14,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v1
+package controllers
 
-func (nj *NotebookJob) LoadDefaultConfig() *NotebookJob {
-	if nj.Spec.ClusterSpec.NodeTypeId == "" {
-		nj.Spec.ClusterSpec.NodeTypeId = "Standard_DS3_v2"
-	}
-	if nj.Spec.ClusterSpec.SparkVersion == "" {
-		nj.Spec.ClusterSpec.SparkVersion = "5.2.x-scala2.11"
-	}
-	if nj.Spec.ClusterSpec.NumWorkers == 0 {
-		nj.Spec.ClusterSpec.NumWorkers = 3
-	}
-	return nj
-}
+// +kubebuilder:rbac:groups=databricks.microsoft.com,resources=events,verbs=create;patch
+// +kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=apps,resources=deployments/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=core,resources=secrets,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=core,resources=events,verbs=create;watch
