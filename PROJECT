@@ -14,3 +14,6 @@ resources:
 - group: databricks
   version: v1
   kind: Dcluster
+- group: databricks
+  version: v1
+  kind: DbfsBlock

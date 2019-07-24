@@ -17,33 +17,54 @@ limitations under the License.
 package v1
 
 import (
+	dbmodels "github.com/xinsnake/databricks-sdk-golang/azure/models"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
-
-// DclusterSpec defines the desired state of Dcluster
-type DclusterSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
-}
-
-// DclusterStatus defines the observed state of Dcluster
 type DclusterStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	ClusterInfo *dbmodels.ClusterInfo `json:"cluster_info,omitempty"`
 }
 
 // +kubebuilder:object:root=true
 
 // Dcluster is the Schema for the dclusters API
+// +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
+// +kubebuilder:printcolumn:name="ClusterID",type="integer",JSONPath=".status.cluster_info.cluster_id"
+// +kubebuilder:printcolumn:name="State",type="string",JSONPath=".status.cluster_info.state"
+// +kubebuilder:printcolumn:name="NumWorkers",type="integer",JSONPath=".status.cluster_info.num_workers"
 type Dcluster struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   DclusterSpec   `json:"spec,omitempty"`
-	Status DclusterStatus `json:"status,omitempty"`
+	Spec   *dbmodels.NewCluster `json:"spec,omitempty"`
+	Status *DclusterStatus      `json:"status,omitempty"`
+}
+
+func (dcluster *Dcluster) IsBeingDeleted() bool {
+	return !dcluster.ObjectMeta.DeletionTimestamp.IsZero()
+}
+
+func (dcluster *Dcluster) IsSubmitted() bool {
+	if dcluster.Status == nil ||
+		dcluster.Status.ClusterInfo == nil ||
+		dcluster.Status.ClusterInfo.ClusterID == "" {
+		return false
+	}
+	return true
+}
+
+const DclusterFinalizerName = "dcluster.finalizers.databricks.microsoft.com"
+
+func (dcluster *Dcluster) HasFinalizer(finalizerName string) bool {
+	return containsString(dcluster.ObjectMeta.Finalizers, finalizerName)
+}
+
+func (dcluster *Dcluster) AddFinalizer(finalizerName string) {
+	dcluster.ObjectMeta.Finalizers = append(dcluster.ObjectMeta.Finalizers, finalizerName)
+}
+
+func (dcluster *Dcluster) RemoveFinalizer(finalizerName string) {
+	dcluster.ObjectMeta.Finalizers = removeString(dcluster.ObjectMeta.Finalizers, finalizerName)
 }
 
 // +kubebuilder:object:root=true
