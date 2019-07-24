@@ -1,7 +1,7 @@
 apiVersion: databricks.microsoft.com/v1
 kind: Djob
 metadata:
-  name: nightly-model-training
+  name: djob-sample
 spec:
   # This spec is directly linked to the JobSettings structure
   # https://docs.databricks.com/api/latest/jobs.html#jobsettings

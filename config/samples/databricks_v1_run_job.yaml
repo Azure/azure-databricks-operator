@@ -4,7 +4,7 @@ metadata:
   name: run-sample
 spec:
   # run an existing job with job id
-  job_name: nightly-model-training
+  job_name: djob-sample
   jar_params:
     - "test"
     - "test_param2"

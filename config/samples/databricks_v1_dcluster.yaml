@@ -3,5 +3,8 @@ kind: Dcluster
 metadata:
   name: dcluster-sample
 spec:
-  # Add fields here
-  foo: bar
+  spark_version: 5.3.x-scala2.11
+  node_type_id: Standard_D3_v2
+  autoscale:
+    min_workers: 2
+    max_workers: 5
