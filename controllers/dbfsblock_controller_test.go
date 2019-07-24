@@ -53,6 +53,10 @@ var _ = Describe("DbfsBlock Controller", func() {
 			rand.Read(data)
 			dataStr := base64.StdEncoding.EncodeToString(data)
 
+			data2 := make([]byte, 5500)
+			rand.Read(data2)
+			dataStr2 := base64.StdEncoding.EncodeToString(data2)
+
 			key := types.NamespacedName{
 				Name:      "block-greater-than-1mb",
 				Namespace: "default",
@@ -85,6 +89,20 @@ var _ = Describe("DbfsBlock Controller", func() {
 				k8sClient.Get(context.Background(), key, f)
 				return f.Status.FileInfo.FileSize
 			}, timeout, interval).Should(Equal(int64(5000)))
+
+			// Update
+			updated := &databricksv1.DbfsBlock{}
+			Expect(k8sClient.Get(context.Background(), key, updated)).Should(Succeed())
+
+			updated.Spec.Data = dataStr2
+			Expect(k8sClient.Update(context.Background(), updated)).Should(Succeed())
+
+			By("Expecting size to be 5500")
+			Eventually(func() int64 {
+				f := &databricksv1.DbfsBlock{}
+				k8sClient.Get(context.Background(), key, f)
+				return f.Status.FileInfo.FileSize
+			}, timeout, interval).Should(Equal(int64(5500)))
 
 			// Delete
 			By("Expecting to delete successfully")

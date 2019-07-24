@@ -6,11 +6,25 @@ metadata:
   creationTimestamp: null
   name: dbfsblocks.databricks.microsoft.com
 spec:
+  additionalPrinterColumns:
+  - JSONPath: .metadata.creationTimestamp
+    name: Age
+    type: date
+  - JSONPath: .status.file_hash
+    name: SHA1SUM
+    type: string
+  - JSONPath: .status.file_info.path
+    name: Path
+    type: string
+  - JSONPath: .status.file_info.file_size
+    name: Size
+    type: integer
   group: databricks.microsoft.com
   names:
     kind: DbfsBlock
     plural: dbfsblocks
   scope: ""
+  subresources: {}
   validation:
     openAPIV3Schema:
       description: DbfsBlock is the Schema for the dbfsblocks API
@@ -38,6 +52,8 @@ spec:
         status:
           description: DbfsBlockStatus defines the observed state of DbfsBlock
           properties:
+            file_hash:
+              type: string
             file_info:
               properties:
                 file_size:

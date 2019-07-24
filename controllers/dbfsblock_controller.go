@@ -76,12 +76,13 @@ func (r *DbfsBlockReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		return ctrl.Result{}, nil
 	}
 
-	if !instance.IsSubmitted() {
+	if !instance.IsSubmitted() || !instance.IsUpToDate() {
 		r.Log.Info(fmt.Sprintf("Submit for %v", req.NamespacedName))
 		if err := r.submit(instance); err != nil {
 			return ctrl.Result{}, fmt.Errorf("error when submitting DBFS block: %v", err)
 		}
 		r.Recorder.Event(instance, "Normal", "Submitted", "Object is submitted")
+		return ctrl.Result{}, nil
 	}
 
 	return ctrl.Result{}, nil

@@ -71,6 +71,7 @@ func (r *DbfsBlockReconciler) submit(instance *databricksv1.DbfsBlock) error {
 
 	instance.Status = &databricksv1.DbfsBlockStatus{
 		FileInfo: &fileInfo,
+		FileHash: instance.GetHash(),
 	}
 
 	return r.Update(context.Background(), instance)

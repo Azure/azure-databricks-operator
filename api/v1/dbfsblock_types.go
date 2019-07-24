@@ -17,6 +17,10 @@ limitations under the License.
 package v1
 
 import (
+	"crypto/sha1"
+	"encoding/base64"
+	"fmt"
+
 	dbmodels "github.com/xinsnake/databricks-sdk-golang/azure/models"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -30,11 +34,16 @@ type DbfsBlockSpec struct {
 // DbfsBlockStatus defines the observed state of DbfsBlock
 type DbfsBlockStatus struct {
 	FileInfo *dbmodels.FileInfo `json:"file_info,omitempty"`
+	FileHash string             `json:"file_hash,omitempty"`
 }
 
 // +kubebuilder:object:root=true
 
 // DbfsBlock is the Schema for the dbfsblocks API
+// +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
+// +kubebuilder:printcolumn:name="SHA1SUM",type="string",JSONPath=".status.file_hash"
+// +kubebuilder:printcolumn:name="Path",type="string",JSONPath=".status.file_info.path"
+// +kubebuilder:printcolumn:name="Size",type="integer",JSONPath=".status.file_info.file_size"
 type DbfsBlock struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -54,6 +63,24 @@ func (dbfsBlock *DbfsBlock) IsSubmitted() bool {
 		return false
 	}
 	return true
+}
+
+// IsUpToDate tells you whether the data is up-to-date with the status
+func (dbfsBlock *DbfsBlock) IsUpToDate() bool {
+	h := dbfsBlock.GetHash()
+	return h == dbfsBlock.Status.FileHash
+}
+
+// GetHash returns the sha1 hash of the decoded data attribute
+func (dbfsBlock *DbfsBlock) GetHash() string {
+	data, err := base64.StdEncoding.DecodeString(dbfsBlock.Spec.Data)
+	if err != nil {
+		return ""
+	}
+	h := sha1.New()
+	h.Write(data)
+	bs := h.Sum(nil)
+	return fmt.Sprintf("%x", bs)
 }
 
 const DbfsBlockFinalizerName = "dbfsBlock.finalizers.databricks.microsoft.com"
