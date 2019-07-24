@@ -22,7 +22,7 @@ import (
 )
 
 type DclusterStatus struct {
-	ClusterInfo *dbmodels.ClusterInfo `json:"cluster_info,omitempty"`
+	ClusterInfo *DclusterInfo `json:"cluster_info,omitempty"`
 }
 
 // +kubebuilder:object:root=true
