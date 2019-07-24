@@ -18,9 +18,11 @@ package controllers
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/go-logr/logr"
 	dbazure "github.com/xinsnake/databricks-sdk-golang/azure"
+	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -44,7 +46,43 @@ func (r *DbfsBlockReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	_ = context.Background()
 	_ = r.Log.WithValues("dbfsblock", req.NamespacedName)
 
-	// your logic here
+	instance := &databricksv1.DbfsBlock{}
+
+	r.Log.Info(fmt.Sprintf("Starting reconcile loop for %v", req.NamespacedName))
+	defer r.Log.Info(fmt.Sprintf("Finish reconcile loop for %v", req.NamespacedName))
+
+	if err := r.Get(context.Background(), req.NamespacedName, instance); err != nil {
+		if errors.IsNotFound(err) {
+			return ctrl.Result{}, nil
+		}
+		return ctrl.Result{}, err
+	}
+
+	if instance.IsBeingDeleted() {
+		r.Log.Info(fmt.Sprintf("HandleFinalizer for %v", req.NamespacedName))
+		if err := r.handleFinalizer(instance); err != nil {
+			return ctrl.Result{}, fmt.Errorf("error when handling finalizer: %v", err)
+		}
+		r.Recorder.Event(instance, "Normal", "Deleted", "Object finalizer is deleted")
+		return ctrl.Result{}, nil
+	}
+
+	if !instance.HasFinalizer(databricksv1.DbfsBlockFinalizerName) {
+		r.Log.Info(fmt.Sprintf("AddFinalizer for %v", req.NamespacedName))
+		if err := r.addFinalizer(instance); err != nil {
+			return ctrl.Result{}, fmt.Errorf("error when adding finalizer: %v", err)
+		}
+		r.Recorder.Event(instance, "Normal", "Added", "Object finalizer is added")
+		return ctrl.Result{}, nil
+	}
+
+	if !instance.IsSubmitted() {
+		r.Log.Info(fmt.Sprintf("Submit for %v", req.NamespacedName))
+		if err := r.submit(instance); err != nil {
+			return ctrl.Result{}, fmt.Errorf("error when submitting DBFS block: %v", err)
+		}
+		r.Recorder.Event(instance, "Normal", "Submitted", "Object is submitted")
+	}
 
 	return ctrl.Result{}, nil
 }

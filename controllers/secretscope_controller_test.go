@@ -115,19 +115,10 @@ var _ = Describe("SecretScope Controller", func() {
 				return k8sClient.Delete(context.Background(), f)
 			}, timeout, interval).Should(Succeed())
 
-			Eventually(func() bool {
+			Eventually(func() error {
 				f := &databricksv1.SecretScope{}
-				k8sClient.Get(context.Background(), key, f)
-				return f.IsBeingDeleted()
-			}, timeout, interval).Should(BeTrue())
-
-			time.Sleep(time.Second * 5)
-			By("Removing the finaliser")
-			Eventually(func() bool {
-				f := &databricksv1.SecretScope{}
-				k8sClient.Get(context.Background(), key, f)
-				return f.HasFinalizer(databricksv1.SecretScopeFinalizerName)
-			}, timeout, interval).Should(BeFalse())
+				return k8sClient.Get(context.Background(), key, f)
+			}, timeout, interval).ShouldNot(Succeed())
 		})
 	})
 
@@ -229,19 +220,10 @@ var _ = Describe("SecretScope Controller", func() {
 				return k8sClient.Delete(context.Background(), f)
 			}, timeout, interval).Should(Succeed())
 
-			Eventually(func() bool {
+			Eventually(func() error {
 				f := &databricksv1.SecretScope{}
-				k8sClient.Get(context.Background(), key, f)
-				return f.IsBeingDeleted()
-			}, timeout, interval).Should(BeTrue())
-
-			time.Sleep(time.Second * 5)
-			By("Removing the finaliser")
-			Eventually(func() bool {
-				f := &databricksv1.SecretScope{}
-				k8sClient.Get(context.Background(), key, f)
-				return f.HasFinalizer(databricksv1.SecretScopeFinalizerName)
-			}, timeout, interval).Should(BeFalse())
+				return k8sClient.Get(context.Background(), key, f)
+			}, timeout, interval).ShouldNot(Succeed())
 		})
 	})
 })

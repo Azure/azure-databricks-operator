@@ -18,9 +18,9 @@ package controllers
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/base64"
 	"time"
-
-	dbmodels "github.com/xinsnake/databricks-sdk-golang/azure/models"
 
 	databricksv1 "github.com/microsoft/azure-databricks-operator/api/v1"
 	. "github.com/onsi/ginkgo"
@@ -29,7 +29,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
-var _ = Describe("Djob Controller", func() {
+var _ = Describe("DbfsBlock Controller", func() {
 
 	const timeout = time.Second * 30
 	const interval = time.Second * 1
@@ -46,47 +46,27 @@ var _ = Describe("Djob Controller", func() {
 	// your API definition.
 	// Avoid adding tests for vanilla CRUD operations because they would
 	// test Kubernetes API server, which isn't the goal here.
-	Context("Job with schedule", func() {
+	Context("Block greater than 1MB", func() {
 		It("Should create successfully", func() {
 
+			data := make([]byte, 5000)
+			rand.Read(data)
+			dataStr := base64.StdEncoding.EncodeToString(data)
+
 			key := types.NamespacedName{
-				Name:      "integreation-test-job-with-schedule",
+				Name:      "block-greater-than-1mb",
 				Namespace: "default",
 			}
 
-			spec := &dbmodels.JobSettings{
-				NewCluster: &dbmodels.NewCluster{
-					SparkVersion: "5.3.x-scala2.11",
-					NodeTypeID:   "Standard_D3_v2",
-					NumWorkers:   10,
-				},
-				Libraries: []dbmodels.Library{
-					dbmodels.Library{
-						Jar: "dbfs:/my-jar.jar",
-					},
-					dbmodels.Library{
-						Maven: &dbmodels.MavenLibrary{
-							Coordinates: "org.jsoup:jsoup:1.7.2",
-						},
-					},
-				},
-				TimeoutSeconds: 3600,
-				MaxRetries:     1,
-				Schedule: &dbmodels.CronSchedule{
-					QuartzCronExpression: "0 15 22 ? * *",
-					TimezoneID:           "America/Los_Angeles",
-				},
-				SparkJarTask: &dbmodels.SparkJarTask{
-					MainClassName: "com.databricks.ComputeModels",
-				},
-			}
-
-			created := &databricksv1.Djob{
+			created := &databricksv1.DbfsBlock{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      key.Name,
 					Namespace: key.Namespace,
 				},
-				Spec: spec,
+				Spec: &databricksv1.DbfsBlockSpec{
+					Path: "/some-path/test-block",
+					Data: dataStr,
+				},
 			}
 
 			// Create
@@ -94,22 +74,29 @@ var _ = Describe("Djob Controller", func() {
 
 			By("Expecting submitted")
 			Eventually(func() bool {
-				f := &databricksv1.Djob{}
+				f := &databricksv1.DbfsBlock{}
 				k8sClient.Get(context.Background(), key, f)
 				return f.IsSubmitted()
 			}, timeout, interval).Should(BeTrue())
 
+			By("Expecting size to be 5000")
+			Eventually(func() int64 {
+				f := &databricksv1.DbfsBlock{}
+				k8sClient.Get(context.Background(), key, f)
+				return f.Status.FileInfo.FileSize
+			}, timeout, interval).Should(Equal(int64(5000)))
+
 			// Delete
 			By("Expecting to delete successfully")
 			Eventually(func() error {
-				f := &databricksv1.Djob{}
+				f := &databricksv1.DbfsBlock{}
 				k8sClient.Get(context.Background(), key, f)
 				return k8sClient.Delete(context.Background(), f)
 			}, timeout, interval).Should(Succeed())
 
 			By("Expecting to delete finish")
 			Eventually(func() error {
-				f := &databricksv1.Djob{}
+				f := &databricksv1.DbfsBlock{}
 				return k8sClient.Get(context.Background(), key, f)
 			}, timeout, interval).ShouldNot(Succeed())
 		})
