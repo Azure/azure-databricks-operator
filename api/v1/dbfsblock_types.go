@@ -67,6 +67,9 @@ func (dbfsBlock *DbfsBlock) IsSubmitted() bool {
 
 // IsUpToDate tells you whether the data is up-to-date with the status
 func (dbfsBlock *DbfsBlock) IsUpToDate() bool {
+	if dbfsBlock.Status == nil {
+		return false
+	}
 	h := dbfsBlock.GetHash()
 	return h == dbfsBlock.Status.FileHash
 }

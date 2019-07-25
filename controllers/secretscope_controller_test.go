@@ -166,7 +166,11 @@ var _ = Describe("SecretScope Controller", func() {
 			spec := databricksv1.SecretScopeSpec{
 				InitialManagePrincipal: "users",
 				SecretScopeSecrets:     initialSecrets,
-				SecretScopeACLs:        make([]databricksv1.SecretScopeACL, 0),
+				SecretScopeACLs: []databricksv1.SecretScopeACL{
+					databricksv1.SecretScopeACL{Principal: "admins", Permission: "WRITE"},
+					databricksv1.SecretScopeACL{Principal: "admins", Permission: "READ"},
+					databricksv1.SecretScopeACL{Principal: "admins", Permission: "MANAGE"},
+				},
 			}
 
 			key := types.NamespacedName{
@@ -201,7 +205,10 @@ var _ = Describe("SecretScope Controller", func() {
 			updateSpec := databricksv1.SecretScopeSpec{
 				InitialManagePrincipal: "users",
 				SecretScopeSecrets:     updatedSecrets,
-				SecretScopeACLs:        make([]databricksv1.SecretScopeACL, 0),
+				SecretScopeACLs: []databricksv1.SecretScopeACL{
+					databricksv1.SecretScopeACL{Principal: "admins", Permission: "WRITE"},
+					databricksv1.SecretScopeACL{Principal: "admins", Permission: "READ"},
+				},
 			}
 
 			fetched.Spec = updateSpec

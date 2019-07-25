@@ -17,9 +17,12 @@ limitations under the License.
 package v1
 
 import (
+	"time"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
+	dbmodels "github.com/xinsnake/databricks-sdk-golang/azure/models"
 	"golang.org/x/net/context"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -72,6 +75,53 @@ var _ = Describe("Dcluster", func() {
 			Expect(k8sClient.Get(context.TODO(), key, created)).ToNot(Succeed())
 		})
 
+		It("should correctly handle isSubmitted", func() {
+			dcluster := &Dcluster{
+				Status: &DclusterStatus{
+					ClusterInfo: &DclusterInfo{
+						ClusterID: "221-322-djaj2",
+					},
+				},
+			}
+			Expect(dcluster.IsSubmitted()).To(BeTrue())
+
+			dcluster2 := &Dcluster{
+				Status: &DclusterStatus{
+					ClusterInfo: nil,
+				},
+			}
+			Expect(dcluster2.IsSubmitted()).To(BeFalse())
+		})
+
+		It("should correctly handle finalizers", func() {
+			dcluster := &Dcluster{
+				ObjectMeta: metav1.ObjectMeta{
+					DeletionTimestamp: &metav1.Time{
+						Time: time.Now(),
+					},
+				},
+			}
+			Expect(dcluster.IsBeingDeleted()).To(BeTrue())
+
+			dcluster.AddFinalizer(DclusterFinalizerName)
+			Expect(len(dcluster.GetFinalizers())).To(Equal(1))
+			Expect(dcluster.HasFinalizer(DclusterFinalizerName)).To(BeTrue())
+
+			dcluster.RemoveFinalizer(DclusterFinalizerName)
+			Expect(len(dcluster.GetFinalizers())).To(Equal(0))
+			Expect(dcluster.HasFinalizer(DclusterFinalizerName)).To(BeFalse())
+		})
+
+		It("should correctly handle float to string", func() {
+			clusterInfo := &dbmodels.ClusterInfo{
+				ClusterCores: 20.32,
+			}
+
+			dclusterInfo := &DclusterInfo{}
+			dclusterInfo.FromDataBricksClusterInfo(*clusterInfo)
+
+			Expect(dclusterInfo.ClusterCores).To(Equal("20.32"))
+		})
 	})
 
 })

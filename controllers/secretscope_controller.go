@@ -88,14 +88,6 @@ func (r *SecretScopeReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error)
 		r.Recorder.Event(instance, "Normal", "Submitted", "Object is submitted")
 	}
 
-	if instance.IsSubmitted() {
-		err = r.refresh(instance)
-		if err != nil {
-			return ctrl.Result{}, fmt.Errorf("error when refreshing secret scope with the API: %v", err)
-		}
-		r.Recorder.Event(instance, "Normal", "Refreshed", "Object is refreshed")
-	}
-
 	return ctrl.Result{RequeueAfter: 30 * time.Second}, nil
 }
 

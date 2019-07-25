@@ -17,9 +17,12 @@ limitations under the License.
 package v1
 
 import (
+	"time"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
+	dbmodels "github.com/xinsnake/databricks-sdk-golang/azure/models"
 	"golang.org/x/net/context"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -72,16 +75,41 @@ var _ = Describe("Djob", func() {
 			Expect(k8sClient.Get(context.Background(), key, created)).ToNot(Succeed())
 		})
 
+		It("should correctly handle isSubmitted", func() {
+			djob := &Djob{
+				Status: &DjobStatus{
+					JobStatus: &dbmodels.Job{
+						JobID: 20,
+					},
+				},
+			}
+			Expect(djob.IsSubmitted()).To(BeTrue())
+
+			djob2 := &Djob{
+				Status: &DjobStatus{
+					JobStatus: nil,
+				},
+			}
+			Expect(djob2.IsSubmitted()).To(BeFalse())
+		})
+
 		It("should correctly handle finalizers", func() {
-			djob := &Djob{}
+			djob := &Djob{
+				ObjectMeta: metav1.ObjectMeta{
+					DeletionTimestamp: &metav1.Time{
+						Time: time.Now(),
+					},
+				},
+			}
+			Expect(djob.IsBeingDeleted()).To(BeTrue())
 
 			djob.AddFinalizer(DjobFinalizerName)
 			Expect(len(djob.GetFinalizers())).To(Equal(1))
-			Expect(djob.HasFinalizer(DjobFinalizerName)).To(Equal(true))
+			Expect(djob.HasFinalizer(DjobFinalizerName)).To(BeTrue())
 
 			djob.RemoveFinalizer(DjobFinalizerName)
 			Expect(len(djob.GetFinalizers())).To(Equal(0))
-			Expect(djob.HasFinalizer(DjobFinalizerName)).To(Equal(false))
+			Expect(djob.HasFinalizer(DjobFinalizerName)).To(BeFalse())
 		})
 	})
 

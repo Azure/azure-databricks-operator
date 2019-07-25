@@ -17,6 +17,8 @@ limitations under the License.
 package v1
 
 import (
+	"fmt"
+
 	dbmodels "github.com/xinsnake/databricks-sdk-golang/azure/models"
 )
 
@@ -52,4 +54,36 @@ type DclusterInfo struct {
 	DefaultTags            []dbmodels.ClusterTag       `json:"default_tags,omitempty" url:"default_tags,omitempty"`
 	ClusterLogStatus       *dbmodels.LogSyncStatus     `json:"cluster_log_status,omitempty" url:"cluster_log_status,omitempty"`
 	TerminationReason      *dbmodels.TerminationReason `json:"termination_reason,omitempty" url:"termination_reason,omitempty"`
+}
+
+func (i *DclusterInfo) FromDataBricksClusterInfo(ci dbmodels.ClusterInfo) *DclusterInfo {
+	i.NumWorkers = ci.NumWorkers
+	i.AutoScale = ci.AutoScale
+	i.ClusterID = ci.ClusterID
+	i.CreatorUserName = ci.CreatorUserName
+	i.Driver = ci.Driver
+	i.Executors = ci.Executors
+	i.SparkContextID = ci.SparkContextID
+	i.JdbcPort = ci.JdbcPort
+	i.ClusterName = ci.ClusterName
+	i.SparkVersion = ci.SparkVersion
+	i.SparkConf = ci.SparkConf
+	i.NodeTypeID = ci.NodeTypeID
+	i.DriverNodeTypeID = ci.DriverNodeTypeID
+	i.ClusterLogConf = ci.ClusterLogConf
+	i.InitScripts = ci.InitScripts
+	i.SparkEnvVars = ci.SparkEnvVars
+	i.AutoterminationMinutes = ci.AutoterminationMinutes
+	i.State = ci.State
+	i.StateMessage = ci.StateMessage
+	i.StartTime = ci.StartTime
+	i.TerminateTime = ci.TerminateTime
+	i.LastStateLossTime = ci.LastStateLossTime
+	i.LastActivityTime = ci.LastActivityTime
+	i.ClusterMemoryMb = ci.ClusterMemoryMb
+	i.ClusterCores = fmt.Sprintf("%v", ci.ClusterCores)
+	i.DefaultTags = ci.DefaultTags
+	i.ClusterLogStatus = ci.ClusterLogStatus
+	i.TerminationReason = ci.TerminationReason
+	return i
 }

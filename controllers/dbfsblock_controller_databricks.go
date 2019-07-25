@@ -38,9 +38,6 @@ func (r *DbfsBlockReconciler) submit(instance *databricksv1.DbfsBlock) error {
 	if err != nil {
 		return err
 	}
-	if createResponse.Handle == 0 {
-		return fmt.Errorf("No valid file handle was returned from DataBricks")
-	}
 
 	// DataBricks limits the AddBlock size to be 1024KB
 	var g = 1000

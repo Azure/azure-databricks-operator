@@ -172,11 +172,7 @@ func (r *SecretScopeReconciler) submit(instance *databricksv1.SecretScope) error
 	}
 
 	instance.Status.SecretScope = remoteScope
-	err = r.Update(context.Background(), instance)
-	if err != nil {
-		return fmt.Errorf("error when updating SecretScope instance after updating the remote: %v", err)
-	}
-	return nil
+	return r.Update(context.Background(), instance)
 }
 
 func (r *SecretScopeReconciler) update(instance *databricksv1.SecretScope) error {
@@ -185,34 +181,7 @@ func (r *SecretScopeReconciler) update(instance *databricksv1.SecretScope) error
 		return err
 	}
 
-	err = r.submitACLs(instance)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (r *SecretScopeReconciler) refresh(instance *databricksv1.SecretScope) error {
-	scope := instance.Status.SecretScope.Name
-	remoteScope, err := r.get(scope)
-	if err != nil {
-		return err
-	}
-
-	if remoteScope != nil {
-		instance.Status.SecretScope = remoteScope
-		err = r.update(instance)
-		if err != nil {
-			return fmt.Errorf("error when refreshing SecretScope: %v", err)
-		}
-	}
-
-	err = r.Update(context.Background(), instance)
-	if err != nil {
-		return fmt.Errorf("error when updating SecretScope instance after updating the remote: %v", err)
-	}
-	return nil
+	return r.submitACLs(instance)
 }
 
 func (r *SecretScopeReconciler) delete(instance *databricksv1.SecretScope) error {

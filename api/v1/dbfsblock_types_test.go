@@ -17,8 +17,11 @@ limitations under the License.
 package v1
 
 import (
+	"time"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	dbmodels "github.com/xinsnake/databricks-sdk-golang/azure/models"
 
 	"golang.org/x/net/context"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -72,6 +75,74 @@ var _ = Describe("DbfsBlock", func() {
 			Expect(k8sClient.Get(context.TODO(), key, created)).ToNot(Succeed())
 		})
 
+		It("should correctly handle isSubmitted", func() {
+			dbfsBlock := &DbfsBlock{
+				Status: &DbfsBlockStatus{
+					FileInfo: &dbmodels.FileInfo{
+						FileSize: 0,
+					},
+				},
+			}
+			Expect(dbfsBlock.IsSubmitted()).To(BeFalse())
+
+			dbfsBlock2 := &DbfsBlock{
+				Status: &DbfsBlockStatus{
+					FileInfo: &dbmodels.FileInfo{
+						Path: "/test-path",
+					},
+				},
+			}
+			Expect(dbfsBlock2.IsSubmitted()).To(BeTrue())
+
+			dbfsBlock3 := &DbfsBlock{
+				Status: &DbfsBlockStatus{
+					FileInfo: nil,
+				},
+			}
+			Expect(dbfsBlock3.IsSubmitted()).To(BeFalse())
+		})
+
+		It("should correctly handle finalizers", func() {
+			dbfsBlock := &DbfsBlock{
+				ObjectMeta: metav1.ObjectMeta{
+					DeletionTimestamp: &metav1.Time{
+						Time: time.Now(),
+					},
+				},
+			}
+			Expect(dbfsBlock.IsBeingDeleted()).To(BeTrue())
+
+			dbfsBlock.AddFinalizer(DbfsBlockFinalizerName)
+			Expect(len(dbfsBlock.GetFinalizers())).To(Equal(1))
+			Expect(dbfsBlock.HasFinalizer(DbfsBlockFinalizerName)).To(BeTrue())
+
+			dbfsBlock.RemoveFinalizer(DbfsBlockFinalizerName)
+			Expect(len(dbfsBlock.GetFinalizers())).To(Equal(0))
+			Expect(dbfsBlock.HasFinalizer(DbfsBlockFinalizerName)).To(BeFalse())
+		})
+
+		It("should correctly handle file hash", func() {
+			dbfsBlock := &DbfsBlock{
+				Spec: &DbfsBlockSpec{
+					Data: "dGVzdA==",
+				},
+			}
+
+			Expect(dbfsBlock.GetHash()).To(Equal("a94a8fe5ccb19ba61c4c0873d391e987982fbbd3"))
+			Expect(dbfsBlock.IsUpToDate()).To(BeFalse())
+
+			dbfsBlock.Status = &DbfsBlockStatus{
+				FileHash: "a94a8fe5ccb19ba61c4c0873d391e987982fbbd3",
+			}
+			Expect(dbfsBlock.IsUpToDate()).To(BeTrue())
+
+			dbfsBlockError := &DbfsBlock{
+				Spec: &DbfsBlockSpec{
+					Data: "invalid_base64",
+				},
+			}
+			Expect(dbfsBlockError.GetHash()).To(Equal(""))
+		})
 	})
 
 })

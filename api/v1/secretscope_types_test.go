@@ -17,6 +17,8 @@ limitations under the License.
 package v1
 
 import (
+	"time"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
@@ -72,6 +74,29 @@ var _ = Describe("SecretScope", func() {
 			Expect(k8sClient.Get(context.Background(), key, created)).ToNot(Succeed())
 		})
 
+		It("should correctly handle isSubmitted", func() {
+			secretScope := &SecretScope{}
+			Expect(secretScope.IsSubmitted()).To(BeFalse())
+		})
+
+		It("should correctly handle finalizers", func() {
+			secretScope := &SecretScope{
+				ObjectMeta: metav1.ObjectMeta{
+					DeletionTimestamp: &metav1.Time{
+						Time: time.Now(),
+					},
+				},
+			}
+			Expect(secretScope.IsBeingDeleted()).To(BeTrue())
+
+			secretScope.AddFinalizer(SecretScopeFinalizerName)
+			Expect(len(secretScope.GetFinalizers())).To(Equal(1))
+			Expect(secretScope.HasFinalizer(SecretScopeFinalizerName)).To(BeTrue())
+
+			secretScope.RemoveFinalizer(SecretScopeFinalizerName)
+			Expect(len(secretScope.GetFinalizers())).To(Equal(0))
+			Expect(secretScope.HasFinalizer(SecretScopeFinalizerName)).To(BeFalse())
+		})
 	})
 
 })

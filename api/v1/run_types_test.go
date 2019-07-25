@@ -17,8 +17,12 @@ limitations under the License.
 package v1
 
 import (
+	"time"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	dbazure "github.com/xinsnake/databricks-sdk-golang/azure"
+	dbmodels "github.com/xinsnake/databricks-sdk-golang/azure/models"
 
 	"golang.org/x/net/context"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -74,15 +78,38 @@ var _ = Describe("Run", func() {
 
 	})
 
+	It("should correctly handle isSubmitted", func() {
+		run := &Run{
+			Status: &dbazure.JobsRunsGetOutputResponse{
+				Metadata: dbmodels.Run{
+					JobID: 23,
+				},
+			},
+		}
+		Expect(run.IsSubmitted()).To(BeTrue())
+
+		run2 := &Run{
+			Status: nil,
+		}
+		Expect(run2.IsSubmitted()).To(BeFalse())
+	})
+
 	It("should correctly handle finalizers", func() {
-		run := &Run{}
+		run := &Run{
+			ObjectMeta: metav1.ObjectMeta{
+				DeletionTimestamp: &metav1.Time{
+					Time: time.Now(),
+				},
+			},
+		}
+		Expect(run.IsBeingDeleted()).To(BeTrue())
 
 		run.AddFinalizer(RunFinalizerName)
 		Expect(len(run.GetFinalizers())).To(Equal(1))
-		Expect(run.HasFinalizer(RunFinalizerName)).To(Equal(true))
+		Expect(run.HasFinalizer(RunFinalizerName)).To(BeTrue())
 
 		run.RemoveFinalizer(RunFinalizerName)
 		Expect(len(run.GetFinalizers())).To(Equal(0))
-		Expect(run.HasFinalizer(RunFinalizerName)).To(Equal(false))
+		Expect(run.HasFinalizer(RunFinalizerName)).To(BeFalse())
 	})
 })
