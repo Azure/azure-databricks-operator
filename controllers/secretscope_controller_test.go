@@ -148,9 +148,9 @@ var _ = Describe("SecretScope Controller", func() {
 			}()
 
 			secretValue := "secretValue"
-			byteSecretValue := []byte("hello")
+			byteSecretValue := "aGVsbG8="
 			initialSecrets := []databricksv1.SecretScopeSecret{
-				databricksv1.SecretScopeSecret{Key: "secretKey", StringValue: &secretValue},
+				databricksv1.SecretScopeSecret{Key: "secretKey", StringValue: secretValue},
 				databricksv1.SecretScopeSecret{
 					Key: "secretFromSecret",
 					ValueFrom: &databricksv1.SecretScopeValueFrom{
@@ -160,7 +160,7 @@ var _ = Describe("SecretScope Controller", func() {
 						},
 					},
 				},
-				databricksv1.SecretScopeSecret{Key: "byteSecretKey", ByteValue: &byteSecretValue},
+				databricksv1.SecretScopeSecret{Key: "byteSecretKey", ByteValue: byteSecretValue},
 			}
 
 			spec := databricksv1.SecretScopeSpec{
@@ -199,7 +199,7 @@ var _ = Describe("SecretScope Controller", func() {
 			By("Updating secrets successfully")
 			newSecretValue := "newSecretValue"
 			updatedSecrets := []databricksv1.SecretScopeSecret{
-				databricksv1.SecretScopeSecret{Key: "newSecretKey", StringValue: &newSecretValue},
+				databricksv1.SecretScopeSecret{Key: "newSecretKey", StringValue: newSecretValue},
 			}
 
 			updateSpec := databricksv1.SecretScopeSpec{
