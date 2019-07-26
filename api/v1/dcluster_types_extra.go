@@ -56,34 +56,36 @@ type DclusterInfo struct {
 	TerminationReason      *dbmodels.TerminationReason `json:"termination_reason,omitempty" url:"termination_reason,omitempty"`
 }
 
-func (i *DclusterInfo) FromDataBricksClusterInfo(ci dbmodels.ClusterInfo) *DclusterInfo {
-	i.NumWorkers = ci.NumWorkers
-	i.AutoScale = ci.AutoScale
-	i.ClusterID = ci.ClusterID
-	i.CreatorUserName = ci.CreatorUserName
-	i.Driver = ci.Driver
-	i.Executors = ci.Executors
-	i.SparkContextID = ci.SparkContextID
-	i.JdbcPort = ci.JdbcPort
-	i.ClusterName = ci.ClusterName
-	i.SparkVersion = ci.SparkVersion
-	i.SparkConf = ci.SparkConf
-	i.NodeTypeID = ci.NodeTypeID
-	i.DriverNodeTypeID = ci.DriverNodeTypeID
-	i.ClusterLogConf = ci.ClusterLogConf
-	i.InitScripts = ci.InitScripts
-	i.SparkEnvVars = ci.SparkEnvVars
-	i.AutoterminationMinutes = ci.AutoterminationMinutes
-	i.State = ci.State
-	i.StateMessage = ci.StateMessage
-	i.StartTime = ci.StartTime
-	i.TerminateTime = ci.TerminateTime
-	i.LastStateLossTime = ci.LastStateLossTime
-	i.LastActivityTime = ci.LastActivityTime
-	i.ClusterMemoryMb = ci.ClusterMemoryMb
-	i.ClusterCores = fmt.Sprintf("%v", ci.ClusterCores)
-	i.DefaultTags = ci.DefaultTags
-	i.ClusterLogStatus = ci.ClusterLogStatus
-	i.TerminationReason = ci.TerminationReason
-	return i
+// FromDataBricksClusterInfo converts a clusterInfo object from a DataBricks
+// ClusterInfo object. It is needed because K8S does not support float type
+func (dci *DclusterInfo) FromDataBricksClusterInfo(ci dbmodels.ClusterInfo) *DclusterInfo {
+	dci.NumWorkers = ci.NumWorkers
+	dci.AutoScale = ci.AutoScale
+	dci.ClusterID = ci.ClusterID
+	dci.CreatorUserName = ci.CreatorUserName
+	dci.Driver = ci.Driver
+	dci.Executors = ci.Executors
+	dci.SparkContextID = ci.SparkContextID
+	dci.JdbcPort = ci.JdbcPort
+	dci.ClusterName = ci.ClusterName
+	dci.SparkVersion = ci.SparkVersion
+	dci.SparkConf = ci.SparkConf
+	dci.NodeTypeID = ci.NodeTypeID
+	dci.DriverNodeTypeID = ci.DriverNodeTypeID
+	dci.ClusterLogConf = ci.ClusterLogConf
+	dci.InitScripts = ci.InitScripts
+	dci.SparkEnvVars = ci.SparkEnvVars
+	dci.AutoterminationMinutes = ci.AutoterminationMinutes
+	dci.State = ci.State
+	dci.StateMessage = ci.StateMessage
+	dci.StartTime = ci.StartTime
+	dci.TerminateTime = ci.TerminateTime
+	dci.LastStateLossTime = ci.LastStateLossTime
+	dci.LastActivityTime = ci.LastActivityTime
+	dci.ClusterMemoryMb = ci.ClusterMemoryMb
+	dci.ClusterCores = fmt.Sprintf("%v", ci.ClusterCores)
+	dci.DefaultTags = ci.DefaultTags
+	dci.ClusterLogStatus = ci.ClusterLogStatus
+	dci.TerminationReason = ci.TerminationReason
+	return dci
 }
