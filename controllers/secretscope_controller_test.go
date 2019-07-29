@@ -115,19 +115,10 @@ var _ = Describe("SecretScope Controller", func() {
 				return k8sClient.Delete(context.Background(), f)
 			}, timeout, interval).Should(Succeed())
 
-			Eventually(func() bool {
+			Eventually(func() error {
 				f := &databricksv1.SecretScope{}
-				k8sClient.Get(context.Background(), key, f)
-				return f.IsBeingDeleted()
-			}, timeout, interval).Should(BeTrue())
-
-			time.Sleep(time.Second * 5)
-			By("Removing the finaliser")
-			Eventually(func() bool {
-				f := &databricksv1.SecretScope{}
-				k8sClient.Get(context.Background(), key, f)
-				return f.HasFinalizer(databricksv1.SecretScopeFinalizerName)
-			}, timeout, interval).Should(BeFalse())
+				return k8sClient.Get(context.Background(), key, f)
+			}, timeout, interval).ShouldNot(Succeed())
 		})
 	})
 
@@ -157,9 +148,9 @@ var _ = Describe("SecretScope Controller", func() {
 			}()
 
 			secretValue := "secretValue"
-			byteSecretValue := []byte("hello")
+			byteSecretValue := "aGVsbG8="
 			initialSecrets := []databricksv1.SecretScopeSecret{
-				databricksv1.SecretScopeSecret{Key: "secretKey", StringValue: &secretValue},
+				databricksv1.SecretScopeSecret{Key: "secretKey", StringValue: secretValue},
 				databricksv1.SecretScopeSecret{
 					Key: "secretFromSecret",
 					ValueFrom: &databricksv1.SecretScopeValueFrom{
@@ -169,13 +160,17 @@ var _ = Describe("SecretScope Controller", func() {
 						},
 					},
 				},
-				databricksv1.SecretScopeSecret{Key: "byteSecretKey", ByteValue: &byteSecretValue},
+				databricksv1.SecretScopeSecret{Key: "byteSecretKey", ByteValue: byteSecretValue},
 			}
 
 			spec := databricksv1.SecretScopeSpec{
 				InitialManagePrincipal: "users",
 				SecretScopeSecrets:     initialSecrets,
-				SecretScopeACLs:        make([]databricksv1.SecretScopeACL, 0),
+				SecretScopeACLs: []databricksv1.SecretScopeACL{
+					databricksv1.SecretScopeACL{Principal: "admins", Permission: "WRITE"},
+					databricksv1.SecretScopeACL{Principal: "admins", Permission: "READ"},
+					databricksv1.SecretScopeACL{Principal: "admins", Permission: "MANAGE"},
+				},
 			}
 
 			key := types.NamespacedName{
@@ -204,13 +199,16 @@ var _ = Describe("SecretScope Controller", func() {
 			By("Updating secrets successfully")
 			newSecretValue := "newSecretValue"
 			updatedSecrets := []databricksv1.SecretScopeSecret{
-				databricksv1.SecretScopeSecret{Key: "newSecretKey", StringValue: &newSecretValue},
+				databricksv1.SecretScopeSecret{Key: "newSecretKey", StringValue: newSecretValue},
 			}
 
 			updateSpec := databricksv1.SecretScopeSpec{
 				InitialManagePrincipal: "users",
 				SecretScopeSecrets:     updatedSecrets,
-				SecretScopeACLs:        make([]databricksv1.SecretScopeACL, 0),
+				SecretScopeACLs: []databricksv1.SecretScopeACL{
+					databricksv1.SecretScopeACL{Principal: "admins", Permission: "WRITE"},
+					databricksv1.SecretScopeACL{Principal: "admins", Permission: "READ"},
+				},
 			}
 
 			fetched.Spec = updateSpec
@@ -229,19 +227,10 @@ var _ = Describe("SecretScope Controller", func() {
 				return k8sClient.Delete(context.Background(), f)
 			}, timeout, interval).Should(Succeed())
 
-			Eventually(func() bool {
+			Eventually(func() error {
 				f := &databricksv1.SecretScope{}
-				k8sClient.Get(context.Background(), key, f)
-				return f.IsBeingDeleted()
-			}, timeout, interval).Should(BeTrue())
-
-			time.Sleep(time.Second * 5)
-			By("Removing the finaliser")
-			Eventually(func() bool {
-				f := &databricksv1.SecretScope{}
-				k8sClient.Get(context.Background(), key, f)
-				return f.HasFinalizer(databricksv1.SecretScopeFinalizerName)
-			}, timeout, interval).Should(BeFalse())
+				return k8sClient.Get(context.Background(), key, f)
+			}, timeout, interval).ShouldNot(Succeed())
 		})
 	})
 })

@@ -18,8 +18,8 @@ package v1
 
 type SecretScopeSecret struct {
 	Key         string                `json:"key,omitempty"`
-	StringValue *string               `json:"string_value,omitempty"`
-	ByteValue   *[]byte               `json:"byte_value,omitempty"`
+	StringValue string                `json:"string_value,omitempty"`
+	ByteValue   string                `json:"byte_value,omitempty"`
 	ValueFrom   *SecretScopeValueFrom `json:"value_from,omitempty"`
 }
 

@@ -1,0 +1,7 @@
+apiVersion: databricks.microsoft.com/v1
+kind: DbfsBlock
+metadata:
+  name: dbfsblock-sample
+spec:
+  path: /dbfsblock-sample
+  data: ZGF0YWJyaWNrcwo=

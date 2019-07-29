@@ -20,16 +20,15 @@ import (
 	"context"
 	"time"
 
-	dbmodels "github.com/xinsnake/databricks-sdk-golang/azure/models"
-
 	databricksv1 "github.com/microsoft/azure-databricks-operator/api/v1"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	dbmodels "github.com/xinsnake/databricks-sdk-golang/azure/models"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 )
 
-var _ = Describe("Djob Controller", func() {
+var _ = Describe("DbfsBlock Controller", func() {
 
 	const timeout = time.Second * 30
 	const interval = time.Second * 1
@@ -46,47 +45,27 @@ var _ = Describe("Djob Controller", func() {
 	// your API definition.
 	// Avoid adding tests for vanilla CRUD operations because they would
 	// test Kubernetes API server, which isn't the goal here.
-	Context("Job with schedule", func() {
+	Context("Cluster with autho-scaling", func() {
 		It("Should create successfully", func() {
 
 			key := types.NamespacedName{
-				Name:      "integreation-test-job-with-schedule",
+				Name:      "test-cluster",
 				Namespace: "default",
 			}
 
-			spec := &dbmodels.JobSettings{
-				NewCluster: &dbmodels.NewCluster{
-					SparkVersion: "5.3.x-scala2.11",
-					NodeTypeID:   "Standard_D3_v2",
-					NumWorkers:   10,
-				},
-				Libraries: []dbmodels.Library{
-					dbmodels.Library{
-						Jar: "dbfs:/my-jar.jar",
-					},
-					dbmodels.Library{
-						Maven: &dbmodels.MavenLibrary{
-							Coordinates: "org.jsoup:jsoup:1.7.2",
-						},
-					},
-				},
-				TimeoutSeconds: 3600,
-				MaxRetries:     1,
-				Schedule: &dbmodels.CronSchedule{
-					QuartzCronExpression: "0 15 22 ? * *",
-					TimezoneID:           "America/Los_Angeles",
-				},
-				SparkJarTask: &dbmodels.SparkJarTask{
-					MainClassName: "com.databricks.ComputeModels",
-				},
-			}
-
-			created := &databricksv1.Djob{
+			created := &databricksv1.Dcluster{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      key.Name,
 					Namespace: key.Namespace,
 				},
-				Spec: spec,
+				Spec: &dbmodels.NewCluster{
+					Autoscale: &dbmodels.AutoScale{
+						MinWorkers: 2,
+						MaxWorkers: 5,
+					},
+					NodeTypeID:   "Standard_D3_v2",
+					SparkVersion: "5.3.x-scala2.11",
+				},
 			}
 
 			// Create
@@ -94,7 +73,7 @@ var _ = Describe("Djob Controller", func() {
 
 			By("Expecting submitted")
 			Eventually(func() bool {
-				f := &databricksv1.Djob{}
+				f := &databricksv1.Dcluster{}
 				k8sClient.Get(context.Background(), key, f)
 				return f.IsSubmitted()
 			}, timeout, interval).Should(BeTrue())
@@ -102,14 +81,14 @@ var _ = Describe("Djob Controller", func() {
 			// Delete
 			By("Expecting to delete successfully")
 			Eventually(func() error {
-				f := &databricksv1.Djob{}
+				f := &databricksv1.Dcluster{}
 				k8sClient.Get(context.Background(), key, f)
 				return k8sClient.Delete(context.Background(), f)
 			}, timeout, interval).Should(Succeed())
 
 			By("Expecting to delete finish")
 			Eventually(func() error {
-				f := &databricksv1.Djob{}
+				f := &databricksv1.Dcluster{}
 				return k8sClient.Get(context.Background(), key, f)
 			}, timeout, interval).ShouldNot(Succeed())
 		})

@@ -60,9 +60,10 @@ var _ = BeforeSuite(func(done Done) {
 	logf.SetLogger(zap.LoggerTo(GinkgoWriter, true))
 
 	By("bootstrapping test environment")
+	t := true
 	if os.Getenv("TEST_USE_EXISTING_CLUSTER") == "true" {
 		testEnv = &envtest.Environment{
-			UseExistingCluster: true,
+			UseExistingCluster: &t,
 		}
 	} else {
 		testEnv = &envtest.Environment{
@@ -76,6 +77,12 @@ var _ = BeforeSuite(func(done Done) {
 
 	err = scheme.AddToScheme(scheme.Scheme)
 	Expect(err).NotTo(HaveOccurred())
+	err = databricksv1.AddToScheme(scheme.Scheme)
+	Expect(err).NotTo(HaveOccurred())
+
+	err = databricksv1.AddToScheme(scheme.Scheme)
+	Expect(err).NotTo(HaveOccurred())
+
 	err = databricksv1.AddToScheme(scheme.Scheme)
 	Expect(err).NotTo(HaveOccurred())
 
@@ -119,6 +126,22 @@ var _ = BeforeSuite(func(done Done) {
 		Client:    k8sManager.GetClient(),
 		Log:       ctrl.Log.WithName("controllers").WithName("Run"),
 		Recorder:  k8sManager.GetEventRecorderFor("run-controller"),
+		APIClient: apiClient,
+	}).SetupWithManager(k8sManager)
+	Expect(err).ToNot(HaveOccurred())
+
+	err = (&DclusterReconciler{
+		Client:    k8sManager.GetClient(),
+		Log:       ctrl.Log.WithName("controllers").WithName("Run"),
+		Recorder:  k8sManager.GetEventRecorderFor("dcluster-controller"),
+		APIClient: apiClient,
+	}).SetupWithManager(k8sManager)
+	Expect(err).ToNot(HaveOccurred())
+
+	err = (&DbfsBlockReconciler{
+		Client:    k8sManager.GetClient(),
+		Log:       ctrl.Log.WithName("controllers").WithName("Run"),
+		Recorder:  k8sManager.GetEventRecorderFor("dbfsblock-controller"),
 		APIClient: apiClient,
 	}).SetupWithManager(k8sManager)
 	Expect(err).ToNot(HaveOccurred())

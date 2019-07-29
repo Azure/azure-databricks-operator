@@ -21,8 +21,8 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-
 	dbmodels "github.com/xinsnake/databricks-sdk-golang/azure/models"
+
 	"golang.org/x/net/context"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -31,10 +31,10 @@ import (
 // These tests are written in BDD-style using Ginkgo framework. Refer to
 // http://onsi.github.io/ginkgo to learn more.
 
-var _ = Describe("Djob", func() {
+var _ = Describe("DbfsBlock", func() {
 	var (
 		key              types.NamespacedName
-		created, fetched *Djob
+		created, fetched *DbfsBlock
 	)
 
 	BeforeEach(func() {
@@ -57,59 +57,91 @@ var _ = Describe("Djob", func() {
 				Name:      "foo",
 				Namespace: "default",
 			}
-			created = &Djob{
+			created = &DbfsBlock{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "foo",
 					Namespace: "default",
 				}}
 
 			By("creating an API obj")
-			Expect(k8sClient.Create(context.Background(), created)).To(Succeed())
+			Expect(k8sClient.Create(context.TODO(), created)).To(Succeed())
 
-			fetched = &Djob{}
-			Expect(k8sClient.Get(context.Background(), key, fetched)).To(Succeed())
+			fetched = &DbfsBlock{}
+			Expect(k8sClient.Get(context.TODO(), key, fetched)).To(Succeed())
 			Expect(fetched).To(Equal(created))
 
 			By("deleting the created object")
-			Expect(k8sClient.Delete(context.Background(), created)).To(Succeed())
-			Expect(k8sClient.Get(context.Background(), key, created)).ToNot(Succeed())
+			Expect(k8sClient.Delete(context.TODO(), created)).To(Succeed())
+			Expect(k8sClient.Get(context.TODO(), key, created)).ToNot(Succeed())
 		})
 
 		It("should correctly handle isSubmitted", func() {
-			djob := &Djob{
-				Status: &DjobStatus{
-					JobStatus: &dbmodels.Job{
-						JobID: 20,
+			dbfsBlock := &DbfsBlock{
+				Status: &DbfsBlockStatus{
+					FileInfo: &dbmodels.FileInfo{
+						FileSize: 0,
 					},
 				},
 			}
-			Expect(djob.IsSubmitted()).To(BeTrue())
+			Expect(dbfsBlock.IsSubmitted()).To(BeFalse())
 
-			djob2 := &Djob{
-				Status: &DjobStatus{
-					JobStatus: nil,
+			dbfsBlock2 := &DbfsBlock{
+				Status: &DbfsBlockStatus{
+					FileInfo: &dbmodels.FileInfo{
+						Path: "/test-path",
+					},
 				},
 			}
-			Expect(djob2.IsSubmitted()).To(BeFalse())
+			Expect(dbfsBlock2.IsSubmitted()).To(BeTrue())
+
+			dbfsBlock3 := &DbfsBlock{
+				Status: &DbfsBlockStatus{
+					FileInfo: nil,
+				},
+			}
+			Expect(dbfsBlock3.IsSubmitted()).To(BeFalse())
 		})
 
 		It("should correctly handle finalizers", func() {
-			djob := &Djob{
+			dbfsBlock := &DbfsBlock{
 				ObjectMeta: metav1.ObjectMeta{
 					DeletionTimestamp: &metav1.Time{
 						Time: time.Now(),
 					},
 				},
 			}
-			Expect(djob.IsBeingDeleted()).To(BeTrue())
+			Expect(dbfsBlock.IsBeingDeleted()).To(BeTrue())
 
-			djob.AddFinalizer(DjobFinalizerName)
-			Expect(len(djob.GetFinalizers())).To(Equal(1))
-			Expect(djob.HasFinalizer(DjobFinalizerName)).To(BeTrue())
+			dbfsBlock.AddFinalizer(DbfsBlockFinalizerName)
+			Expect(len(dbfsBlock.GetFinalizers())).To(Equal(1))
+			Expect(dbfsBlock.HasFinalizer(DbfsBlockFinalizerName)).To(BeTrue())
 
-			djob.RemoveFinalizer(DjobFinalizerName)
-			Expect(len(djob.GetFinalizers())).To(Equal(0))
-			Expect(djob.HasFinalizer(DjobFinalizerName)).To(BeFalse())
+			dbfsBlock.RemoveFinalizer(DbfsBlockFinalizerName)
+			Expect(len(dbfsBlock.GetFinalizers())).To(Equal(0))
+			Expect(dbfsBlock.HasFinalizer(DbfsBlockFinalizerName)).To(BeFalse())
+		})
+
+		It("should correctly handle file hash", func() {
+			dbfsBlock := &DbfsBlock{
+				Spec: &DbfsBlockSpec{
+					Data: "dGVzdA==",
+				},
+			}
+
+			Expect(dbfsBlock.GetHash()).To(Equal("a94a8fe5ccb19ba61c4c0873d391e987982fbbd3"))
+			Expect(dbfsBlock.IsUpToDate()).To(BeFalse())
+
+			dbfsBlock.Status = &DbfsBlockStatus{
+				FileHash: "a94a8fe5ccb19ba61c4c0873d391e987982fbbd3",
+			}
+			Expect(dbfsBlock.IsUpToDate()).To(BeTrue())
+
+			dbfsBlockError := &DbfsBlock{
+				Spec: &DbfsBlockSpec{
+					Data: "invalid_base64",
+				},
+			}
+			Expect(dbfsBlockError.GetHash()).To(Equal(""))
 		})
 	})
 

@@ -44,7 +44,7 @@ func (djob *Djob) IsBeingDeleted() bool {
 }
 
 func (djob *Djob) IsSubmitted() bool {
-	if djob.Status == nil || djob.Status.JobStatus.JobID == 0 {
+	if djob.Status == nil || djob.Status.JobStatus == nil || djob.Status.JobStatus.JobID == 0 {
 		return false
 	}
 	return djob.Status.JobStatus.JobID > 0

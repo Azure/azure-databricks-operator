@@ -18,6 +18,7 @@ package controllers
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"strings"
 
@@ -67,13 +68,17 @@ func (r *SecretScopeReconciler) submitSecrets(instance *databricksv1.SecretScope
 	}
 
 	for _, secret := range instance.Spec.SecretScopeSecrets {
-		if secret.StringValue != nil {
-			err = r.APIClient.Secrets().PutSecretString(*secret.StringValue, scope, secret.Key)
+		if secret.StringValue != "" {
+			err = r.APIClient.Secrets().PutSecretString(secret.StringValue, scope, secret.Key)
 			if err != nil {
 				return err
 			}
-		} else if secret.ByteValue != nil {
-			err = r.APIClient.Secrets().PutSecret(*secret.ByteValue, scope, secret.Key)
+		} else if secret.ByteValue != "" {
+			v, err := base64.StdEncoding.DecodeString(secret.ByteValue)
+			if err != nil {
+				return err
+			}
+			err = r.APIClient.Secrets().PutSecret(v, scope, secret.Key)
 			if err != nil {
 				return err
 			}
@@ -172,11 +177,7 @@ func (r *SecretScopeReconciler) submit(instance *databricksv1.SecretScope) error
 	}
 
 	instance.Status.SecretScope = remoteScope
-	err = r.Update(context.Background(), instance)
-	if err != nil {
-		return fmt.Errorf("error when updating SecretScope instance after updating the remote: %v", err)
-	}
-	return nil
+	return r.Update(context.Background(), instance)
 }
 
 func (r *SecretScopeReconciler) update(instance *databricksv1.SecretScope) error {
@@ -185,34 +186,7 @@ func (r *SecretScopeReconciler) update(instance *databricksv1.SecretScope) error
 		return err
 	}
 
-	err = r.submitACLs(instance)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (r *SecretScopeReconciler) refresh(instance *databricksv1.SecretScope) error {
-	scope := instance.Status.SecretScope.Name
-	remoteScope, err := r.get(scope)
-	if err != nil {
-		return err
-	}
-
-	if remoteScope != nil {
-		instance.Status.SecretScope = remoteScope
-		err = r.update(instance)
-		if err != nil {
-			return fmt.Errorf("error when refreshing SecretScope: %v", err)
-		}
-	}
-
-	err = r.Update(context.Background(), instance)
-	if err != nil {
-		return fmt.Errorf("error when updating SecretScope instance after updating the remote: %v", err)
-	}
-	return nil
+	return r.submitACLs(instance)
 }
 
 func (r *SecretScopeReconciler) delete(instance *databricksv1.SecretScope) error {

@@ -19,21 +19,19 @@ package controllers
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/go-logr/logr"
+	dbazure "github.com/xinsnake/databricks-sdk-golang/azure"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	databricksv1 "github.com/microsoft/azure-databricks-operator/api/v1"
-	dbazure "github.com/xinsnake/databricks-sdk-golang/azure"
 )
 
-// SecretScopeReconciler reconciles a SecretScope object
-type SecretScopeReconciler struct {
+// DbfsBlockReconciler reconciles a DbfsBlock object
+type DbfsBlockReconciler struct {
 	client.Client
 	Log logr.Logger
 
@@ -41,58 +39,57 @@ type SecretScopeReconciler struct {
 	APIClient dbazure.DBClient
 }
 
-// +kubebuilder:rbac:groups=databricks.microsoft.com,resources=secretscopes,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=databricks.microsoft.com,resources=secretscopes/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=databricks.microsoft.com,resources=dbfsblocks,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=databricks.microsoft.com,resources=dbfsblocks/status,verbs=get;update;patch
 
-func (r *SecretScopeReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
+func (r *DbfsBlockReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	_ = context.Background()
-	_ = r.Log.WithValues("secretscope", req.NamespacedName)
+	_ = r.Log.WithValues("dbfsblock", req.NamespacedName)
 
-	// your logic here
-	instance := &databricksv1.SecretScope{}
-	err := r.Get(context.Background(), req.NamespacedName, instance)
+	instance := &databricksv1.DbfsBlock{}
 
 	r.Log.Info(fmt.Sprintf("Starting reconcile loop for %v", req.NamespacedName))
 	defer r.Log.Info(fmt.Sprintf("Finish reconcile loop for %v", req.NamespacedName))
 
-	if err != nil {
+	if err := r.Get(context.Background(), req.NamespacedName, instance); err != nil {
 		if errors.IsNotFound(err) {
-			return reconcile.Result{}, nil
+			return ctrl.Result{}, nil
 		}
-		return reconcile.Result{}, err
+		return ctrl.Result{}, err
 	}
 
 	if instance.IsBeingDeleted() {
-		err := r.handleFinalizer(instance)
-		if err != nil {
-			return reconcile.Result{}, fmt.Errorf("error when handling finalizer: %v", err)
+		r.Log.Info(fmt.Sprintf("HandleFinalizer for %v", req.NamespacedName))
+		if err := r.handleFinalizer(instance); err != nil {
+			return ctrl.Result{}, fmt.Errorf("error when handling finalizer: %v", err)
 		}
 		r.Recorder.Event(instance, "Normal", "Deleted", "Object finalizer is deleted")
 		return ctrl.Result{}, nil
 	}
 
-	if !instance.HasFinalizer(databricksv1.SecretScopeFinalizerName) {
-		err = r.addFinalizer(instance)
-		if err != nil {
-			return reconcile.Result{}, fmt.Errorf("error when handling secret scope finalizer: %v", err)
+	if !instance.HasFinalizer(databricksv1.DbfsBlockFinalizerName) {
+		r.Log.Info(fmt.Sprintf("AddFinalizer for %v", req.NamespacedName))
+		if err := r.addFinalizer(instance); err != nil {
+			return ctrl.Result{}, fmt.Errorf("error when adding finalizer: %v", err)
 		}
 		r.Recorder.Event(instance, "Normal", "Added", "Object finalizer is added")
 		return ctrl.Result{}, nil
 	}
 
-	if !instance.IsSubmitted() {
-		err = r.submit(instance)
-		if err != nil {
-			return ctrl.Result{}, fmt.Errorf("error when submitting secret scope to the API: %v", err)
+	if !instance.IsSubmitted() || !instance.IsUpToDate() {
+		r.Log.Info(fmt.Sprintf("Submit for %v", req.NamespacedName))
+		if err := r.submit(instance); err != nil {
+			return ctrl.Result{}, fmt.Errorf("error when submitting DBFS block: %v", err)
 		}
 		r.Recorder.Event(instance, "Normal", "Submitted", "Object is submitted")
+		return ctrl.Result{}, nil
 	}
 
-	return ctrl.Result{RequeueAfter: 30 * time.Second}, nil
+	return ctrl.Result{}, nil
 }
 
-func (r *SecretScopeReconciler) SetupWithManager(mgr ctrl.Manager) error {
+func (r *DbfsBlockReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&databricksv1.SecretScope{}).
+		For(&databricksv1.DbfsBlock{}).
 		Complete(r)
 }

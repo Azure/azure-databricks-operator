@@ -7,64 +7,25 @@ metadata:
   name: manager-role
 rules:
 - apiGroups:
-  - databricks.microsoft.com
-  resources:
-  - djobs
-  verbs:
-  - get
-  - list
-  - watch
-  - create
-  - update
-  - patch
-  - delete
-- apiGroups:
-  - databricks.microsoft.com
-  resources:
-  - djobs/status
-  verbs:
-  - get
-  - update
-  - patch
-- apiGroups:
-  - databricks.microsoft.com
-  resources:
-  - events
-  verbs:
-  - create
-  - patch
-- apiGroups:
   - apps
   resources:
   - deployments
   verbs:
+  - create
+  - delete
   - get
   - list
-  - watch
-  - create
-  - update
   - patch
-  - delete
+  - update
+  - watch
 - apiGroups:
   - apps
   resources:
   - deployments/status
   verbs:
   - get
-  - update
   - patch
-- apiGroups:
-  - ""
-  resources:
-  - secrets
-  verbs:
-  - get
-  - list
-  - watch
-  - create
   - update
-  - patch
-  - delete
 - apiGroups:
   - ""
   resources:
@@ -73,42 +34,121 @@ rules:
   - create
   - watch
 - apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - databricks.microsoft.com
+  resources:
+  - dbfsblocks
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - databricks.microsoft.com
+  resources:
+  - dbfsblocks/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - databricks.microsoft.com
+  resources:
+  - dclusters
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - databricks.microsoft.com
+  resources:
+  - dclusters/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - databricks.microsoft.com
+  resources:
+  - djobs
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - databricks.microsoft.com
+  resources:
+  - djobs/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - databricks.microsoft.com
+  resources:
+  - events
+  verbs:
+  - create
+  - patch
+- apiGroups:
   - databricks.microsoft.com
   resources:
   - runs
   verbs:
+  - create
+  - delete
   - get
   - list
-  - watch
-  - create
-  - update
   - patch
-  - delete
+  - update
+  - watch
 - apiGroups:
   - databricks.microsoft.com
   resources:
   - runs/status
   verbs:
   - get
-  - update
   - patch
+  - update
 - apiGroups:
   - databricks.microsoft.com
   resources:
   - secretscopes
   verbs:
+  - create
+  - delete
   - get
   - list
-  - watch
-  - create
-  - update
   - patch
-  - delete
+  - update
+  - watch
 - apiGroups:
   - databricks.microsoft.com
   resources:
   - secretscopes/status
   verbs:
   - get
-  - update
   - patch
+  - update

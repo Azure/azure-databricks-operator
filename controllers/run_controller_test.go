@@ -138,19 +138,11 @@ var _ = Describe("Run Controller", func() {
 				return k8sClient.Delete(context.Background(), f)
 			}, timeout, interval).Should(Succeed())
 
-			By("Expecting run to be deleted true")
-			Eventually(func() bool {
+			By("Expecting to delete finish")
+			Eventually(func() error {
 				f := &databricksv1.Run{}
-				k8sClient.Get(context.Background(), runKey, f)
-				return f.IsBeingDeleted()
-			}, timeout, interval).Should(BeTrue())
-
-			By("Expecting run finaliser be removed")
-			Eventually(func() bool {
-				f := &databricksv1.Run{}
-				k8sClient.Get(context.Background(), runKey, f)
-				return f.HasFinalizer(databricksv1.RunFinalizerName)
-			}, timeout, interval).Should(BeFalse())
+				return k8sClient.Get(context.Background(), runKey, f)
+			}, timeout, interval).ShouldNot(Succeed())
 		})
 	})
 })

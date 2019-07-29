@@ -35,9 +35,6 @@ func (r *DjobReconciler) submit(instance *databricksv1.Djob) error {
 	if err != nil {
 		return err
 	}
-	if job.JobID == 0 {
-		return fmt.Errorf("No valid Job ID was returned from DataBricks")
-	}
 
 	instance.Spec.Name = instance.GetName()
 	instance.Status = &databricksv1.DjobStatus{
