@@ -29,7 +29,7 @@ type DclusterStatus struct {
 
 // Dcluster is the Schema for the dclusters API
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
-// +kubebuilder:printcolumn:name="ClusterID",type="integer",JSONPath=".status.cluster_info.cluster_id"
+// +kubebuilder:printcolumn:name="ClusterID",type="string",JSONPath=".status.cluster_info.cluster_id"
 // +kubebuilder:printcolumn:name="State",type="string",JSONPath=".status.cluster_info.state"
 // +kubebuilder:printcolumn:name="NumWorkers",type="integer",JSONPath=".status.cluster_info.num_workers"
 type Dcluster struct {

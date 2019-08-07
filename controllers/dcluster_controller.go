@@ -86,6 +86,14 @@ func (r *DclusterReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		return ctrl.Result{}, nil
 	}
 
+	if instance.IsSubmitted() {
+		r.Log.Info(fmt.Sprintf("Refresh for %v", req.NamespacedName))
+		if err := r.refresh(instance); err != nil {
+			return ctrl.Result{}, fmt.Errorf("error when refreshing cluster: %v", err)
+		}
+		r.Recorder.Event(instance, "Normal", "Refreshed", "Object is refreshed")
+	}
+
 	return ctrl.Result{RequeueAfter: 30 * time.Second}, nil
 }
 

@@ -12,7 +12,7 @@ spec:
     type: date
   - JSONPath: .status.cluster_info.cluster_id
     name: ClusterID
-    type: integer
+    type: string
   - JSONPath: .status.cluster_info.state
     name: State
     type: string
