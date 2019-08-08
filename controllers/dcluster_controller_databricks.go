@@ -19,6 +19,7 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"reflect"
 
 	databricksv1 "github.com/microsoft/azure-databricks-operator/api/v1"
 )
@@ -38,6 +39,29 @@ func (r *DclusterReconciler) submit(instance *databricksv1.Dcluster) error {
 	clusterInfo, err := r.APIClient.Clusters().Create(*instance.Spec)
 	if err != nil {
 		return err
+	}
+
+	var info databricksv1.DclusterInfo
+	instance.Status = &databricksv1.DclusterStatus{
+		ClusterInfo: info.FromDataBricksClusterInfo(clusterInfo),
+	}
+	return r.Update(context.Background(), instance)
+}
+
+func (r *DclusterReconciler) refresh(instance *databricksv1.Dcluster) error {
+	r.Log.Info(fmt.Sprintf("Refresh cluster %s", instance.GetName()))
+
+	if instance.Status == nil || instance.Status.ClusterInfo == nil {
+		return nil
+	}
+
+	clusterInfo, err := r.APIClient.Clusters().Get(instance.Status.ClusterInfo.ClusterID)
+	if err != nil {
+		return err
+	}
+
+	if reflect.DeepEqual(instance.Status.ClusterInfo, &clusterInfo) {
+		return nil
 	}
 
 	var info databricksv1.DclusterInfo
