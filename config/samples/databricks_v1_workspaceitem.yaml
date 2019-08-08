@@ -1,0 +1,11 @@
+apiVersion: databricks.microsoft.com/v1
+kind: WorkspaceItem
+metadata:
+  name: workspaceitem-sample
+spec:
+  content: |
+    MSsx
+  path: /ScalaExampleNotebook
+  language: SCALA
+  overwrite: true
+  format: SOURCE

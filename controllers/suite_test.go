@@ -80,12 +80,6 @@ var _ = BeforeSuite(func(done Done) {
 	err = databricksv1.AddToScheme(scheme.Scheme)
 	Expect(err).NotTo(HaveOccurred())
 
-	err = databricksv1.AddToScheme(scheme.Scheme)
-	Expect(err).NotTo(HaveOccurred())
-
-	err = databricksv1.AddToScheme(scheme.Scheme)
-	Expect(err).NotTo(HaveOccurred())
-
 	// +kubebuilder:scaffold:scheme
 
 	k8sManager, err = ctrl.NewManager(cfg, ctrl.Options{
@@ -142,6 +136,14 @@ var _ = BeforeSuite(func(done Done) {
 		Client:    k8sManager.GetClient(),
 		Log:       ctrl.Log.WithName("controllers").WithName("Run"),
 		Recorder:  k8sManager.GetEventRecorderFor("dbfsblock-controller"),
+		APIClient: apiClient,
+	}).SetupWithManager(k8sManager)
+	Expect(err).ToNot(HaveOccurred())
+
+	err = (&WorkspaceItemReconciler{
+		Client:    k8sManager.GetClient(),
+		Log:       ctrl.Log.WithName("controllers").WithName("Run"),
+		Recorder:  k8sManager.GetEventRecorderFor("workspaceitem-controller"),
 		APIClient: apiClient,
 	}).SetupWithManager(k8sManager)
 	Expect(err).ToNot(HaveOccurred())

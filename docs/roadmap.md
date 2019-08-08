@@ -3,14 +3,15 @@
 - Job (djob)
 - Run (run)
 - Secret Scope & Secret (secretscope)
+- Cluster (dcluster)
+- DBFS (dbfsblock)
+- Workspace (workspaceitem)
 
 # In Progress
 
-- Cluster (dcluster)
-- DBFS (dbfsblock)
+- Libraries
 
 # Future Development
 
-- Libraries
 - Group
 - Token

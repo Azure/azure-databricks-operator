@@ -128,6 +128,16 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "DbfsBlock")
 		os.Exit(1)
 	}
+	err = (&controllers.WorkspaceItemReconciler{
+		Client:    mgr.GetClient(),
+		Log:       ctrl.Log.WithName("controllers").WithName("WorkspaceItem"),
+		Recorder:  mgr.GetEventRecorderFor("workspaceitem-controller"),
+		APIClient: apiClient,
+	}).SetupWithManager(mgr)
+	if err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "WorkspaceItem")
+		os.Exit(1)
+	}
 	// +kubebuilder:scaffold:builder
 
 	setupLog.Info("starting manager")
