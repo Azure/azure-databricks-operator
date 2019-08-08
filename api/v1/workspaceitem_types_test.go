@@ -17,8 +17,11 @@ limitations under the License.
 package v1
 
 import (
+	"time"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	dbmodels "github.com/xinsnake/databricks-sdk-golang/azure/models"
 
 	"golang.org/x/net/context"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -70,6 +73,75 @@ var _ = Describe("WorkspaceItem", func() {
 			By("deleting the created object")
 			Expect(k8sClient.Delete(context.TODO(), created)).To(Succeed())
 			Expect(k8sClient.Get(context.TODO(), key, created)).ToNot(Succeed())
+		})
+
+		It("should correctly handle isSubmitted", func() {
+			wiItem := &WorkspaceItem{
+				Status: &WorkspaceItemStatus{
+					ObjectInfo: &dbmodels.ObjectInfo{
+						Path: "",
+					},
+				},
+			}
+			Expect(wiItem.IsSubmitted()).To(BeFalse())
+
+			wiItem2 := &WorkspaceItem{
+				Status: &WorkspaceItemStatus{
+					ObjectInfo: &dbmodels.ObjectInfo{
+						Path: "/test-path",
+					},
+				},
+			}
+			Expect(wiItem2.IsSubmitted()).To(BeTrue())
+
+			wiItem3 := &WorkspaceItem{
+				Status: &WorkspaceItemStatus{
+					ObjectInfo: nil,
+				},
+			}
+			Expect(wiItem3.IsSubmitted()).To(BeFalse())
+		})
+
+		It("should correctly handle finalizers", func() {
+			wiItem := &WorkspaceItem{
+				ObjectMeta: metav1.ObjectMeta{
+					DeletionTimestamp: &metav1.Time{
+						Time: time.Now(),
+					},
+				},
+			}
+			Expect(wiItem.IsBeingDeleted()).To(BeTrue())
+
+			wiItem.AddFinalizer(WorkspaceItemFinalizerName)
+			Expect(len(wiItem.GetFinalizers())).To(Equal(1))
+			Expect(wiItem.HasFinalizer(WorkspaceItemFinalizerName)).To(BeTrue())
+
+			wiItem.RemoveFinalizer(WorkspaceItemFinalizerName)
+			Expect(len(wiItem.GetFinalizers())).To(Equal(0))
+			Expect(wiItem.HasFinalizer(WorkspaceItemFinalizerName)).To(BeFalse())
+		})
+
+		It("should correctly handle file hash", func() {
+			wiItem := &WorkspaceItem{
+				Spec: &WorkspaceItemSpec{
+					Content: "dGVzdA==",
+				},
+			}
+
+			Expect(wiItem.GetHash()).To(Equal("a94a8fe5ccb19ba61c4c0873d391e987982fbbd3"))
+			Expect(wiItem.IsUpToDate()).To(BeFalse())
+
+			wiItem.Status = &WorkspaceItemStatus{
+				ObjectHash: "a94a8fe5ccb19ba61c4c0873d391e987982fbbd3",
+			}
+			Expect(wiItem.IsUpToDate()).To(BeTrue())
+
+			wiItemError := &WorkspaceItem{
+				Spec: &WorkspaceItemSpec{
+					Content: "invalid_base64",
+				},
+			}
+			Expect(wiItemError.GetHash()).To(Equal(""))
 		})
 
 	})

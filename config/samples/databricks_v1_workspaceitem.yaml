@@ -3,5 +3,9 @@ kind: WorkspaceItem
 metadata:
   name: workspaceitem-sample
 spec:
-  # Add fields here
-  foo: bar
+  content: |
+    MSsx
+  path: /ScalaExampleNotebook
+  language: SCALA
+  overwrite: true
+  format: SOURCE

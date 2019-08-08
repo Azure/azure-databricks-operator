@@ -10,14 +10,19 @@ spec:
   - JSONPath: .metadata.creationTimestamp
     name: Age
     type: date
-  - JSONPath: .status.object_info.path
-    name: Path
+  - JSONPath: .status.object_hash
+    name: SHA1SUM
     type: string
   - JSONPath: .status.object_info.language
     name: Language
     type: string
   - JSONPath: .status.object_info.object_type
     name: Type
+    priority: 1
+    type: string
+  - JSONPath: .status.object_info.path
+    name: Path
+    priority: 1
     type: string
   group: databricks.microsoft.com
   names:
@@ -44,7 +49,7 @@ spec:
         spec:
           description: WorkspaceItemSpec defines the desired state of WorkspaceItem
           properties:
-            contet:
+            content:
               type: string
             format:
               type: string
@@ -56,6 +61,8 @@ spec:
         status:
           description: WorkspaceItemStatus defines the observed state of WorkspaceItem
           properties:
+            object_hash:
+              type: string
             object_info:
               properties:
                 language:

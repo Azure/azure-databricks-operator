@@ -17,30 +17,36 @@ limitations under the License.
 package v1
 
 import (
+	"crypto/sha1"
+	"encoding/base64"
+	"fmt"
+
 	dbmodels "github.com/xinsnake/databricks-sdk-golang/azure/models"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // WorkspaceItemSpec defines the desired state of WorkspaceItem
 type WorkspaceItemSpec struct {
-	Content  string `json:"contet,omitempty"`
-	Path     string `json:"path,omitempty"`
-	Language string `json:"language,omitempty"`
-	Format   string `json:"format,omitempty"`
+	Content  string                `json:"content,omitempty"`
+	Path     string                `json:"path,omitempty"`
+	Language dbmodels.Language     `json:"language,omitempty"`
+	Format   dbmodels.ExportFormat `json:"format,omitempty"`
 }
 
 // WorkspaceItemStatus defines the observed state of WorkspaceItem
 type WorkspaceItemStatus struct {
 	ObjectInfo *dbmodels.ObjectInfo `json:"object_info,omitempty"`
+	ObjectHash string               `json:"object_hash,omitempty"`
 }
 
 // +kubebuilder:object:root=true
 
 // WorkspaceItem is the Schema for the workspaceitems API
-// +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
-// +kubebuilder:printcolumn:name="Path",type="string",JSONPath=".status.object_info.path"
-// +kubebuilder:printcolumn:name="Language",type="string",JSONPath=".status.object_info.language"
-// +kubebuilder:printcolumn:name="Type",type="string",JSONPath=".status.object_info.object_type"
+// +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp",priority=0
+// +kubebuilder:printcolumn:name="SHA1SUM",type="string",JSONPath=".status.object_hash",priority=0
+// +kubebuilder:printcolumn:name="Language",type="string",JSONPath=".status.object_info.language",priority=0
+// +kubebuilder:printcolumn:name="Type",type="string",JSONPath=".status.object_info.object_type",priority=1
+// +kubebuilder:printcolumn:name="Path",type="string",JSONPath=".status.object_info.path",priority=1
 type WorkspaceItem struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -58,6 +64,27 @@ func (wi *WorkspaceItem) IsSubmitted() bool {
 		return false
 	}
 	return true
+}
+
+// IsUpToDate tells you whether the data is up-to-date with the status
+func (wi *WorkspaceItem) IsUpToDate() bool {
+	if wi.Status == nil {
+		return false
+	}
+	h := wi.GetHash()
+	return h == wi.Status.ObjectHash
+}
+
+// GetHash returns the sha1 hash of the decoded data attribute
+func (wi *WorkspaceItem) GetHash() string {
+	data, err := base64.StdEncoding.DecodeString(wi.Spec.Content)
+	if err != nil {
+		return ""
+	}
+	h := sha1.New()
+	h.Write(data)
+	bs := h.Sum(nil)
+	return fmt.Sprintf("%x", bs)
 }
 
 const WorkspaceItemFinalizerName = "workspaceitem.finalizers.databricks.microsoft.com"
