@@ -1,0 +1,7 @@
+apiVersion: databricks.microsoft.com/v1
+kind: WorkspaceItem
+metadata:
+  name: workspaceitem-sample
+spec:
+  # Add fields here
+  foo: bar
