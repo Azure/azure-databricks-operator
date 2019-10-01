@@ -77,5 +77,5 @@ COPY ./Makefile ./
 RUN make install-kind
 RUN make install-kubebuilder
 RUN make install-kustomize
-
+RUN make install-test-dependency
 ENV SHELL /bin/bash

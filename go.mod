@@ -12,7 +12,7 @@ require (
 	github.com/go-playground/log v6.3.0+incompatible
 	github.com/jstemmer/go-junit-report v0.0.0-20190106144839-af01ea7f8024 // indirect
 	github.com/matm/gocov-html v0.0.0-20160206185555-f6dd0fd0ebc7 // indirect
-	github.com/onsi/ginkgo v1.8.0
+	github.com/onsi/ginkgo v1.10.1
 	github.com/onsi/gomega v1.5.0
 	github.com/prometheus/common v0.0.0-20180801064454-c7de2306084e
 	github.com/sirupsen/logrus v1.4.2 // indirect
@@ -20,7 +20,7 @@ require (
 	golang.org/x/crypto v0.0.0-20190701094942-4def268fd1a4 // indirect
 	golang.org/x/net v0.0.0-20190628185345-da137c7871d7
 	golang.org/x/sys v0.0.0-20190712062909-fae7ac547cb7 // indirect
-	golang.org/x/tools v0.0.0-20190716021316-fefcef05abb1 // indirect
+	golang.org/x/tools v0.0.0-20190930201159-7c411dea38b0 // indirect
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6 // indirect
 	k8s.io/api v0.0.0-20190409021203-6e4e0e4f393b
 	k8s.io/apimachinery v0.0.0-20190404173353-6a84e37a896d
