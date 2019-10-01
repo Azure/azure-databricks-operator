@@ -1,6 +1,7 @@
 # Requirements
 If you're interested in contributing to this project, you'll need:
 * Go installed - see this [Getting Started](https://golang.org/doc/install) guide for Go.
+* Docker installed - see this [Getting Started](https://docs.docker.com/install/) guide for Docker.
 * `Kubebuilder` -  see this [Quick Start](https://book.kubebuilder.io/quick-start.html) guide for installation instructions.
 * Kubernetes command-line tool `kubectl` 
 * Access to a Kubernetes cluster. Some options are:
@@ -29,6 +30,26 @@ You will need to set some environment variables so that the operator knows what 
 $ export DATABRICKS_HOST=https://xxxx.azuredatabricks.net
 $ export DATABRICKS_TOKEN=xxxxx
 ```
+
+# Quick start
+
+If you are using Visual Studio Code with [Remote - Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) extension installed, you quickly have you're environment set up and ready to go with everything you need to get started.
+
+1. Open this project in VS Code.
+2. Inside `.devcontainer`, create a file called `.env` and using the following template, copy your Databricks' host URL and access token:
+	```txt
+	DATABRICKS_HOST=
+
+	DATABRICKS_TOKEN=
+	```
+3. If [Docker](https://docs.docker.com/install/) isn't already running, make sure it is now.
+4. Open the Command Pallet (`Command+Shift+P` on MacOS or `CTRL+Shift+P` on Windows), type `Remote-Containers: Open Folder in Container...` and hit enter.
+5. VS Code will relaunch and begin building your development container. This will install all the necessary dependencies required for you to begin developing.
+6. Once the container has finished building, open a new terminal in VS Code (``Control+Shift+` ``) and type:
+	```shell
+	make set-kindcluster
+	```
+7. Once your kind cluster has been created, you can now start testing your Azure Databicks Operator within your own local kubernetes environment!
 
 # Building and Running the operator
 
