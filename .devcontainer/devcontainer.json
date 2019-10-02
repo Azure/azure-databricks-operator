@@ -3,7 +3,8 @@
 	"name": "Go",
 	"dockerComposeFile": "docker-compose.yml",
     "service": "docker-in-docker",
-    "workspaceFolder": "/workspace",
+	"workspaceFolder": "/workspace",
+	"postCreateCommand": "make set-kindcluster",
     "shutdownAction": "stopCompose",
 	"extensions": [
 		"ms-azuretools.vscode-docker",

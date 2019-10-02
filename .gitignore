@@ -19,4 +19,4 @@
 /bin/manager
 cmd/manager/__debug_bin
 
-.env
+azure-databricks-operator
