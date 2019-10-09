@@ -13,6 +13,8 @@ RUN apt-get update \
     && apt-get -y install --no-install-recommends apt-utils 2>&1 \
     # Verify git, process tools, lsb-release (common in install instructions for CLIs) installed
     && apt-get -y install git procps lsb-release \
+    # Install Editor
+    && apt-get install vim -y \
     # Install gocode-gomod
     && go get -x -d github.com/stamblerre/gocode 2>&1 \
     && go build -o gocode-gomod github.com/stamblerre/gocode \
@@ -77,5 +79,5 @@ COPY ./Makefile ./
 RUN make install-kind
 RUN make install-kubebuilder
 RUN make install-kustomize
-
+RUN make install-test-dependency
 ENV SHELL /bin/bash
