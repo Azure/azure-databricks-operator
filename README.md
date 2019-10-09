@@ -3,7 +3,7 @@
 
 # Azure Databricks operator (for Kubernetes)
 
-> This project is experimental. Expect the API to change. It is not recommended for production environments.
+**This project is experimental. Expect the API to change. It is not recommended for production environments.**
 
 ## Introduction
 
