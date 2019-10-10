@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v1
+package v1beta1
 
 import (
 	"time"
@@ -31,10 +31,10 @@ import (
 // These tests are written in BDD-style using Ginkgo framework. Refer to
 // http://onsi.github.io/ginkgo to learn more.
 
-var _ = Describe("DbfsBlock", func() {
+var _ = Describe("WorkspaceItem", func() {
 	var (
 		key              types.NamespacedName
-		created, fetched *DbfsBlock
+		created, fetched *WorkspaceItem
 	)
 
 	BeforeEach(func() {
@@ -57,7 +57,7 @@ var _ = Describe("DbfsBlock", func() {
 				Name:      "foo",
 				Namespace: "default",
 			}
-			created = &DbfsBlock{
+			created = &WorkspaceItem{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "foo",
 					Namespace: "default",
@@ -66,7 +66,7 @@ var _ = Describe("DbfsBlock", func() {
 			By("creating an API obj")
 			Expect(k8sClient.Create(context.TODO(), created)).To(Succeed())
 
-			fetched = &DbfsBlock{}
+			fetched = &WorkspaceItem{}
 			Expect(k8sClient.Get(context.TODO(), key, fetched)).To(Succeed())
 			Expect(fetched).To(Equal(created))
 
@@ -76,73 +76,74 @@ var _ = Describe("DbfsBlock", func() {
 		})
 
 		It("should correctly handle isSubmitted", func() {
-			dbfsBlock := &DbfsBlock{
-				Status: &DbfsBlockStatus{
-					FileInfo: &dbmodels.FileInfo{
-						FileSize: 0,
+			wiItem := &WorkspaceItem{
+				Status: &WorkspaceItemStatus{
+					ObjectInfo: &dbmodels.ObjectInfo{
+						Path: "",
 					},
 				},
 			}
-			Expect(dbfsBlock.IsSubmitted()).To(BeFalse())
+			Expect(wiItem.IsSubmitted()).To(BeFalse())
 
-			dbfsBlock2 := &DbfsBlock{
-				Status: &DbfsBlockStatus{
-					FileInfo: &dbmodels.FileInfo{
+			wiItem2 := &WorkspaceItem{
+				Status: &WorkspaceItemStatus{
+					ObjectInfo: &dbmodels.ObjectInfo{
 						Path: "/test-path",
 					},
 				},
 			}
-			Expect(dbfsBlock2.IsSubmitted()).To(BeTrue())
+			Expect(wiItem2.IsSubmitted()).To(BeTrue())
 
-			dbfsBlock3 := &DbfsBlock{
-				Status: &DbfsBlockStatus{
-					FileInfo: nil,
+			wiItem3 := &WorkspaceItem{
+				Status: &WorkspaceItemStatus{
+					ObjectInfo: nil,
 				},
 			}
-			Expect(dbfsBlock3.IsSubmitted()).To(BeFalse())
+			Expect(wiItem3.IsSubmitted()).To(BeFalse())
 		})
 
 		It("should correctly handle finalizers", func() {
-			dbfsBlock := &DbfsBlock{
+			wiItem := &WorkspaceItem{
 				ObjectMeta: metav1.ObjectMeta{
 					DeletionTimestamp: &metav1.Time{
 						Time: time.Now(),
 					},
 				},
 			}
-			Expect(dbfsBlock.IsBeingDeleted()).To(BeTrue())
+			Expect(wiItem.IsBeingDeleted()).To(BeTrue())
 
-			dbfsBlock.AddFinalizer(DbfsBlockFinalizerName)
-			Expect(len(dbfsBlock.GetFinalizers())).To(Equal(1))
-			Expect(dbfsBlock.HasFinalizer(DbfsBlockFinalizerName)).To(BeTrue())
+			wiItem.AddFinalizer(WorkspaceItemFinalizerName)
+			Expect(len(wiItem.GetFinalizers())).To(Equal(1))
+			Expect(wiItem.HasFinalizer(WorkspaceItemFinalizerName)).To(BeTrue())
 
-			dbfsBlock.RemoveFinalizer(DbfsBlockFinalizerName)
-			Expect(len(dbfsBlock.GetFinalizers())).To(Equal(0))
-			Expect(dbfsBlock.HasFinalizer(DbfsBlockFinalizerName)).To(BeFalse())
+			wiItem.RemoveFinalizer(WorkspaceItemFinalizerName)
+			Expect(len(wiItem.GetFinalizers())).To(Equal(0))
+			Expect(wiItem.HasFinalizer(WorkspaceItemFinalizerName)).To(BeFalse())
 		})
 
 		It("should correctly handle file hash", func() {
-			dbfsBlock := &DbfsBlock{
-				Spec: &DbfsBlockSpec{
-					Data: "dGVzdA==",
+			wiItem := &WorkspaceItem{
+				Spec: &WorkspaceItemSpec{
+					Content: "dGVzdA==",
 				},
 			}
 
-			Expect(dbfsBlock.GetHash()).To(Equal("a94a8fe5ccb19ba61c4c0873d391e987982fbbd3"))
-			Expect(dbfsBlock.IsUpToDate()).To(BeFalse())
+			Expect(wiItem.GetHash()).To(Equal("a94a8fe5ccb19ba61c4c0873d391e987982fbbd3"))
+			Expect(wiItem.IsUpToDate()).To(BeFalse())
 
-			dbfsBlock.Status = &DbfsBlockStatus{
-				FileHash: "a94a8fe5ccb19ba61c4c0873d391e987982fbbd3",
+			wiItem.Status = &WorkspaceItemStatus{
+				ObjectHash: "a94a8fe5ccb19ba61c4c0873d391e987982fbbd3",
 			}
-			Expect(dbfsBlock.IsUpToDate()).To(BeTrue())
+			Expect(wiItem.IsUpToDate()).To(BeTrue())
 
-			dbfsBlockError := &DbfsBlock{
-				Spec: &DbfsBlockSpec{
-					Data: "invalid_base64",
+			wiItemError := &WorkspaceItem{
+				Spec: &WorkspaceItemSpec{
+					Content: "invalid_base64",
 				},
 			}
-			Expect(dbfsBlockError.GetHash()).To(Equal(""))
+			Expect(wiItemError.GetHash()).To(Equal(""))
 		})
+
 	})
 
 })

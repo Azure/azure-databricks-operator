@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v1
+package v1beta1
 
 import (
 	"time"
@@ -31,10 +31,10 @@ import (
 // These tests are written in BDD-style using Ginkgo framework. Refer to
 // http://onsi.github.io/ginkgo to learn more.
 
-var _ = Describe("Dcluster", func() {
+var _ = Describe("Djob", func() {
 	var (
 		key              types.NamespacedName
-		created, fetched *Dcluster
+		created, fetched *Djob
 	)
 
 	BeforeEach(func() {
@@ -57,70 +57,59 @@ var _ = Describe("Dcluster", func() {
 				Name:      "foo",
 				Namespace: "default",
 			}
-			created = &Dcluster{
+			created = &Djob{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "foo",
 					Namespace: "default",
 				}}
 
 			By("creating an API obj")
-			Expect(k8sClient.Create(context.TODO(), created)).To(Succeed())
+			Expect(k8sClient.Create(context.Background(), created)).To(Succeed())
 
-			fetched = &Dcluster{}
-			Expect(k8sClient.Get(context.TODO(), key, fetched)).To(Succeed())
+			fetched = &Djob{}
+			Expect(k8sClient.Get(context.Background(), key, fetched)).To(Succeed())
 			Expect(fetched).To(Equal(created))
 
 			By("deleting the created object")
-			Expect(k8sClient.Delete(context.TODO(), created)).To(Succeed())
-			Expect(k8sClient.Get(context.TODO(), key, created)).ToNot(Succeed())
+			Expect(k8sClient.Delete(context.Background(), created)).To(Succeed())
+			Expect(k8sClient.Get(context.Background(), key, created)).ToNot(Succeed())
 		})
 
 		It("should correctly handle isSubmitted", func() {
-			dcluster := &Dcluster{
-				Status: &DclusterStatus{
-					ClusterInfo: &DclusterInfo{
-						ClusterID: "221-322-djaj2",
+			djob := &Djob{
+				Status: &DjobStatus{
+					JobStatus: &dbmodels.Job{
+						JobID: 20,
 					},
 				},
 			}
-			Expect(dcluster.IsSubmitted()).To(BeTrue())
+			Expect(djob.IsSubmitted()).To(BeTrue())
 
-			dcluster2 := &Dcluster{
-				Status: &DclusterStatus{
-					ClusterInfo: nil,
+			djob2 := &Djob{
+				Status: &DjobStatus{
+					JobStatus: nil,
 				},
 			}
-			Expect(dcluster2.IsSubmitted()).To(BeFalse())
+			Expect(djob2.IsSubmitted()).To(BeFalse())
 		})
 
 		It("should correctly handle finalizers", func() {
-			dcluster := &Dcluster{
+			djob := &Djob{
 				ObjectMeta: metav1.ObjectMeta{
 					DeletionTimestamp: &metav1.Time{
 						Time: time.Now(),
 					},
 				},
 			}
-			Expect(dcluster.IsBeingDeleted()).To(BeTrue())
+			Expect(djob.IsBeingDeleted()).To(BeTrue())
 
-			dcluster.AddFinalizer(DclusterFinalizerName)
-			Expect(len(dcluster.GetFinalizers())).To(Equal(1))
-			Expect(dcluster.HasFinalizer(DclusterFinalizerName)).To(BeTrue())
+			djob.AddFinalizer(DjobFinalizerName)
+			Expect(len(djob.GetFinalizers())).To(Equal(1))
+			Expect(djob.HasFinalizer(DjobFinalizerName)).To(BeTrue())
 
-			dcluster.RemoveFinalizer(DclusterFinalizerName)
-			Expect(len(dcluster.GetFinalizers())).To(Equal(0))
-			Expect(dcluster.HasFinalizer(DclusterFinalizerName)).To(BeFalse())
-		})
-
-		It("should correctly handle float to string", func() {
-			clusterInfo := &dbmodels.ClusterInfo{
-				ClusterCores: 20.32,
-			}
-
-			dclusterInfo := &DclusterInfo{}
-			dclusterInfo.FromDataBricksClusterInfo(*clusterInfo)
-
-			Expect(dclusterInfo.ClusterCores).To(Equal("20.32"))
+			djob.RemoveFinalizer(DjobFinalizerName)
+			Expect(len(djob.GetFinalizers())).To(Equal(0))
+			Expect(djob.HasFinalizer(DjobFinalizerName)).To(BeFalse())
 		})
 	})
 
