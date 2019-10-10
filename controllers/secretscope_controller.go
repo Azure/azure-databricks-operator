@@ -28,7 +28,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
-	databricksv1 "github.com/microsoft/azure-databricks-operator/api/v1"
+	databricksv1beta1 "github.com/microsoft/azure-databricks-operator/api/v1beta1"
 	dbazure "github.com/xinsnake/databricks-sdk-golang/azure"
 )
 
@@ -49,7 +49,7 @@ func (r *SecretScopeReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error)
 	_ = r.Log.WithValues("secretscope", req.NamespacedName)
 
 	// your logic here
-	instance := &databricksv1.SecretScope{}
+	instance := &databricksv1beta1.SecretScope{}
 	err := r.Get(context.Background(), req.NamespacedName, instance)
 
 	r.Log.Info(fmt.Sprintf("Starting reconcile loop for %v", req.NamespacedName))
@@ -71,7 +71,7 @@ func (r *SecretScopeReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error)
 		return ctrl.Result{}, nil
 	}
 
-	if !instance.HasFinalizer(databricksv1.SecretScopeFinalizerName) {
+	if !instance.HasFinalizer(databricksv1beta1.SecretScopeFinalizerName) {
 		err = r.addFinalizer(instance)
 		if err != nil {
 			return reconcile.Result{}, fmt.Errorf("error when handling secret scope finalizer: %v", err)
@@ -93,6 +93,6 @@ func (r *SecretScopeReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error)
 
 func (r *SecretScopeReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&databricksv1.SecretScope{}).
+		For(&databricksv1beta1.SecretScope{}).
 		Complete(r)
 }

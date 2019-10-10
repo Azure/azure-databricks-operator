@@ -14,15 +14,16 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v1
+package v1beta1
 
 import (
 	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-
+	dbazure "github.com/xinsnake/databricks-sdk-golang/azure"
 	dbmodels "github.com/xinsnake/databricks-sdk-golang/azure/models"
+
 	"golang.org/x/net/context"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -31,10 +32,10 @@ import (
 // These tests are written in BDD-style using Ginkgo framework. Refer to
 // http://onsi.github.io/ginkgo to learn more.
 
-var _ = Describe("Djob", func() {
+var _ = Describe("Run", func() {
 	var (
 		key              types.NamespacedName
-		created, fetched *Djob
+		created, fetched *Run
 	)
 
 	BeforeEach(func() {
@@ -57,7 +58,7 @@ var _ = Describe("Djob", func() {
 				Name:      "foo",
 				Namespace: "default",
 			}
-			created = &Djob{
+			created = &Run{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "foo",
 					Namespace: "default",
@@ -66,7 +67,7 @@ var _ = Describe("Djob", func() {
 			By("creating an API obj")
 			Expect(k8sClient.Create(context.Background(), created)).To(Succeed())
 
-			fetched = &Djob{}
+			fetched = &Run{}
 			Expect(k8sClient.Get(context.Background(), key, fetched)).To(Succeed())
 			Expect(fetched).To(Equal(created))
 
@@ -75,42 +76,40 @@ var _ = Describe("Djob", func() {
 			Expect(k8sClient.Get(context.Background(), key, created)).ToNot(Succeed())
 		})
 
-		It("should correctly handle isSubmitted", func() {
-			djob := &Djob{
-				Status: &DjobStatus{
-					JobStatus: &dbmodels.Job{
-						JobID: 20,
-					},
-				},
-			}
-			Expect(djob.IsSubmitted()).To(BeTrue())
-
-			djob2 := &Djob{
-				Status: &DjobStatus{
-					JobStatus: nil,
-				},
-			}
-			Expect(djob2.IsSubmitted()).To(BeFalse())
-		})
-
-		It("should correctly handle finalizers", func() {
-			djob := &Djob{
-				ObjectMeta: metav1.ObjectMeta{
-					DeletionTimestamp: &metav1.Time{
-						Time: time.Now(),
-					},
-				},
-			}
-			Expect(djob.IsBeingDeleted()).To(BeTrue())
-
-			djob.AddFinalizer(DjobFinalizerName)
-			Expect(len(djob.GetFinalizers())).To(Equal(1))
-			Expect(djob.HasFinalizer(DjobFinalizerName)).To(BeTrue())
-
-			djob.RemoveFinalizer(DjobFinalizerName)
-			Expect(len(djob.GetFinalizers())).To(Equal(0))
-			Expect(djob.HasFinalizer(DjobFinalizerName)).To(BeFalse())
-		})
 	})
 
+	It("should correctly handle isSubmitted", func() {
+		run := &Run{
+			Status: &dbazure.JobsRunsGetOutputResponse{
+				Metadata: dbmodels.Run{
+					JobID: 23,
+				},
+			},
+		}
+		Expect(run.IsSubmitted()).To(BeTrue())
+
+		run2 := &Run{
+			Status: nil,
+		}
+		Expect(run2.IsSubmitted()).To(BeFalse())
+	})
+
+	It("should correctly handle finalizers", func() {
+		run := &Run{
+			ObjectMeta: metav1.ObjectMeta{
+				DeletionTimestamp: &metav1.Time{
+					Time: time.Now(),
+				},
+			},
+		}
+		Expect(run.IsBeingDeleted()).To(BeTrue())
+
+		run.AddFinalizer(RunFinalizerName)
+		Expect(len(run.GetFinalizers())).To(Equal(1))
+		Expect(run.HasFinalizer(RunFinalizerName)).To(BeTrue())
+
+		run.RemoveFinalizer(RunFinalizerName)
+		Expect(len(run.GetFinalizers())).To(Equal(0))
+		Expect(run.HasFinalizer(RunFinalizerName)).To(BeFalse())
+	})
 })

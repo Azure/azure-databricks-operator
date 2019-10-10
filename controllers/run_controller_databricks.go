@@ -23,14 +23,14 @@ import (
 	"strings"
 	"time"
 
-	databricksv1 "github.com/microsoft/azure-databricks-operator/api/v1"
+	databricksv1beta1 "github.com/microsoft/azure-databricks-operator/api/v1beta1"
 	dbmodels "github.com/xinsnake/databricks-sdk-golang/azure/models"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"k8s.io/apimachinery/pkg/types"
 )
 
-func (r *RunReconciler) submit(instance *databricksv1.Run) error {
+func (r *RunReconciler) submit(instance *databricksv1beta1.Run) error {
 	r.Log.Info(fmt.Sprintf("Submitting run %s", instance.GetName()))
 
 	var run dbmodels.Run
@@ -51,14 +51,14 @@ func (r *RunReconciler) submit(instance *databricksv1.Run) error {
 
 		// Here we set the owner attribute
 		k8sJobNamespacedName := types.NamespacedName{Namespace: instance.GetNamespace(), Name: instance.Spec.JobName}
-		var k8sJob databricksv1.Djob
+		var k8sJob databricksv1beta1.Djob
 		if err := r.Client.Get(context.Background(), k8sJobNamespacedName, &k8sJob); err != nil {
 			return err
 		}
 		instance.ObjectMeta.SetOwnerReferences([]metav1.OwnerReference{
 			metav1.OwnerReference{
-				APIVersion: "v1",   // TODO should this be a referenced value?
-				Kind:       "Djob", // TODO should this be a referenced value?
+				APIVersion: "v1beta1", // TODO should this be a referenced value?
+				Kind:       "Djob",    // TODO should this be a referenced value?
 				Name:       k8sJob.GetName(),
 				UID:        k8sJob.GetUID(),
 			},
@@ -94,7 +94,7 @@ func (r *RunReconciler) submit(instance *databricksv1.Run) error {
 	return r.Update(context.Background(), instance)
 }
 
-func (r *RunReconciler) refresh(instance *databricksv1.Run) error {
+func (r *RunReconciler) refresh(instance *databricksv1beta1.Run) error {
 	r.Log.Info(fmt.Sprintf("Refreshing run %s", instance.GetName()))
 
 	runID := instance.Status.Metadata.RunID
@@ -120,7 +120,7 @@ func (r *RunReconciler) refresh(instance *databricksv1.Run) error {
 	return r.Update(context.Background(), instance)
 }
 
-func (r *RunReconciler) delete(instance *databricksv1.Run) error {
+func (r *RunReconciler) delete(instance *databricksv1beta1.Run) error {
 	r.Log.Info(fmt.Sprintf("Deleting run %s", instance.GetName()))
 
 	if instance.Status == nil {

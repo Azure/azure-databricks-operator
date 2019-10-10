@@ -20,7 +20,7 @@ import (
 	"context"
 	"time"
 
-	databricksv1 "github.com/microsoft/azure-databricks-operator/api/v1"
+	databricksv1beta1 "github.com/microsoft/azure-databricks-operator/api/v1beta1"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -52,12 +52,12 @@ var _ = Describe("WorkspaceItem Controller", func() {
 				Namespace: "default",
 			}
 
-			created := &databricksv1.WorkspaceItem{
+			created := &databricksv1beta1.WorkspaceItem{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      key.Name,
 					Namespace: key.Namespace,
 				},
-				Spec: &databricksv1.WorkspaceItemSpec{
+				Spec: &databricksv1beta1.WorkspaceItemSpec{
 					Content:  "MSsx",
 					Path:     "/test-notebook",
 					Language: "SCALA",
@@ -70,13 +70,13 @@ var _ = Describe("WorkspaceItem Controller", func() {
 
 			By("Expecting submitted")
 			Eventually(func() bool {
-				f := &databricksv1.WorkspaceItem{}
+				f := &databricksv1beta1.WorkspaceItem{}
 				k8sClient.Get(context.Background(), key, f)
 				return f.IsSubmitted()
 			}, timeout, interval).Should(BeTrue())
 
 			// Update
-			updated := &databricksv1.WorkspaceItem{}
+			updated := &databricksv1beta1.WorkspaceItem{}
 			Expect(k8sClient.Get(context.Background(), key, updated)).Should(Succeed())
 
 			updated.Spec.Content = "MSsy"
@@ -85,14 +85,14 @@ var _ = Describe("WorkspaceItem Controller", func() {
 			// Delete
 			By("Expecting to delete successfully")
 			Eventually(func() error {
-				f := &databricksv1.WorkspaceItem{}
+				f := &databricksv1beta1.WorkspaceItem{}
 				k8sClient.Get(context.Background(), key, f)
 				return k8sClient.Delete(context.Background(), f)
 			}, timeout, interval).Should(Succeed())
 
 			By("Expecting to delete finish")
 			Eventually(func() error {
-				f := &databricksv1.WorkspaceItem{}
+				f := &databricksv1beta1.WorkspaceItem{}
 				return k8sClient.Get(context.Background(), key, f)
 			}, timeout, interval).ShouldNot(Succeed())
 		})
