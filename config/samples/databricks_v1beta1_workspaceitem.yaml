@@ -1,4 +1,4 @@
-apiVersion: databricks.microsoft.com/v1
+apiVersion: databricks.microsoft.com/v1beta1
 kind: WorkspaceItem
 metadata:
   name: workspaceitem-sample

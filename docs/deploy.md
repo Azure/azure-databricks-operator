@@ -67,7 +67,7 @@ kubectl apply -f config/crd/bases
 1. Deploy a sample job, this will create a job in the default namespace:
 
 ```sh
-curl https://raw.githubusercontent.com/microsoft/azure-databricks-operator/master/config/samples/databricks_v1_djob.yaml | kubectl apply -f -
+curl https://raw.githubusercontent.com/microsoft/azure-databricks-operator/master/config/samples/databricks_v1beta1_djob.yaml | kubectl apply -f -
 ```
 
 2. Check the Job in Kubernetes:
