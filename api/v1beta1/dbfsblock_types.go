@@ -25,17 +25,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// DbfsBlockSpec defines the desired state of DbfsBlock
-type DbfsBlockSpec struct {
-	Path string `json:"path,omitempty"`
-	Data string `json:"data,omitempty"`
-}
-
-// DbfsBlockStatus defines the observed state of DbfsBlock
-type DbfsBlockStatus struct {
-	FileInfo *dbmodels.FileInfo `json:"file_info,omitempty"`
-	FileHash string             `json:"file_hash,omitempty"`
-}
 
 // +kubebuilder:object:root=true
 
