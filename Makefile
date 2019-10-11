@@ -103,7 +103,7 @@ create-kindcluster:
 ifeq (,$(shell kind get clusters))
 	@echo "no kind cluster"
 else
-	@echo "kind cluster is running, deleteing the current cluster"
+	@echo "kind cluster is running, deleting the current cluster"
 	kind delete cluster 
 endif
 	@echo "creating kind cluster"
