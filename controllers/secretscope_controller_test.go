@@ -23,7 +23,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	databricksv1beta1 "github.com/microsoft/azure-databricks-operator/api/v1beta1"
+	databricksv1alpha1 "github.com/microsoft/azure-databricks-operator/api/v1alpha1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -55,13 +55,13 @@ var _ = Describe("SecretScope Controller", func() {
 	// test Kubernetes API server, which isn't the goal here.
 	Context("Secret Scope with ACLs", func() {
 		It("Should handle scope and ACLs correctly", func() {
-			spec := databricksv1beta1.SecretScopeSpec{
+			spec := databricksv1alpha1.SecretScopeSpec{
 				InitialManagePrincipal: "users",
-				SecretScopeSecrets:     make([]databricksv1beta1.SecretScopeSecret, 0),
-				SecretScopeACLs: []databricksv1beta1.SecretScopeACL{
-					databricksv1beta1.SecretScopeACL{Principal: "admins", Permission: "WRITE"},
-					databricksv1beta1.SecretScopeACL{Principal: "admins", Permission: "READ"},
-					databricksv1beta1.SecretScopeACL{Principal: "admins", Permission: "MANAGE"},
+				SecretScopeSecrets:     make([]databricksv1alpha1.SecretScopeSecret, 0),
+				SecretScopeACLs: []databricksv1alpha1.SecretScopeACL{
+					databricksv1alpha1.SecretScopeACL{Principal: "admins", Permission: "WRITE"},
+					databricksv1alpha1.SecretScopeACL{Principal: "admins", Permission: "READ"},
+					databricksv1alpha1.SecretScopeACL{Principal: "admins", Permission: "MANAGE"},
 				},
 			}
 
@@ -70,7 +70,7 @@ var _ = Describe("SecretScope Controller", func() {
 				Namespace: "default",
 			}
 
-			toCreate := &databricksv1beta1.SecretScope{
+			toCreate := &databricksv1alpha1.SecretScope{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      key.Name,
 					Namespace: key.Namespace,
@@ -82,41 +82,41 @@ var _ = Describe("SecretScope Controller", func() {
 			Expect(k8sClient.Create(context.Background(), toCreate)).Should(Succeed())
 			time.Sleep(time.Second * 5)
 
-			fetched := &databricksv1beta1.SecretScope{}
+			fetched := &databricksv1alpha1.SecretScope{}
 			Eventually(func() bool {
 				k8sClient.Get(context.Background(), key, fetched)
 				return fetched.IsSubmitted()
 			}, timeout, interval).Should(BeTrue())
 
 			By("Updating ACLs successfully")
-			updatedACLs := []databricksv1beta1.SecretScopeACL{
-				databricksv1beta1.SecretScopeACL{Principal: "admins", Permission: "READ"},
+			updatedACLs := []databricksv1alpha1.SecretScopeACL{
+				databricksv1alpha1.SecretScopeACL{Principal: "admins", Permission: "READ"},
 			}
 
-			updateSpec := databricksv1beta1.SecretScopeSpec{
+			updateSpec := databricksv1alpha1.SecretScopeSpec{
 				InitialManagePrincipal: "users",
-				SecretScopeSecrets:     make([]databricksv1beta1.SecretScopeSecret, 0),
+				SecretScopeSecrets:     make([]databricksv1alpha1.SecretScopeSecret, 0),
 				SecretScopeACLs:        updatedACLs,
 			}
 
 			fetched.Spec = updateSpec
 
 			Expect(k8sClient.Update(context.Background(), fetched)).Should(Succeed())
-			fetchedUpdated := &databricksv1beta1.SecretScope{}
-			Eventually(func() []databricksv1beta1.SecretScopeACL {
+			fetchedUpdated := &databricksv1alpha1.SecretScope{}
+			Eventually(func() []databricksv1alpha1.SecretScopeACL {
 				k8sClient.Get(context.Background(), key, fetchedUpdated)
 				return fetchedUpdated.Spec.SecretScopeACLs
 			}, timeout, interval).Should(Equal(updatedACLs))
 
 			By("Deleting the scope")
 			Eventually(func() error {
-				f := &databricksv1beta1.SecretScope{}
+				f := &databricksv1alpha1.SecretScope{}
 				k8sClient.Get(context.Background(), key, f)
 				return k8sClient.Delete(context.Background(), f)
 			}, timeout, interval).Should(Succeed())
 
 			Eventually(func() error {
-				f := &databricksv1beta1.SecretScope{}
+				f := &databricksv1alpha1.SecretScope{}
 				return k8sClient.Get(context.Background(), key, f)
 			}, timeout, interval).ShouldNot(Succeed())
 		})
@@ -149,27 +149,27 @@ var _ = Describe("SecretScope Controller", func() {
 
 			secretValue := "secretValue"
 			byteSecretValue := "aGVsbG8="
-			initialSecrets := []databricksv1beta1.SecretScopeSecret{
-				databricksv1beta1.SecretScopeSecret{Key: "secretKey", StringValue: secretValue},
-				databricksv1beta1.SecretScopeSecret{
+			initialSecrets := []databricksv1alpha1.SecretScopeSecret{
+				databricksv1alpha1.SecretScopeSecret{Key: "secretKey", StringValue: secretValue},
+				databricksv1alpha1.SecretScopeSecret{
 					Key: "secretFromSecret",
-					ValueFrom: &databricksv1beta1.SecretScopeValueFrom{
-						SecretKeyRef: databricksv1beta1.SecretScopeKeyRef{
+					ValueFrom: &databricksv1alpha1.SecretScopeValueFrom{
+						SecretKeyRef: databricksv1alpha1.SecretScopeKeyRef{
 							Name: "k8secret",
 							Key:  "username",
 						},
 					},
 				},
-				databricksv1beta1.SecretScopeSecret{Key: "byteSecretKey", ByteValue: byteSecretValue},
+				databricksv1alpha1.SecretScopeSecret{Key: "byteSecretKey", ByteValue: byteSecretValue},
 			}
 
-			spec := databricksv1beta1.SecretScopeSpec{
+			spec := databricksv1alpha1.SecretScopeSpec{
 				InitialManagePrincipal: "users",
 				SecretScopeSecrets:     initialSecrets,
-				SecretScopeACLs: []databricksv1beta1.SecretScopeACL{
-					databricksv1beta1.SecretScopeACL{Principal: "admins", Permission: "WRITE"},
-					databricksv1beta1.SecretScopeACL{Principal: "admins", Permission: "READ"},
-					databricksv1beta1.SecretScopeACL{Principal: "admins", Permission: "MANAGE"},
+				SecretScopeACLs: []databricksv1alpha1.SecretScopeACL{
+					databricksv1alpha1.SecretScopeACL{Principal: "admins", Permission: "WRITE"},
+					databricksv1alpha1.SecretScopeACL{Principal: "admins", Permission: "READ"},
+					databricksv1alpha1.SecretScopeACL{Principal: "admins", Permission: "MANAGE"},
 				},
 			}
 
@@ -178,7 +178,7 @@ var _ = Describe("SecretScope Controller", func() {
 				Namespace: "default",
 			}
 
-			toCreate := &databricksv1beta1.SecretScope{
+			toCreate := &databricksv1alpha1.SecretScope{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      key.Name,
 					Namespace: key.Namespace,
@@ -190,7 +190,7 @@ var _ = Describe("SecretScope Controller", func() {
 			Expect(k8sClient.Create(context.Background(), toCreate)).Should(Succeed())
 			time.Sleep(time.Second * 5)
 
-			fetched := &databricksv1beta1.SecretScope{}
+			fetched := &databricksv1alpha1.SecretScope{}
 			Eventually(func() bool {
 				k8sClient.Get(context.Background(), key, fetched)
 				return fetched.IsSubmitted()
@@ -198,37 +198,37 @@ var _ = Describe("SecretScope Controller", func() {
 
 			By("Updating secrets successfully")
 			newSecretValue := "newSecretValue"
-			updatedSecrets := []databricksv1beta1.SecretScopeSecret{
-				databricksv1beta1.SecretScopeSecret{Key: "newSecretKey", StringValue: newSecretValue},
+			updatedSecrets := []databricksv1alpha1.SecretScopeSecret{
+				databricksv1alpha1.SecretScopeSecret{Key: "newSecretKey", StringValue: newSecretValue},
 			}
 
-			updateSpec := databricksv1beta1.SecretScopeSpec{
+			updateSpec := databricksv1alpha1.SecretScopeSpec{
 				InitialManagePrincipal: "users",
 				SecretScopeSecrets:     updatedSecrets,
-				SecretScopeACLs: []databricksv1beta1.SecretScopeACL{
-					databricksv1beta1.SecretScopeACL{Principal: "admins", Permission: "WRITE"},
-					databricksv1beta1.SecretScopeACL{Principal: "admins", Permission: "READ"},
+				SecretScopeACLs: []databricksv1alpha1.SecretScopeACL{
+					databricksv1alpha1.SecretScopeACL{Principal: "admins", Permission: "WRITE"},
+					databricksv1alpha1.SecretScopeACL{Principal: "admins", Permission: "READ"},
 				},
 			}
 
 			fetched.Spec = updateSpec
 
 			Expect(k8sClient.Update(context.Background(), fetched)).Should(Succeed())
-			fetchedUpdated := &databricksv1beta1.SecretScope{}
-			Eventually(func() []databricksv1beta1.SecretScopeSecret {
+			fetchedUpdated := &databricksv1alpha1.SecretScope{}
+			Eventually(func() []databricksv1alpha1.SecretScopeSecret {
 				k8sClient.Get(context.Background(), key, fetchedUpdated)
 				return fetchedUpdated.Spec.SecretScopeSecrets
 			}, timeout, interval).Should(Equal(updatedSecrets))
 
 			By("Deleting the scope")
 			Eventually(func() error {
-				f := &databricksv1beta1.SecretScope{}
+				f := &databricksv1alpha1.SecretScope{}
 				k8sClient.Get(context.Background(), key, f)
 				return k8sClient.Delete(context.Background(), f)
 			}, timeout, interval).Should(Succeed())
 
 			Eventually(func() error {
-				f := &databricksv1beta1.SecretScope{}
+				f := &databricksv1alpha1.SecretScope{}
 				return k8sClient.Get(context.Background(), key, f)
 			}, timeout, interval).ShouldNot(Succeed())
 		})

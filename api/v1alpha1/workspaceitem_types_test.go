@@ -14,15 +14,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v1beta1
+package v1alpha1
 
 import (
 	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-
 	dbmodels "github.com/xinsnake/databricks-sdk-golang/azure/models"
+
 	"golang.org/x/net/context"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -31,10 +31,10 @@ import (
 // These tests are written in BDD-style using Ginkgo framework. Refer to
 // http://onsi.github.io/ginkgo to learn more.
 
-var _ = Describe("Dcluster", func() {
+var _ = Describe("WorkspaceItem", func() {
 	var (
 		key              types.NamespacedName
-		created, fetched *Dcluster
+		created, fetched *WorkspaceItem
 	)
 
 	BeforeEach(func() {
@@ -57,7 +57,7 @@ var _ = Describe("Dcluster", func() {
 				Name:      "foo",
 				Namespace: "default",
 			}
-			created = &Dcluster{
+			created = &WorkspaceItem{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "foo",
 					Namespace: "default",
@@ -66,7 +66,7 @@ var _ = Describe("Dcluster", func() {
 			By("creating an API obj")
 			Expect(k8sClient.Create(context.TODO(), created)).To(Succeed())
 
-			fetched = &Dcluster{}
+			fetched = &WorkspaceItem{}
 			Expect(k8sClient.Get(context.TODO(), key, fetched)).To(Succeed())
 			Expect(fetched).To(Equal(created))
 
@@ -76,52 +76,74 @@ var _ = Describe("Dcluster", func() {
 		})
 
 		It("should correctly handle isSubmitted", func() {
-			dcluster := &Dcluster{
-				Status: &DclusterStatus{
-					ClusterInfo: &DclusterInfo{
-						ClusterID: "221-322-djaj2",
+			wiItem := &WorkspaceItem{
+				Status: &WorkspaceItemStatus{
+					ObjectInfo: &dbmodels.ObjectInfo{
+						Path: "",
 					},
 				},
 			}
-			Expect(dcluster.IsSubmitted()).To(BeTrue())
+			Expect(wiItem.IsSubmitted()).To(BeFalse())
 
-			dcluster2 := &Dcluster{
-				Status: &DclusterStatus{
-					ClusterInfo: nil,
+			wiItem2 := &WorkspaceItem{
+				Status: &WorkspaceItemStatus{
+					ObjectInfo: &dbmodels.ObjectInfo{
+						Path: "/test-path",
+					},
 				},
 			}
-			Expect(dcluster2.IsSubmitted()).To(BeFalse())
+			Expect(wiItem2.IsSubmitted()).To(BeTrue())
+
+			wiItem3 := &WorkspaceItem{
+				Status: &WorkspaceItemStatus{
+					ObjectInfo: nil,
+				},
+			}
+			Expect(wiItem3.IsSubmitted()).To(BeFalse())
 		})
 
 		It("should correctly handle finalizers", func() {
-			dcluster := &Dcluster{
+			wiItem := &WorkspaceItem{
 				ObjectMeta: metav1.ObjectMeta{
 					DeletionTimestamp: &metav1.Time{
 						Time: time.Now(),
 					},
 				},
 			}
-			Expect(dcluster.IsBeingDeleted()).To(BeTrue())
+			Expect(wiItem.IsBeingDeleted()).To(BeTrue())
 
-			dcluster.AddFinalizer(DclusterFinalizerName)
-			Expect(len(dcluster.GetFinalizers())).To(Equal(1))
-			Expect(dcluster.HasFinalizer(DclusterFinalizerName)).To(BeTrue())
+			wiItem.AddFinalizer(WorkspaceItemFinalizerName)
+			Expect(len(wiItem.GetFinalizers())).To(Equal(1))
+			Expect(wiItem.HasFinalizer(WorkspaceItemFinalizerName)).To(BeTrue())
 
-			dcluster.RemoveFinalizer(DclusterFinalizerName)
-			Expect(len(dcluster.GetFinalizers())).To(Equal(0))
-			Expect(dcluster.HasFinalizer(DclusterFinalizerName)).To(BeFalse())
+			wiItem.RemoveFinalizer(WorkspaceItemFinalizerName)
+			Expect(len(wiItem.GetFinalizers())).To(Equal(0))
+			Expect(wiItem.HasFinalizer(WorkspaceItemFinalizerName)).To(BeFalse())
 		})
 
-		It("should correctly handle float to string", func() {
-			clusterInfo := &dbmodels.ClusterInfo{
-				ClusterCores: 20.32,
+		It("should correctly handle file hash", func() {
+			wiItem := &WorkspaceItem{
+				Spec: &WorkspaceItemSpec{
+					Content: "dGVzdA==",
+				},
 			}
 
-			dclusterInfo := &DclusterInfo{}
-			dclusterInfo.FromDataBricksClusterInfo(*clusterInfo)
+			Expect(wiItem.GetHash()).To(Equal("a94a8fe5ccb19ba61c4c0873d391e987982fbbd3"))
+			Expect(wiItem.IsUpToDate()).To(BeFalse())
 
-			Expect(dclusterInfo.ClusterCores).To(Equal("20.32"))
+			wiItem.Status = &WorkspaceItemStatus{
+				ObjectHash: "a94a8fe5ccb19ba61c4c0873d391e987982fbbd3",
+			}
+			Expect(wiItem.IsUpToDate()).To(BeTrue())
+
+			wiItemError := &WorkspaceItem{
+				Spec: &WorkspaceItemSpec{
+					Content: "invalid_base64",
+				},
+			}
+			Expect(wiItemError.GetHash()).To(Equal(""))
 		})
+
 	})
 
 })
