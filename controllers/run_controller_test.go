@@ -20,7 +20,7 @@ import (
 	"context"
 	"time"
 
-	databricksv1beta1 "github.com/microsoft/azure-databricks-operator/api/v1beta1"
+	databricksv1alpha1 "github.com/microsoft/azure-databricks-operator/api/v1alpha1"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	dbmodels "github.com/xinsnake/databricks-sdk-golang/azure/models"
@@ -82,7 +82,7 @@ var _ = Describe("Run Controller", func() {
 				},
 			}
 
-			job := &databricksv1beta1.Djob{
+			job := &databricksv1alpha1.Djob{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      jobKey.Name,
 					Namespace: jobKey.Namespace,
@@ -103,14 +103,14 @@ var _ = Describe("Run Controller", func() {
 				Namespace: "default",
 			}
 
-			runSpec := &databricksv1beta1.RunSpec{
+			runSpec := &databricksv1alpha1.RunSpec{
 				JobName: jobKey.Name,
 				RunParameters: &dbmodels.RunParameters{
 					JarParams: []string{"test"},
 				},
 			}
 
-			run := &databricksv1beta1.Run{
+			run := &databricksv1alpha1.Run{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      runKey.Name,
 					Namespace: runKey.Namespace,
@@ -123,7 +123,7 @@ var _ = Describe("Run Controller", func() {
 			// Create
 			By("Expecting run to be submitted")
 			Eventually(func() bool {
-				f := &databricksv1beta1.Run{}
+				f := &databricksv1alpha1.Run{}
 				k8sClient.Get(context.Background(), runKey, f)
 				return f.IsSubmitted()
 			}, timeout, interval).Should(BeTrue())
@@ -133,14 +133,14 @@ var _ = Describe("Run Controller", func() {
 			// Delete
 			By("Expecting run to be deleted successfully")
 			Eventually(func() error {
-				f := &databricksv1beta1.Run{}
+				f := &databricksv1alpha1.Run{}
 				k8sClient.Get(context.Background(), runKey, f)
 				return k8sClient.Delete(context.Background(), f)
 			}, timeout, interval).Should(Succeed())
 
 			By("Expecting to delete finish")
 			Eventually(func() error {
-				f := &databricksv1beta1.Run{}
+				f := &databricksv1alpha1.Run{}
 				return k8sClient.Get(context.Background(), runKey, f)
 			}, timeout, interval).ShouldNot(Succeed())
 		})
