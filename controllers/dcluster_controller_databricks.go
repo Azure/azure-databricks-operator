@@ -21,10 +21,10 @@ import (
 	"fmt"
 	"reflect"
 
-	databricksv1beta1 "github.com/microsoft/azure-databricks-operator/api/v1beta1"
+	databricksv1alpha1 "github.com/microsoft/azure-databricks-operator/api/v1alpha1"
 )
 
-func (r *DclusterReconciler) submit(instance *databricksv1beta1.Dcluster) error {
+func (r *DclusterReconciler) submit(instance *databricksv1alpha1.Dcluster) error {
 	r.Log.Info(fmt.Sprintf("Create cluster %s", instance.GetName()))
 
 	instance.Spec.ClusterName = instance.GetName()
@@ -41,14 +41,14 @@ func (r *DclusterReconciler) submit(instance *databricksv1beta1.Dcluster) error 
 		return err
 	}
 
-	var info databricksv1beta1.DclusterInfo
-	instance.Status = &databricksv1beta1.DclusterStatus{
+	var info databricksv1alpha1.DclusterInfo
+	instance.Status = &databricksv1alpha1.DclusterStatus{
 		ClusterInfo: info.FromDataBricksClusterInfo(clusterInfo),
 	}
 	return r.Update(context.Background(), instance)
 }
 
-func (r *DclusterReconciler) refresh(instance *databricksv1beta1.Dcluster) error {
+func (r *DclusterReconciler) refresh(instance *databricksv1alpha1.Dcluster) error {
 	r.Log.Info(fmt.Sprintf("Refresh cluster %s", instance.GetName()))
 
 	if instance.Status == nil || instance.Status.ClusterInfo == nil {
@@ -64,14 +64,14 @@ func (r *DclusterReconciler) refresh(instance *databricksv1beta1.Dcluster) error
 		return nil
 	}
 
-	var info databricksv1beta1.DclusterInfo
-	instance.Status = &databricksv1beta1.DclusterStatus{
+	var info databricksv1alpha1.DclusterInfo
+	instance.Status = &databricksv1alpha1.DclusterStatus{
 		ClusterInfo: info.FromDataBricksClusterInfo(clusterInfo),
 	}
 	return r.Update(context.Background(), instance)
 }
 
-func (r *DclusterReconciler) delete(instance *databricksv1beta1.Dcluster) error {
+func (r *DclusterReconciler) delete(instance *databricksv1alpha1.Dcluster) error {
 	r.Log.Info(fmt.Sprintf("Deleting cluster %s", instance.GetName()))
 
 	if instance.Status == nil || instance.Status.ClusterInfo == nil {

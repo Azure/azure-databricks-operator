@@ -28,7 +28,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	databricksv1beta1 "github.com/microsoft/azure-databricks-operator/api/v1beta1"
+	databricksv1alpha1 "github.com/microsoft/azure-databricks-operator/api/v1alpha1"
 )
 
 // RunReconciler reconciles a Run object
@@ -47,7 +47,7 @@ func (r *RunReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	_ = context.Background()
 	_ = r.Log.WithValues("run", req.NamespacedName)
 
-	instance := &databricksv1beta1.Run{}
+	instance := &databricksv1alpha1.Run{}
 	if err := r.Get(context.Background(), req.NamespacedName, instance); err != nil {
 		if errors.IsNotFound(err) {
 			return ctrl.Result{}, nil
@@ -63,7 +63,7 @@ func (r *RunReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		return ctrl.Result{}, nil
 	}
 
-	if !instance.HasFinalizer(databricksv1beta1.RunFinalizerName) {
+	if !instance.HasFinalizer(databricksv1alpha1.RunFinalizerName) {
 		if err := r.addFinalizer(instance); err != nil {
 			return ctrl.Result{}, fmt.Errorf("error when adding finalizer: %v", err)
 		}
@@ -90,6 +90,6 @@ func (r *RunReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 func (r *RunReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&databricksv1beta1.Run{}).
+		For(&databricksv1alpha1.Run{}).
 		Complete(r)
 }
