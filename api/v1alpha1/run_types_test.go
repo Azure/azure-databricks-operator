@@ -14,13 +14,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v1beta1
+package v1alpha1
 
 import (
 	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	dbazure "github.com/xinsnake/databricks-sdk-golang/azure"
+	dbmodels "github.com/xinsnake/databricks-sdk-golang/azure/models"
 
 	"golang.org/x/net/context"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -30,10 +32,10 @@ import (
 // These tests are written in BDD-style using Ginkgo framework. Refer to
 // http://onsi.github.io/ginkgo to learn more.
 
-var _ = Describe("SecretScope", func() {
+var _ = Describe("Run", func() {
 	var (
 		key              types.NamespacedName
-		created, fetched *SecretScope
+		created, fetched *Run
 	)
 
 	BeforeEach(func() {
@@ -56,7 +58,7 @@ var _ = Describe("SecretScope", func() {
 				Name:      "foo",
 				Namespace: "default",
 			}
-			created = &SecretScope{
+			created = &Run{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "foo",
 					Namespace: "default",
@@ -65,7 +67,7 @@ var _ = Describe("SecretScope", func() {
 			By("creating an API obj")
 			Expect(k8sClient.Create(context.Background(), created)).To(Succeed())
 
-			fetched = &SecretScope{}
+			fetched = &Run{}
 			Expect(k8sClient.Get(context.Background(), key, fetched)).To(Succeed())
 			Expect(fetched).To(Equal(created))
 
@@ -74,29 +76,40 @@ var _ = Describe("SecretScope", func() {
 			Expect(k8sClient.Get(context.Background(), key, created)).ToNot(Succeed())
 		})
 
-		It("should correctly handle isSubmitted", func() {
-			secretScope := &SecretScope{}
-			Expect(secretScope.IsSubmitted()).To(BeFalse())
-		})
-
-		It("should correctly handle finalizers", func() {
-			secretScope := &SecretScope{
-				ObjectMeta: metav1.ObjectMeta{
-					DeletionTimestamp: &metav1.Time{
-						Time: time.Now(),
-					},
-				},
-			}
-			Expect(secretScope.IsBeingDeleted()).To(BeTrue())
-
-			secretScope.AddFinalizer(SecretScopeFinalizerName)
-			Expect(len(secretScope.GetFinalizers())).To(Equal(1))
-			Expect(secretScope.HasFinalizer(SecretScopeFinalizerName)).To(BeTrue())
-
-			secretScope.RemoveFinalizer(SecretScopeFinalizerName)
-			Expect(len(secretScope.GetFinalizers())).To(Equal(0))
-			Expect(secretScope.HasFinalizer(SecretScopeFinalizerName)).To(BeFalse())
-		})
 	})
 
+	It("should correctly handle isSubmitted", func() {
+		run := &Run{
+			Status: &dbazure.JobsRunsGetOutputResponse{
+				Metadata: dbmodels.Run{
+					JobID: 23,
+				},
+			},
+		}
+		Expect(run.IsSubmitted()).To(BeTrue())
+
+		run2 := &Run{
+			Status: nil,
+		}
+		Expect(run2.IsSubmitted()).To(BeFalse())
+	})
+
+	It("should correctly handle finalizers", func() {
+		run := &Run{
+			ObjectMeta: metav1.ObjectMeta{
+				DeletionTimestamp: &metav1.Time{
+					Time: time.Now(),
+				},
+			},
+		}
+		Expect(run.IsBeingDeleted()).To(BeTrue())
+
+		run.AddFinalizer(RunFinalizerName)
+		Expect(len(run.GetFinalizers())).To(Equal(1))
+		Expect(run.HasFinalizer(RunFinalizerName)).To(BeTrue())
+
+		run.RemoveFinalizer(RunFinalizerName)
+		Expect(len(run.GetFinalizers())).To(Equal(0))
+		Expect(run.HasFinalizer(RunFinalizerName)).To(BeFalse())
+	})
 })

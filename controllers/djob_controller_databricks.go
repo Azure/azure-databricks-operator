@@ -22,11 +22,11 @@ import (
 	"reflect"
 	"strings"
 
-	databricksv1beta1 "github.com/microsoft/azure-databricks-operator/api/v1beta1"
+	databricksv1alpha1 "github.com/microsoft/azure-databricks-operator/api/v1alpha1"
 	"k8s.io/apimachinery/pkg/types"
 )
 
-func (r *DjobReconciler) submit(instance *databricksv1beta1.Djob) error {
+func (r *DjobReconciler) submit(instance *databricksv1alpha1.Djob) error {
 	r.Log.Info(fmt.Sprintf("Submitting job %s", instance.GetName()))
 
 	instance.Spec.Name = instance.GetName()
@@ -37,13 +37,13 @@ func (r *DjobReconciler) submit(instance *databricksv1beta1.Djob) error {
 	}
 
 	instance.Spec.Name = instance.GetName()
-	instance.Status = &databricksv1beta1.DjobStatus{
+	instance.Status = &databricksv1alpha1.DjobStatus{
 		JobStatus: &job,
 	}
 	return r.Update(context.Background(), instance)
 }
 
-func (r *DjobReconciler) refresh(instance *databricksv1beta1.Djob) error {
+func (r *DjobReconciler) refresh(instance *databricksv1alpha1.Djob) error {
 	r.Log.Info(fmt.Sprintf("Refreshing job %s", instance.GetName()))
 
 	jobID := instance.Status.JobStatus.JobID
@@ -72,14 +72,14 @@ func (r *DjobReconciler) refresh(instance *databricksv1beta1.Djob) error {
 		return nil
 	}
 
-	instance.Status = &databricksv1beta1.DjobStatus{
+	instance.Status = &databricksv1alpha1.DjobStatus{
 		JobStatus:  &job,
 		Last10Runs: jobRunListResponse.Runs,
 	}
 	return r.Update(context.Background(), instance)
 }
 
-func (r *DjobReconciler) delete(instance *databricksv1beta1.Djob) error {
+func (r *DjobReconciler) delete(instance *databricksv1alpha1.Djob) error {
 	r.Log.Info(fmt.Sprintf("Deleting job %s", instance.GetName()))
 
 	if instance.Status == nil || instance.Status.JobStatus == nil {

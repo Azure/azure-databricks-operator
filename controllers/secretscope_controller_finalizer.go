@@ -20,11 +20,11 @@ import (
 	"context"
 	"fmt"
 
-	databricksv1beta1 "github.com/microsoft/azure-databricks-operator/api/v1beta1"
+	databricksv1alpha1 "github.com/microsoft/azure-databricks-operator/api/v1alpha1"
 )
 
-func (r *SecretScopeReconciler) addFinalizer(instance *databricksv1beta1.SecretScope) error {
-	instance.AddFinalizer(databricksv1beta1.SecretScopeFinalizerName)
+func (r *SecretScopeReconciler) addFinalizer(instance *databricksv1alpha1.SecretScope) error {
+	instance.AddFinalizer(databricksv1alpha1.SecretScopeFinalizerName)
 	err := r.Update(context.Background(), instance)
 	if err != nil {
 		return fmt.Errorf("failed to update secret scope finalizer: %v", err)
@@ -32,13 +32,13 @@ func (r *SecretScopeReconciler) addFinalizer(instance *databricksv1beta1.SecretS
 	return nil
 }
 
-func (r *SecretScopeReconciler) handleFinalizer(instance *databricksv1beta1.SecretScope) error {
-	if instance.HasFinalizer(databricksv1beta1.SecretScopeFinalizerName) {
+func (r *SecretScopeReconciler) handleFinalizer(instance *databricksv1alpha1.SecretScope) error {
+	if instance.HasFinalizer(databricksv1alpha1.SecretScopeFinalizerName) {
 		if err := r.delete(instance); err != nil {
 			return err
 		}
 
-		instance.RemoveFinalizer(databricksv1beta1.SecretScopeFinalizerName)
+		instance.RemoveFinalizer(databricksv1alpha1.SecretScopeFinalizerName)
 		if err := r.Update(context.Background(), instance); err != nil {
 			return err
 		}

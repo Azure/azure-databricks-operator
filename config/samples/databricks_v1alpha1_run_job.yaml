@@ -1,4 +1,4 @@
-apiVersion: databricks.microsoft.com/v1beta1
+apiVersion: databricks.microsoft.com/v1alpha1
 kind: Run
 metadata:
   name: run-sample

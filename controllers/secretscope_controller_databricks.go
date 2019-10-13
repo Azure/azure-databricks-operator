@@ -22,7 +22,7 @@ import (
 	"fmt"
 	"strings"
 
-	databricksv1beta1 "github.com/microsoft/azure-databricks-operator/api/v1beta1"
+	databricksv1alpha1 "github.com/microsoft/azure-databricks-operator/api/v1alpha1"
 	dbmodels "github.com/xinsnake/databricks-sdk-golang/azure/models"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -48,7 +48,7 @@ func (r *SecretScopeReconciler) get(scope string) (*dbmodels.SecretScope, error)
 	}
 }
 
-func (r *SecretScopeReconciler) submitSecrets(instance *databricksv1beta1.SecretScope) error {
+func (r *SecretScopeReconciler) submitSecrets(instance *databricksv1alpha1.SecretScope) error {
 	scope := instance.ObjectMeta.Name
 	namespace := instance.Namespace
 	scopeSecrets, err := r.APIClient.Secrets().ListSecrets(scope)
@@ -98,7 +98,7 @@ func (r *SecretScopeReconciler) submitSecrets(instance *databricksv1beta1.Secret
 	return nil
 }
 
-func (r *SecretScopeReconciler) getSecretValueFrom(namespace string, scopeSecret databricksv1beta1.SecretScopeSecret) (string, error) {
+func (r *SecretScopeReconciler) getSecretValueFrom(namespace string, scopeSecret databricksv1alpha1.SecretScopeSecret) (string, error) {
 	if &scopeSecret.ValueFrom != nil {
 		namespacedName := types.NamespacedName{Namespace: namespace, Name: scopeSecret.ValueFrom.SecretKeyRef.Name}
 		secret := &v1.Secret{}
@@ -114,7 +114,7 @@ func (r *SecretScopeReconciler) getSecretValueFrom(namespace string, scopeSecret
 	}
 }
 
-func (r *SecretScopeReconciler) submitACLs(instance *databricksv1beta1.SecretScope) error {
+func (r *SecretScopeReconciler) submitACLs(instance *databricksv1alpha1.SecretScope) error {
 	scope := instance.ObjectMeta.Name
 	scopeSecretAcls, err := r.APIClient.Secrets().ListSecretACLs(scope)
 	if err != nil {
@@ -152,7 +152,7 @@ func (r *SecretScopeReconciler) submitACLs(instance *databricksv1beta1.SecretSco
 	return nil
 }
 
-func (r *SecretScopeReconciler) submit(instance *databricksv1beta1.SecretScope) error {
+func (r *SecretScopeReconciler) submit(instance *databricksv1alpha1.SecretScope) error {
 	scope := instance.ObjectMeta.Name
 	initialManagePrincipal := instance.Spec.InitialManagePrincipal
 
@@ -180,7 +180,7 @@ func (r *SecretScopeReconciler) submit(instance *databricksv1beta1.SecretScope) 
 	return r.Update(context.Background(), instance)
 }
 
-func (r *SecretScopeReconciler) update(instance *databricksv1beta1.SecretScope) error {
+func (r *SecretScopeReconciler) update(instance *databricksv1alpha1.SecretScope) error {
 	err := r.submitSecrets(instance)
 	if err != nil {
 		return err
@@ -189,7 +189,7 @@ func (r *SecretScopeReconciler) update(instance *databricksv1beta1.SecretScope) 
 	return r.submitACLs(instance)
 }
 
-func (r *SecretScopeReconciler) delete(instance *databricksv1beta1.SecretScope) error {
+func (r *SecretScopeReconciler) delete(instance *databricksv1alpha1.SecretScope) error {
 	scope := instance.Status.SecretScope.Name
 	if instance.Status.SecretScope != nil {
 		err := r.APIClient.Secrets().DeleteSecretScope(scope)
