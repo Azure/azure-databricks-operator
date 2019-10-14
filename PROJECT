@@ -3,20 +3,20 @@ domain: microsoft.com
 repo: github.com/microsoft/azure-databricks-operator
 resources:
 - group: databricks
-  version: v1
+  version: v1alpha1
   kind: SecretScope
 - group: databricks
-  version: v1
+  version: v1alpha1
   kind: Djob
 - group: databricks
-  version: v1
+  version: v1alpha1
   kind: Run
 - group: databricks
-  version: v1
+  version: v1alpha1
   kind: Dcluster
 - group: databricks
-  version: v1
+  version: v1alpha1
   kind: DbfsBlock
 - group: databricks
-  version: v1
+  version: v1alpha1
   kind: WorkspaceItem

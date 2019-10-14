@@ -22,10 +22,10 @@ import (
 	"fmt"
 	"time"
 
-	databricksv1 "github.com/microsoft/azure-databricks-operator/api/v1"
+	databricksv1alpha1 "github.com/microsoft/azure-databricks-operator/api/v1alpha1"
 )
 
-func (r *WorkspaceItemReconciler) submit(instance *databricksv1.WorkspaceItem) error {
+func (r *WorkspaceItemReconciler) submit(instance *databricksv1alpha1.WorkspaceItem) error {
 	r.Log.Info(fmt.Sprintf("Create item %s", instance.GetName()))
 
 	data, err := base64.StdEncoding.DecodeString(instance.Spec.Content)
@@ -46,7 +46,7 @@ func (r *WorkspaceItemReconciler) submit(instance *databricksv1.WorkspaceItem) e
 		return err
 	}
 
-	instance.Status = &databricksv1.WorkspaceItemStatus{
+	instance.Status = &databricksv1alpha1.WorkspaceItemStatus{
 		ObjectInfo: &objectInfo,
 		ObjectHash: instance.GetHash(),
 	}
@@ -54,7 +54,7 @@ func (r *WorkspaceItemReconciler) submit(instance *databricksv1.WorkspaceItem) e
 	return r.Update(context.Background(), instance)
 }
 
-func (r *WorkspaceItemReconciler) delete(instance *databricksv1.WorkspaceItem) error {
+func (r *WorkspaceItemReconciler) delete(instance *databricksv1alpha1.WorkspaceItem) error {
 	r.Log.Info(fmt.Sprintf("Deleting item %s", instance.GetName()))
 
 	if instance.Status == nil || instance.Status.ObjectInfo == nil {

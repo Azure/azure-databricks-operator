@@ -1,4 +1,4 @@
-apiVersion: databricks.microsoft.com/v1
+apiVersion: databricks.microsoft.com/v1alpha1
 kind: Run
 metadata:
   name: run-sample
@@ -14,4 +14,3 @@ spec:
         coordinates: 'org.jsoup:jsoup:1.7.2'
   spark_jar_task:
     main_class_name: com.databricks.ComputeModels
- 

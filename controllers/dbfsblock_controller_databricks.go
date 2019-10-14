@@ -22,10 +22,10 @@ import (
 	"fmt"
 	"time"
 
-	databricksv1 "github.com/microsoft/azure-databricks-operator/api/v1"
+	databricksv1alpha1 "github.com/microsoft/azure-databricks-operator/api/v1alpha1"
 )
 
-func (r *DbfsBlockReconciler) submit(instance *databricksv1.DbfsBlock) error {
+func (r *DbfsBlockReconciler) submit(instance *databricksv1alpha1.DbfsBlock) error {
 	r.Log.Info(fmt.Sprintf("Create block %s", instance.GetName()))
 
 	data, err := base64.StdEncoding.DecodeString(instance.Spec.Data)
@@ -66,7 +66,7 @@ func (r *DbfsBlockReconciler) submit(instance *databricksv1.DbfsBlock) error {
 		return err
 	}
 
-	instance.Status = &databricksv1.DbfsBlockStatus{
+	instance.Status = &databricksv1alpha1.DbfsBlockStatus{
 		FileInfo: &fileInfo,
 		FileHash: instance.GetHash(),
 	}
@@ -74,7 +74,7 @@ func (r *DbfsBlockReconciler) submit(instance *databricksv1.DbfsBlock) error {
 	return r.Update(context.Background(), instance)
 }
 
-func (r *DbfsBlockReconciler) delete(instance *databricksv1.DbfsBlock) error {
+func (r *DbfsBlockReconciler) delete(instance *databricksv1alpha1.DbfsBlock) error {
 	r.Log.Info(fmt.Sprintf("Deleting block %s", instance.GetName()))
 
 	if instance.Status == nil || instance.Status.FileInfo == nil {

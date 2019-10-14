@@ -27,7 +27,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	databricksv1 "github.com/microsoft/azure-databricks-operator/api/v1"
+	databricksv1alpha1 "github.com/microsoft/azure-databricks-operator/api/v1alpha1"
 )
 
 // WorkspaceItemReconciler reconciles a WorkspaceItem object
@@ -46,7 +46,7 @@ func (r *WorkspaceItemReconciler) Reconcile(req ctrl.Request) (ctrl.Result, erro
 	_ = context.Background()
 	_ = r.Log.WithValues("workspaceitem", req.NamespacedName)
 
-	instance := &databricksv1.WorkspaceItem{}
+	instance := &databricksv1alpha1.WorkspaceItem{}
 
 	r.Log.Info(fmt.Sprintf("Starting reconcile loop for %v", req.NamespacedName))
 	defer r.Log.Info(fmt.Sprintf("Finish reconcile loop for %v", req.NamespacedName))
@@ -67,7 +67,7 @@ func (r *WorkspaceItemReconciler) Reconcile(req ctrl.Request) (ctrl.Result, erro
 		return ctrl.Result{}, nil
 	}
 
-	if !instance.HasFinalizer(databricksv1.WorkspaceItemFinalizerName) {
+	if !instance.HasFinalizer(databricksv1alpha1.WorkspaceItemFinalizerName) {
 		r.Log.Info(fmt.Sprintf("AddFinalizer for %v", req.NamespacedName))
 		if err := r.addFinalizer(instance); err != nil {
 			return ctrl.Result{}, fmt.Errorf("error when adding finalizer: %v", err)
@@ -90,6 +90,6 @@ func (r *WorkspaceItemReconciler) Reconcile(req ctrl.Request) (ctrl.Result, erro
 
 func (r *WorkspaceItemReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&databricksv1.WorkspaceItem{}).
+		For(&databricksv1alpha1.WorkspaceItem{}).
 		Complete(r)
 }

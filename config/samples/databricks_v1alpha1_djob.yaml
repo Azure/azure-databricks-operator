@@ -1,4 +1,4 @@
-apiVersion: databricks.microsoft.com/v1
+apiVersion: databricks.microsoft.com/v1alpha1
 kind: Djob
 metadata:
   name: djob-sample

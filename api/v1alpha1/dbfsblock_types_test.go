@@ -14,15 +14,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v1
+package v1alpha1
 
 import (
 	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-
 	dbmodels "github.com/xinsnake/databricks-sdk-golang/azure/models"
+
 	"golang.org/x/net/context"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -31,10 +31,10 @@ import (
 // These tests are written in BDD-style using Ginkgo framework. Refer to
 // http://onsi.github.io/ginkgo to learn more.
 
-var _ = Describe("Dcluster", func() {
+var _ = Describe("DbfsBlock", func() {
 	var (
 		key              types.NamespacedName
-		created, fetched *Dcluster
+		created, fetched *DbfsBlock
 	)
 
 	BeforeEach(func() {
@@ -57,7 +57,7 @@ var _ = Describe("Dcluster", func() {
 				Name:      "foo",
 				Namespace: "default",
 			}
-			created = &Dcluster{
+			created = &DbfsBlock{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "foo",
 					Namespace: "default",
@@ -66,7 +66,7 @@ var _ = Describe("Dcluster", func() {
 			By("creating an API obj")
 			Expect(k8sClient.Create(context.TODO(), created)).To(Succeed())
 
-			fetched = &Dcluster{}
+			fetched = &DbfsBlock{}
 			Expect(k8sClient.Get(context.TODO(), key, fetched)).To(Succeed())
 			Expect(fetched).To(Equal(created))
 
@@ -76,51 +76,72 @@ var _ = Describe("Dcluster", func() {
 		})
 
 		It("should correctly handle isSubmitted", func() {
-			dcluster := &Dcluster{
-				Status: &DclusterStatus{
-					ClusterInfo: &DclusterInfo{
-						ClusterID: "221-322-djaj2",
+			dbfsBlock := &DbfsBlock{
+				Status: &DbfsBlockStatus{
+					FileInfo: &dbmodels.FileInfo{
+						FileSize: 0,
 					},
 				},
 			}
-			Expect(dcluster.IsSubmitted()).To(BeTrue())
+			Expect(dbfsBlock.IsSubmitted()).To(BeFalse())
 
-			dcluster2 := &Dcluster{
-				Status: &DclusterStatus{
-					ClusterInfo: nil,
+			dbfsBlock2 := &DbfsBlock{
+				Status: &DbfsBlockStatus{
+					FileInfo: &dbmodels.FileInfo{
+						Path: "/test-path",
+					},
 				},
 			}
-			Expect(dcluster2.IsSubmitted()).To(BeFalse())
+			Expect(dbfsBlock2.IsSubmitted()).To(BeTrue())
+
+			dbfsBlock3 := &DbfsBlock{
+				Status: &DbfsBlockStatus{
+					FileInfo: nil,
+				},
+			}
+			Expect(dbfsBlock3.IsSubmitted()).To(BeFalse())
 		})
 
 		It("should correctly handle finalizers", func() {
-			dcluster := &Dcluster{
+			dbfsBlock := &DbfsBlock{
 				ObjectMeta: metav1.ObjectMeta{
 					DeletionTimestamp: &metav1.Time{
 						Time: time.Now(),
 					},
 				},
 			}
-			Expect(dcluster.IsBeingDeleted()).To(BeTrue())
+			Expect(dbfsBlock.IsBeingDeleted()).To(BeTrue())
 
-			dcluster.AddFinalizer(DclusterFinalizerName)
-			Expect(len(dcluster.GetFinalizers())).To(Equal(1))
-			Expect(dcluster.HasFinalizer(DclusterFinalizerName)).To(BeTrue())
+			dbfsBlock.AddFinalizer(DbfsBlockFinalizerName)
+			Expect(len(dbfsBlock.GetFinalizers())).To(Equal(1))
+			Expect(dbfsBlock.HasFinalizer(DbfsBlockFinalizerName)).To(BeTrue())
 
-			dcluster.RemoveFinalizer(DclusterFinalizerName)
-			Expect(len(dcluster.GetFinalizers())).To(Equal(0))
-			Expect(dcluster.HasFinalizer(DclusterFinalizerName)).To(BeFalse())
+			dbfsBlock.RemoveFinalizer(DbfsBlockFinalizerName)
+			Expect(len(dbfsBlock.GetFinalizers())).To(Equal(0))
+			Expect(dbfsBlock.HasFinalizer(DbfsBlockFinalizerName)).To(BeFalse())
 		})
 
-		It("should correctly handle float to string", func() {
-			clusterInfo := &dbmodels.ClusterInfo{
-				ClusterCores: 20.32,
+		It("should correctly handle file hash", func() {
+			dbfsBlock := &DbfsBlock{
+				Spec: &DbfsBlockSpec{
+					Data: "dGVzdA==",
+				},
 			}
 
-			dclusterInfo := &DclusterInfo{}
-			dclusterInfo.FromDataBricksClusterInfo(*clusterInfo)
+			Expect(dbfsBlock.GetHash()).To(Equal("a94a8fe5ccb19ba61c4c0873d391e987982fbbd3"))
+			Expect(dbfsBlock.IsUpToDate()).To(BeFalse())
 
-			Expect(dclusterInfo.ClusterCores).To(Equal("20.32"))
+			dbfsBlock.Status = &DbfsBlockStatus{
+				FileHash: "a94a8fe5ccb19ba61c4c0873d391e987982fbbd3",
+			}
+			Expect(dbfsBlock.IsUpToDate()).To(BeTrue())
+
+			dbfsBlockError := &DbfsBlock{
+				Spec: &DbfsBlockSpec{
+					Data: "invalid_base64",
+				},
+			}
+			Expect(dbfsBlockError.GetHash()).To(Equal(""))
 		})
 	})
 
