@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"os"
 
-	databricksv1beta1 "github.com/microsoft/azure-databricks-operator/api/v1beta1"
+	databricksv1alpha1 "github.com/microsoft/azure-databricks-operator/api/v1alpha1"
 	"github.com/microsoft/azure-databricks-operator/controllers"
 	db "github.com/xinsnake/databricks-sdk-golang"
 	dbazure "github.com/xinsnake/databricks-sdk-golang/azure"
@@ -40,7 +40,7 @@ var (
 
 func init() {
 	kscheme.AddToScheme(scheme)
-	_ = databricksv1beta1.AddToScheme(scheme)
+	_ = databricksv1alpha1.AddToScheme(scheme)
 	// +kubebuilder:scaffold:scheme
 }
 

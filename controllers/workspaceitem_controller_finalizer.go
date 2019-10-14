@@ -19,22 +19,22 @@ package controllers
 import (
 	"context"
 
-	databricksv1beta1 "github.com/microsoft/azure-databricks-operator/api/v1beta1"
+	databricksv1alpha1 "github.com/microsoft/azure-databricks-operator/api/v1alpha1"
 )
 
-func (r *WorkspaceItemReconciler) addFinalizer(instance *databricksv1beta1.WorkspaceItem) error {
-	instance.AddFinalizer(databricksv1beta1.WorkspaceItemFinalizerName)
+func (r *WorkspaceItemReconciler) addFinalizer(instance *databricksv1alpha1.WorkspaceItem) error {
+	instance.AddFinalizer(databricksv1alpha1.WorkspaceItemFinalizerName)
 	return r.Update(context.Background(), instance)
 }
 
-func (r *WorkspaceItemReconciler) handleFinalizer(instance *databricksv1beta1.WorkspaceItem) error {
-	if !instance.HasFinalizer(databricksv1beta1.WorkspaceItemFinalizerName) {
+func (r *WorkspaceItemReconciler) handleFinalizer(instance *databricksv1alpha1.WorkspaceItem) error {
+	if !instance.HasFinalizer(databricksv1alpha1.WorkspaceItemFinalizerName) {
 		return nil
 	}
 
 	if err := r.delete(instance); err != nil {
 		return err
 	}
-	instance.RemoveFinalizer(databricksv1beta1.WorkspaceItemFinalizerName)
+	instance.RemoveFinalizer(databricksv1alpha1.WorkspaceItemFinalizerName)
 	return r.Update(context.Background(), instance)
 }

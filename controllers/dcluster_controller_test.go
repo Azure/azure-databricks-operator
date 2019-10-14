@@ -20,7 +20,7 @@ import (
 	"context"
 	"time"
 
-	databricksv1beta1 "github.com/microsoft/azure-databricks-operator/api/v1beta1"
+	databricksv1alpha1 "github.com/microsoft/azure-databricks-operator/api/v1alpha1"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	dbmodels "github.com/xinsnake/databricks-sdk-golang/azure/models"
@@ -53,7 +53,7 @@ var _ = Describe("DbfsBlock Controller", func() {
 				Namespace: "default",
 			}
 
-			created := &databricksv1beta1.Dcluster{
+			created := &databricksv1alpha1.Dcluster{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      key.Name,
 					Namespace: key.Namespace,
@@ -73,7 +73,7 @@ var _ = Describe("DbfsBlock Controller", func() {
 
 			By("Expecting submitted")
 			Eventually(func() bool {
-				f := &databricksv1beta1.Dcluster{}
+				f := &databricksv1alpha1.Dcluster{}
 				k8sClient.Get(context.Background(), key, f)
 				return f.IsSubmitted()
 			}, timeout, interval).Should(BeTrue())
@@ -81,14 +81,14 @@ var _ = Describe("DbfsBlock Controller", func() {
 			// Delete
 			By("Expecting to delete successfully")
 			Eventually(func() error {
-				f := &databricksv1beta1.Dcluster{}
+				f := &databricksv1alpha1.Dcluster{}
 				k8sClient.Get(context.Background(), key, f)
 				return k8sClient.Delete(context.Background(), f)
 			}, timeout, interval).Should(Succeed())
 
 			By("Expecting to delete finish")
 			Eventually(func() error {
-				f := &databricksv1beta1.Dcluster{}
+				f := &databricksv1alpha1.Dcluster{}
 				return k8sClient.Get(context.Background(), key, f)
 			}, timeout, interval).ShouldNot(Succeed())
 		})

@@ -28,7 +28,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	databricksv1beta1 "github.com/microsoft/azure-databricks-operator/api/v1beta1"
+	databricksv1alpha1 "github.com/microsoft/azure-databricks-operator/api/v1alpha1"
 )
 
 // DclusterReconciler reconciles a Dcluster object
@@ -47,7 +47,7 @@ func (r *DclusterReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	_ = context.Background()
 	_ = r.Log.WithValues("dcluster", req.NamespacedName)
 
-	instance := &databricksv1beta1.Dcluster{}
+	instance := &databricksv1alpha1.Dcluster{}
 
 	r.Log.Info(fmt.Sprintf("Starting reconcile loop for %v", req.NamespacedName))
 	defer r.Log.Info(fmt.Sprintf("Finish reconcile loop for %v", req.NamespacedName))
@@ -68,7 +68,7 @@ func (r *DclusterReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		return ctrl.Result{}, nil
 	}
 
-	if !instance.HasFinalizer(databricksv1beta1.DclusterFinalizerName) {
+	if !instance.HasFinalizer(databricksv1alpha1.DclusterFinalizerName) {
 		r.Log.Info(fmt.Sprintf("AddFinalizer for %v", req.NamespacedName))
 		if err := r.addFinalizer(instance); err != nil {
 			return ctrl.Result{}, fmt.Errorf("error when adding finalizer: %v", err)
@@ -99,6 +99,6 @@ func (r *DclusterReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 func (r *DclusterReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&databricksv1beta1.Dcluster{}).
+		For(&databricksv1alpha1.Dcluster{}).
 		Complete(r)
 }

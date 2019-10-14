@@ -14,16 +14,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v1beta1
+package v1alpha1
 
 import (
 	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	dbazure "github.com/xinsnake/databricks-sdk-golang/azure"
-	dbmodels "github.com/xinsnake/databricks-sdk-golang/azure/models"
 
+	dbmodels "github.com/xinsnake/databricks-sdk-golang/azure/models"
 	"golang.org/x/net/context"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -32,10 +31,10 @@ import (
 // These tests are written in BDD-style using Ginkgo framework. Refer to
 // http://onsi.github.io/ginkgo to learn more.
 
-var _ = Describe("Run", func() {
+var _ = Describe("Djob", func() {
 	var (
 		key              types.NamespacedName
-		created, fetched *Run
+		created, fetched *Djob
 	)
 
 	BeforeEach(func() {
@@ -58,7 +57,7 @@ var _ = Describe("Run", func() {
 				Name:      "foo",
 				Namespace: "default",
 			}
-			created = &Run{
+			created = &Djob{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "foo",
 					Namespace: "default",
@@ -67,7 +66,7 @@ var _ = Describe("Run", func() {
 			By("creating an API obj")
 			Expect(k8sClient.Create(context.Background(), created)).To(Succeed())
 
-			fetched = &Run{}
+			fetched = &Djob{}
 			Expect(k8sClient.Get(context.Background(), key, fetched)).To(Succeed())
 			Expect(fetched).To(Equal(created))
 
@@ -76,40 +75,42 @@ var _ = Describe("Run", func() {
 			Expect(k8sClient.Get(context.Background(), key, created)).ToNot(Succeed())
 		})
 
-	})
-
-	It("should correctly handle isSubmitted", func() {
-		run := &Run{
-			Status: &dbazure.JobsRunsGetOutputResponse{
-				Metadata: dbmodels.Run{
-					JobID: 23,
+		It("should correctly handle isSubmitted", func() {
+			djob := &Djob{
+				Status: &DjobStatus{
+					JobStatus: &dbmodels.Job{
+						JobID: 20,
+					},
 				},
-			},
-		}
-		Expect(run.IsSubmitted()).To(BeTrue())
+			}
+			Expect(djob.IsSubmitted()).To(BeTrue())
 
-		run2 := &Run{
-			Status: nil,
-		}
-		Expect(run2.IsSubmitted()).To(BeFalse())
-	})
-
-	It("should correctly handle finalizers", func() {
-		run := &Run{
-			ObjectMeta: metav1.ObjectMeta{
-				DeletionTimestamp: &metav1.Time{
-					Time: time.Now(),
+			djob2 := &Djob{
+				Status: &DjobStatus{
+					JobStatus: nil,
 				},
-			},
-		}
-		Expect(run.IsBeingDeleted()).To(BeTrue())
+			}
+			Expect(djob2.IsSubmitted()).To(BeFalse())
+		})
 
-		run.AddFinalizer(RunFinalizerName)
-		Expect(len(run.GetFinalizers())).To(Equal(1))
-		Expect(run.HasFinalizer(RunFinalizerName)).To(BeTrue())
+		It("should correctly handle finalizers", func() {
+			djob := &Djob{
+				ObjectMeta: metav1.ObjectMeta{
+					DeletionTimestamp: &metav1.Time{
+						Time: time.Now(),
+					},
+				},
+			}
+			Expect(djob.IsBeingDeleted()).To(BeTrue())
 
-		run.RemoveFinalizer(RunFinalizerName)
-		Expect(len(run.GetFinalizers())).To(Equal(0))
-		Expect(run.HasFinalizer(RunFinalizerName)).To(BeFalse())
+			djob.AddFinalizer(DjobFinalizerName)
+			Expect(len(djob.GetFinalizers())).To(Equal(1))
+			Expect(djob.HasFinalizer(DjobFinalizerName)).To(BeTrue())
+
+			djob.RemoveFinalizer(DjobFinalizerName)
+			Expect(len(djob.GetFinalizers())).To(Equal(0))
+			Expect(djob.HasFinalizer(DjobFinalizerName)).To(BeFalse())
+		})
 	})
+
 })

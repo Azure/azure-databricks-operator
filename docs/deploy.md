@@ -40,7 +40,7 @@ kubectl --namespace azure-databricks-operator-system \
 kubectl apply -f release/config
 ```
 
-## Use kustomise to customise your deployment
+## Use kustomize to customise your deployment
 
 1. Clone the source code:
 
@@ -50,7 +50,7 @@ git clone git@github.com:microsoft/azure-databricks-operator.git
 
 2. Edit file `config/default/kustomization.yaml` file to change your preferences
 
-3. Use `kustomise` to generate the final manifests and deploy:
+3. Use `kustomize` to generate the final manifests and deploy:
 
 ```sh
 kustomize build config/default | kubectl apply -f -
@@ -67,7 +67,7 @@ kubectl apply -f config/crd/bases
 1. Deploy a sample job, this will create a job in the default namespace:
 
 ```sh
-curl https://raw.githubusercontent.com/microsoft/azure-databricks-operator/master/config/samples/databricks_v1beta1_djob.yaml | kubectl apply -f -
+curl https://raw.githubusercontent.com/microsoft/azure-databricks-operator/master/config/samples/databricks_v1alpha1_djob.yaml | kubectl apply -f -
 ```
 
 2. Check the Job in Kubernetes:
