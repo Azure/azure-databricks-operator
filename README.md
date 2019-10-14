@@ -1,5 +1,5 @@
 
-[![Build Status](https://img.shields.io/azure-devops/build/ms/c7bb5181-d75b-4ef1-8145-a2c051657858/152.svg?label=build-azure-databricks-operator&style=flat-square&logo=data%3Aimage%2Fpng%3Bbase64%2CiVBORw0KGgoAAAANSUhEUgAAADQAAAAyCAMAAAAk%2FwjEAAAAXVBMVEX%2F%2F%2F%2BTk5Obm5udnZ2kpKSlpaWnp6eoqKiwsLCxsbGysrKzs7O6urq7u7u9vb3GxsbHx8fIyMjJycnR0dHS0tLT09PU1NTd3d3e3t7f39%2Fo6Ojp6enq6ur09PT%2F%2F%2F%2Bel%2BNbAAAAAXRSTlMAQObYZgAAAM5JREFUeNrt090OgjAMhuEqCoqKv8Mprvd%2FmUY6U9SFfSwemMh7toMno82gsd%2BpcNxtgpiMX6sR5BKQ5eGoYOlARDWKvMnawwpDVsyFpBuCSpZyPccRv6EcQA37KpKqONrxM9e52VCgJQdq9OYg4nDWWGYcaemoTECWhqM94UhX%2F21kHbI4zcm0n8pNe%2F9v63F8bZrRl6fNCWgT2UDcsEHMop1C5zpRf%2FL5TiZ3MJq1yzvLCUc6WgJaM47U4Oh6fKRrQJCPumoLI1UNjf1ddw%2FHSv3TGNoxAAAAAElFTkSuQmCC)](https://dev.azure.com/ms/azure-databricks-operator/_build/latest?definitionId=152&branchName=master)
+[![Build Status](https://dev.azure.com/ms/azure-databricks-operator/_apis/build/status/microsoft.azure-databricks-operator?branchName=master)](https://dev.azure.com/ms/azure-databricks-operator/_build/latest?definitionId=254&branchName=master)
 
 # Azure Databricks operator (for Kubernetes)
 
