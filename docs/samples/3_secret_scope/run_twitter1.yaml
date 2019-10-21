@@ -1,0 +1,18 @@
+apiVersion: databricks.microsoft.com/v1alpha1
+kind: Run
+metadata:
+  name: drun-twitteringest1
+spec:
+  # create a run directly without a job
+  existing_cluster_id: 1021-013622-bused793
+  libraries:
+    - pypi:
+        package: "tweepy"
+    - pypi:
+        package: "azure.eventhub"
+    - maven:
+        coordinates: "com.microsoft.azure:azure-eventhubs-spark_2.11:2.3.9" # installs the azure event hubs library
+  notebook_task:
+    base_parameters:
+      "filter":  "#microsoft"
+    notebook_path: "/samples/twitter_ingest" 

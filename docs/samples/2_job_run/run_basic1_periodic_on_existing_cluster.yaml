@@ -1,0 +1,17 @@
+apiVersion: databricks.microsoft.com/v1alpha1
+kind: Djob
+metadata:
+  name: djob-basic1
+spec:
+  # This spec is directly linked to the JobSettings structure
+  # https://docs.databricks.com/api/latest/jobs.html#jobsettings
+  existing_cluster_id: 1021-013622-bused793
+  timeout_seconds: 3600
+  max_retries: 1
+  schedule:
+    quartz_cron_expression: 0 0/1 * * * ?
+    timezone_id: America/Los_Angeles
+  notebook_task:
+    base_parameters:
+      "name":  "Azadeh"
+    notebook_path: "/samples/basic1" 

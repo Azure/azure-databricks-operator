@@ -5,11 +5,11 @@
 
 > This project is experimental. Expect the API to change. It is not recommended for production environments.
 
+
 ## Introduction
 
-Kubernetes offers the facility of extending it's API through the concept of 'Operators' ([Introducing Operators: Putting Operational Knowledge into Software](https://coreos.com/blog/introducing-operators.html)). This repository contains the resources and code to deploy an Azure Databricks Operator for Kubernetes.
+Kubernetes offers the facility of extending its API through the concept of 'Operators' ([Introducing Operators: Putting Operational Knowledge into Software](https://coreos.com/blog/introducing-operators.html)). This repository contains the resources and code to deploy an Azure Databricks Operator for Kubernetes.
 
-It is a Kubernetes controller that watches Customer Resource Definitions (CRDs) that define a Databricks job.
 
 ![alt text](docs/images/azure-databricks-operator.jpg "high level architecture")
 
@@ -24,6 +24,8 @@ The project was built using
 
 For deployment guides please see [deploy.md](https://github.com/microsoft/azure-databricks-operator/blob/master/docs/deploy.md)
 
+For samples and simple use cases on how to use the operator please see [samples.md](docs/samples.md)
+
 ## Roadmap
 
 Check [roadmap.md](https://github.com/microsoft/azure-databricks-operator/blob/master/docs/roadmap.md) for what has been supported and what's coming.
@@ -34,6 +36,7 @@ Few topics are discussed in the [resources.md](https://github.com/microsoft/azur
 
 - Kubernetes on WSL
 - Build pipelines
+- Dev container
 
 ## Contributing
 
