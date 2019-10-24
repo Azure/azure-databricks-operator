@@ -114,6 +114,9 @@ spec:
                       format: int32
                       type: integer
                   type: object
+                autotermination_minutes:
+                  format: int32
+                  type: integer
                 cluster_log_conf:
                   properties:
                     dbfs:
@@ -147,17 +150,16 @@ spec:
                         type: object
                     type: object
                   type: array
+                instance_pool_id:
+                  type: string
                 node_type_id:
                   type: string
                 num_workers:
                   format: int32
                   type: integer
                 spark_conf:
-                  properties:
-                    key:
-                      type: string
-                    value:
-                      type: string
+                  additionalProperties:
+                    type: string
                   type: object
                 spark_env_vars:
                   additionalProperties:
@@ -165,10 +167,6 @@ spec:
                   type: object
                 spark_version:
                   type: string
-                ssh_public_keys:
-                  items:
-                    type: string
-                  type: array
               type: object
             notebook_task:
               properties:
@@ -310,6 +308,9 @@ spec:
                               format: int32
                               type: integer
                           type: object
+                        autotermination_minutes:
+                          format: int32
+                          type: integer
                         cluster_log_conf:
                           properties:
                             dbfs:
@@ -343,17 +344,16 @@ spec:
                                 type: object
                             type: object
                           type: array
+                        instance_pool_id:
+                          type: string
                         node_type_id:
                           type: string
                         num_workers:
                           format: int32
                           type: integer
                         spark_conf:
-                          properties:
-                            key:
-                              type: string
-                            value:
-                              type: string
+                          additionalProperties:
+                            type: string
                           type: object
                         spark_env_vars:
                           additionalProperties:
@@ -361,10 +361,6 @@ spec:
                           type: object
                         spark_version:
                           type: string
-                        ssh_public_keys:
-                          items:
-                            type: string
-                          type: array
                       type: object
                     notebook_task:
                       properties:
@@ -480,6 +476,9 @@ spec:
                                 format: int32
                                 type: integer
                             type: object
+                          autotermination_minutes:
+                            format: int32
+                            type: integer
                           cluster_log_conf:
                             properties:
                               dbfs:
@@ -513,17 +512,16 @@ spec:
                                   type: object
                               type: object
                             type: array
+                          instance_pool_id:
+                            type: string
                           node_type_id:
                             type: string
                           num_workers:
                             format: int32
                             type: integer
                           spark_conf:
-                            properties:
-                              key:
-                                type: string
-                              value:
-                                type: string
+                            additionalProperties:
+                              type: string
                             type: object
                           spark_env_vars:
                             additionalProperties:
@@ -531,10 +529,6 @@ spec:
                             type: object
                           spark_version:
                             type: string
-                          ssh_public_keys:
-                            items:
-                              type: string
-                            type: array
                         type: object
                     type: object
                   creator_user_name:
@@ -573,6 +567,12 @@ spec:
                   run_id:
                     format: int64
                     type: integer
+                  run_name:
+                    type: string
+                  run_page_url:
+                    type: string
+                  run_type:
+                    type: string
                   schedule:
                     properties:
                       quartz_cron_expression:
