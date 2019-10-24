@@ -3,10 +3,21 @@
 # Licensed under the MIT License. See https://go.microsoft.com/fwlink/?linkid=2090316 for license information.
 #-------------------------------------------------------------------------------------------------------------
 
-FROM golang:1.12.5
+FROM golang:1.12.5-stretch
 
 # Avoid warnings by switching to noninteractive
 ENV DEBIAN_FRONTEND=noninteractive
+
+# This Dockerfile adds a non-root 'vscode' user with sudo access. However, for Linux,
+# this user's GID/UID must match your local user UID/GID to avoid permission issues
+# with bind mounts. Update USER_UID / USER_GID if yours is not 1000. See
+# https://aka.ms/vscode-remote/containers/non-root-user for details.
+ARG USERNAME=vscode
+ARG USER_UID=1000
+ARG USER_GID=$USER_UID
+# Support docker connecting to the external docker daemon. On Nix the GID inside the container must match
+# the GID of the docker group on the host. 
+ARG DOCKER_GROUP_ID=999
 
 # Configure apt, install packages and tools
 RUN apt-get update \
@@ -44,10 +55,17 @@ RUN apt-get update \
         github.com/golangci/golangci-lint/cmd/golangci-lint \
         github.com/mgechev/revive \
         github.com/derekparker/delve/cmd/dlv 2>&1 \
+    # Create a non-root user to use if preferred - see https://aka.ms/vscode-remote/containers/non-root-user.
+    && groupadd --gid $USER_GID $USERNAME \
+    && useradd -s /bin/bash --uid $USER_UID --gid $USER_GID -m $USERNAME \
+    # [Optional] Add sudo support
+    && apt-get install -y sudo \
+    && echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
+    && chmod 0440 /etc/sudoers.d/$USERNAME \
     # Clean up
     && apt-get autoremove -y \
     && apt-get clean -y \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* 
 
 RUN apt-get update \
     # Install Docker CE CLI
@@ -62,6 +80,9 @@ RUN apt-get update \
     # Install Helm
     && curl -s https://raw.githubusercontent.com/helm/helm/master/scripts/get | bash -
 
+# Configure permissions for Docker without sudo
+RUN groupadd --gid $DOCKER_GROUP_ID docker && gpasswd -a $USERNAME docker
+
 # Verify git, process tools installed
 RUN apt-get -y install git procps wget nano zsh inotify-tools jq
 RUN wget https://github.com/robbyrussell/oh-my-zsh/raw/master/tools/install.sh -O - | zsh || true
@@ -73,7 +94,7 @@ ENV GO111MODULE=on
 # Set the default shell to bash instead of sh
 ENV DATABRICKS_HOST ""
 ENV DATABRICKS_TOKEN ""
-ENV KUBECONFIG="/root/.kube/kind-config-kind"
+ENV KUBECONFIG="/home/${USERNAME}/.kube/kind-config-kind"
 
 COPY ./Makefile ./
 RUN make install-kind
@@ -81,3 +102,12 @@ RUN make install-kubebuilder
 RUN make install-kustomize
 RUN make install-test-dependency
 ENV SHELL /bin/bash
+
+# Add useful aliases
+RUN echo "alias k=kubectl" > "/home/${USERNAME}/.bash_aliases"
+# Add autocomplete to kubectl
+RUN echo "source <(kubectl completion bash)" > "/home/${USERNAME}/.bash_aliases"
+RUN echo "source <(kubectl completion bash | sed 's/kubectl/k/g')" > "/home/${USERNAME}/.bash_aliases"
+
+# Configure persmissions for go directory
+RUN chown -R $USER_GID /go
