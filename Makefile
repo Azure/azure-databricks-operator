@@ -63,6 +63,15 @@ deploy-controller:
 	make deploy
 	sed -i'' -e 's@image: .*@image: '"IMAGE_URL"'@' ./config/default/manager_image_patch.yaml
 
+timestamp := $(shell /bin/date "+%Y%m%d-%H%M%S")
+
+update-deployed-controller:
+	IMG="docker.io/controllertest:$(timestamp)" make ARGS="${ARGS}" docker-build
+	kind load docker-image docker.io/controllertest:$(timestamp) --loglevel "trace"
+	make install
+	make deploy
+	sed -i'' -e 's@image: .*@image: '"IMAGE_URL"'@' ./config/default/manager_image_patch.yaml
+
 # Generate manifests e.g. CRD, RBAC etc.
 manifests: controller-gen
 	$(CONTROLLER_GEN) $(CRD_OPTIONS) rbac:roleName=manager-role webhook paths="./..." output:crd:artifacts:config=config/crd/bases
@@ -81,7 +90,7 @@ generate: controller-gen
 
 # Build the docker image
 docker-build:
-	docker build . -t ${IMG}
+	docker build . -t ${IMG} ${ARGS}
 	@echo "updating kustomize image patch file for manager resource"
 	sed -i'' -e 's@image: .*@image: '"${IMG}"'@' ./config/default/manager_image_patch.yaml
 
@@ -127,6 +136,7 @@ endif
 
 	@echo "deploying controller to cluster"
 	make deploy-controller
+
 
 install-kind:
 ifeq (,$(shell which kind))
