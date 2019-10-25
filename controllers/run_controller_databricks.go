@@ -22,6 +22,7 @@ import (
 	"reflect"
 	"strings"
 	"time"
+	"errors"
 
 	databricksv1alpha1 "github.com/microsoft/azure-databricks-operator/api/v1alpha1"
 	dbmodels "github.com/xinsnake/databricks-sdk-golang/azure/models"
@@ -102,6 +103,9 @@ func (r *RunReconciler) refresh(instance *databricksv1alpha1.Run) error {
 	runOutput, err := r.APIClient.Jobs().RunsGetOutput(runID)
 	if err != nil {
 		return err
+	}
+	if (len(runOutput.Error) > 0){
+		return  errors.New(runOutput.Error)
 	}
 
 	err = r.Get(context.Background(), types.NamespacedName{
