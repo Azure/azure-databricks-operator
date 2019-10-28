@@ -55,13 +55,6 @@ RUN apt-get update \
         github.com/golangci/golangci-lint/cmd/golangci-lint \
         github.com/mgechev/revive \
         github.com/derekparker/delve/cmd/dlv 2>&1 \
-    # Create a non-root user to use if preferred - see https://aka.ms/vscode-remote/containers/non-root-user.
-    && groupadd --gid $USER_GID $USERNAME \
-    && useradd -s /bin/bash --uid $USER_UID --gid $USER_GID -m $USERNAME \
-    # [Optional] Add sudo support
-    && apt-get install -y sudo \
-    && echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
-    && chmod 0440 /etc/sudoers.d/$USERNAME \
     # Clean up
     && apt-get autoremove -y \
     && apt-get clean -y \
@@ -81,7 +74,7 @@ RUN apt-get update \
     && curl -s https://raw.githubusercontent.com/helm/helm/master/scripts/get | bash -
 
 # Configure permissions for Docker without sudo
-RUN groupadd --gid $DOCKER_GROUP_ID docker && gpasswd -a $USERNAME docker
+# RUN groupadd --gid $DOCKER_GROUP_ID docker && gpasswd -a $USERNAME docker
 
 # Verify git, process tools installed
 RUN apt-get -y install git procps wget nano zsh inotify-tools jq
@@ -94,7 +87,7 @@ ENV GO111MODULE=on
 # Set the default shell to bash instead of sh
 ENV DATABRICKS_HOST ""
 ENV DATABRICKS_TOKEN ""
-ENV KUBECONFIG="/home/${USERNAME}/.kube/kind-config-kind"
+ENV KUBECONFIG="/root/.kube/kind-config-kind"
 
 COPY ./Makefile ./
 RUN make install-kind
@@ -104,10 +97,7 @@ RUN make install-test-dependency
 ENV SHELL /bin/bash
 
 # Add useful aliases
-RUN echo "alias k=kubectl" > "/home/${USERNAME}/.bash_aliases"
+RUN echo "alias k=kubectl" >> "/root/.bash_aliases"
 # Add autocomplete to kubectl
-RUN echo "source <(kubectl completion bash)" > "/home/${USERNAME}/.bash_aliases"
-RUN echo "source <(kubectl completion bash | sed 's/kubectl/k/g')" > "/home/${USERNAME}/.bash_aliases"
-
-# Configure persmissions for go directory
-RUN chown -R $USER_GID /go
+RUN echo "source <(kubectl completion bash)" >> "/root/.bash_aliases"
+RUN echo "source <(kubectl completion bash | sed 's/kubectl/k/g')" >> "/root/.bash_aliases"
