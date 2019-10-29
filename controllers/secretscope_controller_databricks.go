@@ -43,9 +43,9 @@ func (r *SecretScopeReconciler) get(scope string) (*dbmodels.SecretScope, error)
 
 	if (dbmodels.SecretScope{}) == matchingScope {
 		return nil, fmt.Errorf("get for secret scope failed. scope not found: %s", scope)
-	} else {
-		return &matchingScope, nil
 	}
+
+	return &matchingScope, nil
 }
 
 func (r *SecretScopeReconciler) submitSecrets(instance *databricksv1alpha1.SecretScope) error {
@@ -122,8 +122,8 @@ func (r *SecretScopeReconciler) submitACLs(instance *databricksv1alpha1.SecretSc
 	}
 
 	if len(scopeSecretAcls) > 0 {
-		for _, existingAcl := range scopeSecretAcls {
-			err = r.APIClient.Secrets().DeleteSecretACL(scope, existingAcl.Principal)
+		for _, existingACL := range scopeSecretAcls {
+			err = r.APIClient.Secrets().DeleteSecretACL(scope, existingACL.Principal)
 			if err != nil {
 				return err
 			}
@@ -166,9 +166,11 @@ func (r *SecretScopeReconciler) submit(instance *databricksv1alpha1.SecretScope)
 		return err
 	}
 
-	err = r.submitACLs(instance)
-	if err != nil {
-		return err
+	if instance.Spec.SecretScopeACLs != nil {
+		err = r.submitACLs(instance)
+		if err != nil {
+			return err
+		}
 	}
 
 	remoteScope, err := r.get(scope)
