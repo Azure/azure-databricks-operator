@@ -76,6 +76,9 @@ RUN apt-get update \
 # Configure permissions for Docker without sudo
 # RUN groupadd --gid $DOCKER_GROUP_ID docker && gpasswd -a $USERNAME docker
 
+# Enable bash completion
+RUN apt-get update && apt install -y bash-completion && echo "source /etc/bash_completion" >> "/root/.bashrc"
+
 # Verify git, process tools installed
 RUN apt-get -y install git procps wget nano zsh inotify-tools jq
 RUN wget https://github.com/robbyrussell/oh-my-zsh/raw/master/tools/install.sh -O - | zsh || true
@@ -97,7 +100,18 @@ RUN make install-test-dependency
 ENV SHELL /bin/bash
 
 # Add useful aliases
-RUN echo "alias k=kubectl" >> "/root/.bash_aliases"
+RUN echo "alias k=kubectl" >> "/root/.bashrc"
 # Add autocomplete to kubectl
-RUN echo "source <(kubectl completion bash)" >> "/root/.bash_aliases"
-RUN echo "source <(kubectl completion bash | sed 's/kubectl/k/g')" >> "/root/.bash_aliases"
+RUN echo "source <(kubectl completion bash)" >> "/root/.bashrc"
+RUN echo "source <(kubectl completion bash | sed 's/kubectl/k/g')" >> "/root/.bashrc"
+# Add kubectx 
+RUN git clone https://github.com/ahmetb/kubectx.git /root/.kubectx \
+    && COMPDIR=$(pkg-config --variable=completionsdir bash-completion) \
+    && ln -sf /root/.kubectx/completion/kubens.bash $COMPDIR/kubens \
+    && ln -sf /root/.kubectx/completion/kubectx.bash $COMPDIR/kubectx 
+
+# Git command prompt
+RUN git clone https://github.com/magicmonty/bash-git-prompt.git ~/.bash-git-prompt --depth=1 \
+    && echo "if [ -f \"$HOME/.bash-git-prompt/gitprompt.sh\" ]; then GIT_PROMPT_ONLY_IN_REPO=1 && source $HOME/.bash-git-prompt/gitprompt.sh; fi" >> "/root/.bashrc"
+
+ENV PATH="/root/.kubectx:${PATH}"
