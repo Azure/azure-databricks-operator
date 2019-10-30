@@ -109,9 +109,9 @@ func (r *SecretScopeReconciler) getSecretValueFrom(namespace string, scopeSecret
 
 		value := string(secret.Data[scopeSecret.ValueFrom.SecretKeyRef.Key])
 		return value, nil
-	} else {
-		return "", fmt.Errorf("No ValueFrom present to extract secret")
 	}
+
+	return "", fmt.Errorf("No ValueFrom present to extract secret")
 }
 
 func (r *SecretScopeReconciler) submitACLs(instance *databricksv1alpha1.SecretScope) error {
@@ -152,22 +152,61 @@ func (r *SecretScopeReconciler) submitACLs(instance *databricksv1alpha1.SecretSc
 	return nil
 }
 
-func (r *SecretScopeReconciler) submit(instance *databricksv1alpha1.SecretScope) error {
+// checkCluster checks if Databricks cluster supports ACLs, and checks if secret scope exists.
+func (r *SecretScopeReconciler) checkCluster(instance *databricksv1alpha1.SecretScope) error {
 	scope := instance.ObjectMeta.Name
 	initialManagePrincipal := instance.Spec.InitialManagePrincipal
 
+	// try create secret scope to see if exists or not.
 	err := r.APIClient.Secrets().CreateSecretScope(scope, initialManagePrincipal)
 	if err != nil {
 		return err
 	}
 
-	err = r.submitSecrets(instance)
+	// try to list ACLs to see if cluster supports ACL.
+	if instance.Spec.SecretScopeACLs != nil {
+		if _, err = r.APIClient.Secrets().ListSecretACLs(scope); err != nil {
+			if er := r.APIClient.Secrets().DeleteSecretScope(scope); er != nil {
+				return fmt.Errorf("%v\n%v", err, er)
+			}
+			return err
+		}
+	}
+
+	return nil
+}
+
+// checkSecrets checks if referenced secret is present in k8s or not.
+func (r *SecretScopeReconciler) checkSecrets(instance *databricksv1alpha1.SecretScope) error {
+	scope := instance.ObjectMeta.Name
+	namespace := instance.Namespace
+
+	// if secret in cluster is reference, see if secret exists.
+	// if secret does not exist, try delete secret scope.
+	for _, secret := range instance.Spec.SecretScopeSecrets {
+		if secret.ValueFrom != nil {
+			if _, err := r.getSecretValueFrom(namespace, secret); err != nil {
+				if er := r.APIClient.Secrets().DeleteSecretScope(scope); er != nil {
+					return fmt.Errorf("%v\n%v", err, er)
+				}
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+func (r *SecretScopeReconciler) submit(instance *databricksv1alpha1.SecretScope) error {
+	scope := instance.ObjectMeta.Name
+
+	err := r.submitSecrets(instance)
 	if err != nil {
 		return err
 	}
 
 	if instance.Spec.SecretScopeACLs != nil {
-		err = r.submitACLs(instance)
+		err := r.submitACLs(instance)
 		if err != nil {
 			return err
 		}
@@ -192,7 +231,7 @@ func (r *SecretScopeReconciler) update(instance *databricksv1alpha1.SecretScope)
 }
 
 func (r *SecretScopeReconciler) delete(instance *databricksv1alpha1.SecretScope) error {
-	
+
 	if instance.Status.SecretScope != nil {
 		scope := instance.Status.SecretScope.Name
 		err := r.APIClient.Secrets().DeleteSecretScope(scope)

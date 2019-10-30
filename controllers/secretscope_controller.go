@@ -30,6 +30,7 @@ import (
 
 	databricksv1alpha1 "github.com/microsoft/azure-databricks-operator/api/v1alpha1"
 	dbazure "github.com/xinsnake/databricks-sdk-golang/azure"
+	v1 "k8s.io/api/core/v1"
 )
 
 // SecretScopeReconciler reconciles a SecretScope object
@@ -45,7 +46,6 @@ type SecretScopeReconciler struct {
 // +kubebuilder:rbac:groups=databricks.microsoft.com,resources=secretscopes/status,verbs=get;update;patch
 
 func (r *SecretScopeReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
-	_ = context.Background()
 	_ = r.Log.WithValues("secretscope", req.NamespacedName)
 
 	// your logic here
@@ -67,7 +67,7 @@ func (r *SecretScopeReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error)
 		if err != nil {
 			return reconcile.Result{}, fmt.Errorf("error when handling finalizer: %v", err)
 		}
-		r.Recorder.Event(instance, "Normal", "Deleted", "Object finalizer is deleted")
+		r.Recorder.Event(instance, v1.EventTypeNormal, "Deleted", "Object finalizer is deleted")
 		return ctrl.Result{}, nil
 	}
 
@@ -76,20 +76,30 @@ func (r *SecretScopeReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error)
 		if err != nil {
 			return reconcile.Result{}, fmt.Errorf("error when handling secret scope finalizer: %v", err)
 		}
-		r.Recorder.Event(instance, "Normal", "Added", "Object finalizer is added")
+		r.Recorder.Event(instance, v1.EventTypeNormal, "Added", "Object finalizer is added")
 		return ctrl.Result{}, nil
 	}
 
 	if !instance.IsSubmitted() {
-		err = r.submit(instance)
-		if err != nil {
-			r.Recorder.Event(instance, "Warning", "Failied to submit", "An error occured. Please check logs.")
+
+		if err = r.checkCluster(instance); err != nil {
+			r.Recorder.Event(instance, v1.EventTypeWarning, "Failed", err.Error())
+			return ctrl.Result{}, nil
+		}
+
+		if err = r.checkSecrets(instance); err != nil {
+			r.Recorder.Event(instance, v1.EventTypeWarning, "Failed", err.Error())
+			return ctrl.Result{Requeue: true, RequeueAfter: 30 * time.Second}, fmt.Errorf("error when submitting secret scope to the API: %v", err)
+		}
+
+		if err = r.submit(instance); err != nil {
+			r.Recorder.Event(instance, v1.EventTypeWarning, "Failed", err.Error())
 			return ctrl.Result{}, fmt.Errorf("error when submitting secret scope to the API: %v", err)
 		}
-		r.Recorder.Event(instance, "Normal", "Submitted", "Object is submitted")
 	}
 
-	return ctrl.Result{RequeueAfter: 30 * time.Second}, nil
+	r.Recorder.Event(instance, v1.EventTypeNormal, "Completed", "Object has completed")
+	return ctrl.Result{}, nil
 }
 
 func (r *SecretScopeReconciler) SetupWithManager(mgr ctrl.Manager) error {
