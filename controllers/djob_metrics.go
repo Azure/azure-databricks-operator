@@ -34,9 +34,40 @@ var (
 			Help: "Number of create djob failures",
 		},
 	)
+
+	djobGetSuccess = prometheus.NewCounter(
+		prometheus.CounterOpts{
+			Name: "djob_success_total",
+			Help: "Number of create djob success",
+		},
+	)
+	djobGetFailure = prometheus.NewCounter(
+		prometheus.CounterOpts{
+			Name: "djob_failures_total",
+			Help: "Number of create djob failures",
+		},
+	)
+
+	djobCreateDuration = prometheus.NewHistogram(prometheus.HistogramOpts{
+		Name:    "djob_creation_duration",
+		Help:    "Duration of DB api create calls.",
+		Buckets: prometheus.LinearBuckets(100, 10, 20), 
+	})
+
+	djobGetDuration = prometheus.NewHistogram(prometheus.HistogramOpts{
+		Name:    "djob_get_duration",
+		Help:    "Duration of DB api get calls.",
+		Buckets: prometheus.LinearBuckets(100, 10, 20),  // 5 buckets, each 5 centigrade wide.
+	})
+
+	djobDeleteDuration = prometheus.NewHistogram(prometheus.HistogramOpts{
+		Name:    "djob_delete_duration",
+		Help:    "Duration of DB api delete calls.",
+		Buckets: prometheus.LinearBuckets(100, 10, 20),  // 5 buckets, each 5 centigrade wide.
+	})
 )
 
 func init() {
 	// Register custom metrics with the global prometheus registry
-	metrics.Registry.MustRegister(djobCreateSuccess, djobCreateFailure)
+	metrics.Registry.MustRegister(djobCreateSuccess, djobCreateFailure, djobGetDuration)
 }
