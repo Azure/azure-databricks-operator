@@ -23,6 +23,8 @@ import (
 	"strings"
 
 	databricksv1alpha1 "github.com/microsoft/azure-databricks-operator/api/v1alpha1"
+	"github.com/prometheus/client_golang/prometheus"
+	models "github.com/xinsnake/databricks-sdk-golang/azure/models"
 	"k8s.io/apimachinery/pkg/types"
 )
 
@@ -31,13 +33,12 @@ func (r *DjobReconciler) submit(instance *databricksv1alpha1.Djob) error {
 
 	instance.Spec.Name = instance.GetName()
 
-	job, err := r.APIClient.Jobs().Create(*instance.Spec)
+	job, err := createJob(r, instance)
+
 	if err != nil {
-		djobCreateFailure.Inc()
 		return err
 	}
 
-	djobCreateSuccess.Inc()
 	instance.Spec.Name = instance.GetName()
 	instance.Status = &databricksv1alpha1.DjobStatus{
 		JobStatus: &job,
@@ -50,7 +51,8 @@ func (r *DjobReconciler) refresh(instance *databricksv1alpha1.Djob) error {
 
 	jobID := instance.Status.JobStatus.JobID
 
-	job, err := r.APIClient.Jobs().Get(jobID)
+	job, err := getJob(r, jobID)
+
 	if err != nil {
 		return err
 	}
@@ -90,13 +92,44 @@ func (r *DjobReconciler) delete(instance *databricksv1alpha1.Djob) error {
 
 	jobID := instance.Status.JobStatus.JobID
 
+	_, err := getJob(r, jobID)
+
 	// Check if the job exists before trying to delete it
-	if _, err := r.APIClient.Jobs().Get(jobID); err != nil {
+	if err != nil {
 		if strings.Contains(err.Error(), "does not exist") {
 			return nil
 		}
 		return err
 	}
 
-	return r.APIClient.Jobs().Delete(jobID)
+	return trackExecutionTime(djobDeleteDuration, func() error {
+		return r.APIClient.Jobs().Delete(jobID)
+	})
+}
+
+func getJob(r *DjobReconciler, jobID int64) (job models.Job, err error) {
+	return trackJob(djobGetDuration, djobGetSuccess, djobGetFailure, func() (models.Job, error) {
+		return r.APIClient.Jobs().Get(jobID)
+	})
+}
+
+func createJob(r *DjobReconciler, instance *databricksv1alpha1.Djob) (job models.Job, err error) {
+	return trackJob(djobCreateDuration, djobCreateSuccess, djobCreateFailure, func() (models.Job, error) {
+		return r.APIClient.Jobs().Create(*instance.Spec)
+	})
+}
+
+func trackJob(duration prometheus.Histogram, success prometheus.Counter, failure prometheus.Counter, 
+	f func() (models.Job, error)) (job models.Job, err error) {
+		job, err = trackJobExecutionTime(duration, func() (models.Job, error) {
+			return f()
+		})
+	
+		if err != nil {
+			failure.Inc()
+		} else {
+			success.Inc()
+		}
+	
+		return
 }
