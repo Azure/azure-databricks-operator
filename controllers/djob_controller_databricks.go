@@ -71,8 +71,11 @@ func (r *DjobReconciler) submit(instance *databricksv1alpha1.Djob) error {
 	jobSettings := databricksv1alpha1.ToDatabricksJobSettings(instance.Spec)
 	job, err := r.APIClient.Jobs().Create(jobSettings)
 	if err != nil {
+		djobCreateFailure.Inc()
 		return err
 	}
+
+	djobCreateSuccess.Inc()
 	instance.Spec.Name = instance.GetName()
 	instance.Status = &databricksv1alpha1.DjobStatus{
 		JobStatus: &job,
