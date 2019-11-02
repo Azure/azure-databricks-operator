@@ -12,7 +12,6 @@
 /cover.*
 /cover/
 
-.vscode/
 .env
 
 !/bin
