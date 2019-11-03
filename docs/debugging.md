@@ -4,6 +4,8 @@ The following guide details how to debug the Databicks operator locally using th
 
 Running the debugger in VSCode from wihtin a DevContainer, you'll be able to interact with the operator just as you would if it was running within kubernetes using `kubectl`.
 
+![debugging in vscode](images/debugging.gif)
+
 ## Prerequests
 
 * DevContainer is up and running.
