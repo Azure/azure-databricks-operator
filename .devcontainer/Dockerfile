@@ -8,17 +8,6 @@ FROM golang:1.12.5-stretch
 # Avoid warnings by switching to noninteractive
 ENV DEBIAN_FRONTEND=noninteractive
 
-# This Dockerfile adds a non-root 'vscode' user with sudo access. However, for Linux,
-# this user's GID/UID must match your local user UID/GID to avoid permission issues
-# with bind mounts. Update USER_UID / USER_GID if yours is not 1000. See
-# https://aka.ms/vscode-remote/containers/non-root-user for details.
-ARG USERNAME=vscode
-ARG USER_UID=1000
-ARG USER_GID=$USER_UID
-# Support docker connecting to the external docker daemon. On Nix the GID inside the container must match
-# the GID of the docker group on the host. 
-ARG DOCKER_GROUP_ID=999
-
 # Configure apt, install packages and tools
 RUN apt-get update \
     && apt-get -y install --no-install-recommends apt-utils 2>&1 \
@@ -73,9 +62,6 @@ RUN apt-get update \
     # Install Helm
     && curl -s https://raw.githubusercontent.com/helm/helm/master/scripts/get | bash -
 
-# Configure permissions for Docker without sudo
-# RUN groupadd --gid $DOCKER_GROUP_ID docker && gpasswd -a $USERNAME docker
-
 # Enable bash completion
 RUN apt-get update && apt install -y bash-completion && echo "source /etc/bash_completion" >> "/root/.bashrc"
 
@@ -98,6 +84,12 @@ RUN make install-kubebuilder
 RUN make install-kustomize
 RUN make install-test-dependency
 ENV SHELL /bin/bash
+
+# Save command line history 
+RUN echo "export HISTFILE=/root/commandhistory/.bash_history" >> "/root/.bashrc" \
+    && echo "export PROMPT_COMMAND='history -a'" >> "/root/.bashrc" \
+    && mkdir -p /root/commandhistory \
+    && touch /root/commandhistory/.bash_history
 
 # Add useful aliases
 RUN echo "alias k=kubectl" >> "/root/.bashrc"

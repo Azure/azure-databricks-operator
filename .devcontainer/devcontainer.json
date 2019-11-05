@@ -7,11 +7,15 @@
 	"workspaceMount": "src=${localWorkspaceFolder},dst=/workspace,type=bind",
 	"postCreateCommand": "make set-kindcluster",
     "runArgs": [
-		// // Uncomment the next line to use a non-root user. On Linux, this will prevent
-		// // new files getting created as root, but you may need to update the USER_UID
-		// // and USER_GID in .devcontainer/Dockerfile to match your user if not 1000.
-		// "-u", "vscode",
-
+		// Mount the env file
+		"--env-file", "${localWorkspaceFolder}/.env",
+		// Mount go mod cache
+		"-v", "dboperator-gomodcache:/go/pkg",
+		// Cache vscode exentsions installs and homedir
+		"-v", "dboperator-vscodecache:/root/.vscode-server",
+		// Keep command history 
+		"-v", "dboperator-bashhistory:/root/commandhistory",
+		// Enable security needed for docker
 		"--cap-add=SYS_PTRACE", "--security-opt", "seccomp=unconfined",
 		// Mount docker socket for docker builds
 		"-v", "/var/run/docker.sock:/var/run/docker.sock",
