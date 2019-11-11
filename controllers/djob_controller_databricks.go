@@ -131,5 +131,5 @@ func trackJob(duration prometheus.Histogram, success prometheus.Counter, failure
 			success.Inc()
 		}
 	
-		return
+		return job, err
 }
