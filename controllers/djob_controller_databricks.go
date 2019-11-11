@@ -21,9 +21,9 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+	"time"
 
 	databricksv1alpha1 "github.com/microsoft/azure-databricks-operator/api/v1alpha1"
-	"github.com/prometheus/client_golang/prometheus"
 	models "github.com/xinsnake/databricks-sdk-golang/azure/models"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -130,10 +130,8 @@ func (r *DjobReconciler) delete(instance *databricksv1alpha1.Djob) error {
 
 	jobID := instance.Status.JobStatus.JobID
 
-	_, err := getJob(r, jobID)
-
 	// Check if the job exists before trying to delete it
-	if err != nil {
+	if _, err := getJob(r, jobID); err != nil {
 		if strings.Contains(err.Error(), "does not exist") {
 			return nil
 		}
@@ -146,29 +144,22 @@ func (r *DjobReconciler) delete(instance *databricksv1alpha1.Djob) error {
 }
 
 func getJob(r *DjobReconciler, jobID int64) (job models.Job, err error) {
-	return trackJob(djobGetDuration, djobGetSuccess, djobGetFailure, func() (models.Job, error) {
-		return r.APIClient.Jobs().Get(jobID)
-	})
+	defer trackMillisecondsTaken(time.Now(), djobGetDuration)
+
+	job, err = r.APIClient.Jobs().Get(jobID)
+
+	trackSuccessFailure(err, djobGetSuccess, djobGetFailure)
+
+	return job, err
 }
 
 func createJob(r *DjobReconciler, instance *databricksv1alpha1.Djob) (job models.Job, err error) {
-	return trackJob(djobCreateDuration, djobCreateSuccess, djobCreateFailure, func() (models.Job, error) {
-		jobSettings := databricksv1alpha1.ToDatabricksJobSettings(instance.Spec)
-		return r.APIClient.Jobs().Create(jobSettings)
-	})
-}
+	defer trackMillisecondsTaken(time.Now(), djobCreateDuration)
 
-func trackJob(duration prometheus.Histogram, success prometheus.Counter, failure prometheus.Counter,
-	f func() (models.Job, error)) (job models.Job, err error) {
-	job, err = trackJobExecutionTime(duration, func() (models.Job, error) {
-		return f()
-	})
+	jobSettings := databricksv1alpha1.ToDatabricksJobSettings(instance.Spec)
+	job, err = r.APIClient.Jobs().Create(jobSettings)
 
-	if err != nil {
-		failure.Inc()
-	} else {
-		success.Inc()
-	}
+	trackSuccessFailure(err, djobCreateSuccess, djobCreateFailure)
 
 	return job, err
 }
