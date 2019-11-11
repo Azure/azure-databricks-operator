@@ -51,23 +51,24 @@ var (
 	djobCreateDuration = prometheus.NewHistogram(prometheus.HistogramOpts{
 		Name:    "djob_creation_duration",
 		Help:    "Duration of DB api create calls.",
-		Buckets: prometheus.LinearBuckets(100, 10, 20), 
+		Buckets: prometheus.LinearBuckets(100, 10, 20),
 	})
 
 	djobGetDuration = prometheus.NewHistogram(prometheus.HistogramOpts{
 		Name:    "djob_get_duration",
 		Help:    "Duration of DB api get calls.",
-		Buckets: prometheus.LinearBuckets(100, 10, 20),  // 5 buckets, each 5 centigrade wide.
+		Buckets: prometheus.LinearBuckets(100, 10, 20),
 	})
 
 	djobDeleteDuration = prometheus.NewHistogram(prometheus.HistogramOpts{
 		Name:    "djob_delete_duration",
 		Help:    "Duration of DB api delete calls.",
-		Buckets: prometheus.LinearBuckets(100, 10, 20),  // 5 buckets, each 5 centigrade wide.
+		Buckets: prometheus.LinearBuckets(100, 10, 20), 
 	})
 )
 
 func init() {
 	// Register custom metrics with the global prometheus registry
-	metrics.Registry.MustRegister(djobCreateSuccess, djobCreateFailure, djobGetDuration)
+	metrics.Registry.MustRegister(djobCreateSuccess, djobCreateFailure, djobGetSuccess, djobGetFailure,
+		djobCreateDuration, djobGetDuration, djobDeleteDuration)
 }
