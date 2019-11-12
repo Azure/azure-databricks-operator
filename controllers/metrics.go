@@ -31,8 +31,8 @@ func trackExecutionTime(histogram prometheus.Histogram, f func() error) error {
 }
 
 func trackMillisecondsTaken(startTime time.Time, histogram prometheus.Histogram) {
-	endTime := float64(time.Now().Sub(startTime).Nanoseconds() / int64(time.Millisecond))
-	histogram.Observe(endTime)
+	duration := float64(time.Since(startTime) / time.Millisecond)
+	histogram.Observe(duration)
 }
 
 func trackSuccessFailure(err error, success prometheus.Counter, failure prometheus.Counter) {

@@ -20,8 +20,10 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"time"
 
 	databricksv1alpha1 "github.com/microsoft/azure-databricks-operator/api/v1alpha1"
+	models "github.com/xinsnake/databricks-sdk-golang/azure/models"
 )
 
 func (r *DclusterReconciler) submit(instance *databricksv1alpha1.Dcluster) error {
@@ -36,7 +38,7 @@ func (r *DclusterReconciler) submit(instance *databricksv1alpha1.Dcluster) error
 		}
 	}
 
-	clusterInfo, err := r.APIClient.Clusters().Create(*instance.Spec)
+	clusterInfo, err := r.createCluster(instance)
 	if err != nil {
 		return err
 	}
@@ -55,7 +57,7 @@ func (r *DclusterReconciler) refresh(instance *databricksv1alpha1.Dcluster) erro
 		return nil
 	}
 
-	clusterInfo, err := r.APIClient.Clusters().Get(instance.Status.ClusterInfo.ClusterID)
+	clusterInfo, err := r.getCluster(instance.Status.ClusterInfo.ClusterID)
 	if err != nil {
 		return err
 	}
@@ -78,5 +80,27 @@ func (r *DclusterReconciler) delete(instance *databricksv1alpha1.Dcluster) error
 		return nil
 	}
 
-	return r.APIClient.Clusters().PermanentDelete(instance.Status.ClusterInfo.ClusterID)
+	return trackExecutionTime(dclusterDeleteDuration, func() error {
+		return r.APIClient.Clusters().PermanentDelete(instance.Status.ClusterInfo.ClusterID)
+	})
+}
+
+func (r *DclusterReconciler) getCluster(clusterID string) (cluster models.ClusterInfo, err error) {
+	defer trackMillisecondsTaken(time.Now(), dclusterGetDuration)
+
+	cluster, err = r.APIClient.Clusters().Get(clusterID)
+
+	trackSuccessFailure(err, dclusterGetSuccess, dclusterGetFailure)
+
+	return cluster, err
+}
+
+func (r *DclusterReconciler) createCluster(instance *databricksv1alpha1.Dcluster) (cluster models.ClusterInfo, err error) {
+	defer trackMillisecondsTaken(time.Now(), dclusterCreateDuration)
+
+	cluster, err = r.APIClient.Clusters().Create(*instance.Spec)
+
+	trackSuccessFailure(err, dclusterCreateSuccess, dclusterCreateFailure)
+
+	return cluster, err
 }
