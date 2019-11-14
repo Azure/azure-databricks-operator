@@ -153,14 +153,9 @@ spec:
                 creator_user_name:
                   type: string
                 default_tags:
-                  items:
-                    properties:
-                      key:
-                        type: string
-                      value:
-                        type: string
-                    type: object
-                  type: array
+                  additionalProperties:
+                    type: string
+                  type: object
                 driver:
                   properties:
                     host_private_ip:

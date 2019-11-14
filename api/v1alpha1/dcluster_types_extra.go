@@ -51,7 +51,7 @@ type DclusterInfo struct {
 	LastActivityTime       int64                       `json:"last_activity_time,omitempty" url:"last_activity_time,omitempty"`
 	ClusterMemoryMb        int64                       `json:"cluster_memory_mb,omitempty" url:"cluster_memory_mb,omitempty"`
 	ClusterCores           string                      `json:"cluster_cores,omitempty" url:"cluster_cores,omitempty"`
-	DefaultTags            []dbmodels.ClusterTag       `json:"default_tags,omitempty" url:"default_tags,omitempty"`
+	DefaultTags            map[string]string           `json:"default_tags,omitempty" url:"default_tags,omitempty"`
 	ClusterLogStatus       *dbmodels.LogSyncStatus     `json:"cluster_log_status,omitempty" url:"cluster_log_status,omitempty"`
 	TerminationReason      *dbmodels.TerminationReason `json:"termination_reason,omitempty" url:"termination_reason,omitempty"`
 }

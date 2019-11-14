@@ -190,7 +190,7 @@ func (r *SecretScopeReconciler) update(instance *databricksv1alpha1.SecretScope)
 }
 
 func (r *SecretScopeReconciler) delete(instance *databricksv1alpha1.SecretScope) error {
-	
+
 	if instance.Status.SecretScope != nil {
 		scope := instance.Status.SecretScope.Name
 		err := r.APIClient.Secrets().DeleteSecretScope(scope)
