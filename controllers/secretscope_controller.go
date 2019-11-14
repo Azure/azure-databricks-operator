@@ -30,7 +30,7 @@ import (
 
 	databricksv1alpha1 "github.com/microsoft/azure-databricks-operator/api/v1alpha1"
 	dbazure "github.com/xinsnake/databricks-sdk-golang/azure"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 )
 
 // SecretScopeReconciler reconciles a SecretScope object
@@ -67,7 +67,7 @@ func (r *SecretScopeReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error)
 		if err != nil {
 			return reconcile.Result{}, fmt.Errorf("error when handling finalizer: %v", err)
 		}
-		r.Recorder.Event(instance, v1.EventTypeNormal, "Deleted", "Object finalizer is deleted")
+		r.Recorder.Event(instance, corev1.EventTypeNormal, "Deleted", "Object finalizer is deleted")
 		return ctrl.Result{}, nil
 	}
 
@@ -76,29 +76,29 @@ func (r *SecretScopeReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error)
 		if err != nil {
 			return reconcile.Result{}, fmt.Errorf("error when handling secret scope finalizer: %v", err)
 		}
-		r.Recorder.Event(instance, v1.EventTypeNormal, "Added", "Object finalizer is added")
+		r.Recorder.Event(instance, corev1.EventTypeNormal, "Added", "Object finalizer is added")
 		return ctrl.Result{}, nil
 	}
 
 	if !instance.IsSubmitted() {
 
 		if err = r.checkCluster(instance); err != nil {
-			r.Recorder.Event(instance, v1.EventTypeWarning, "Failed", err.Error())
+			r.Recorder.Event(instance, corev1.EventTypeWarning, "Failed", err.Error())
 			return ctrl.Result{}, nil
 		}
 
 		if err = r.checkSecrets(instance); err != nil {
-			r.Recorder.Event(instance, v1.EventTypeWarning, "Failed", err.Error())
+			r.Recorder.Event(instance, corev1.EventTypeWarning, "Failed", err.Error())
 			return ctrl.Result{Requeue: true, RequeueAfter: 30 * time.Second}, fmt.Errorf("error when submitting secret scope to the API: %v", err)
 		}
 
 		if err = r.submit(instance); err != nil {
-			r.Recorder.Event(instance, v1.EventTypeWarning, "Failed", err.Error())
+			r.Recorder.Event(instance, corev1.EventTypeWarning, "Failed", err.Error())
 			return ctrl.Result{}, fmt.Errorf("error when submitting secret scope to the API: %v", err)
 		}
 	}
 
-	r.Recorder.Event(instance, v1.EventTypeNormal, "Completed", "Object has completed")
+	r.Recorder.Event(instance, corev1.EventTypeNormal, "Completed", "Object has completed")
 	return ctrl.Result{}, nil
 }
 
