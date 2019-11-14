@@ -82,7 +82,7 @@ func (r *SecretScopeReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error)
 
 	if !instance.IsSubmitted() {
 
-		if err = r.checkCluster(instance); err != nil {
+		if err = r.verifyWorkspace(instance); err != nil {
 			r.Recorder.Event(instance, corev1.EventTypeWarning, "Failed", err.Error())
 			return ctrl.Result{}, nil
 		}

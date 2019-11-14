@@ -152,8 +152,8 @@ func (r *SecretScopeReconciler) submitACLs(instance *databricksv1alpha1.SecretSc
 	return nil
 }
 
-// checkCluster checks if Databricks cluster supports ACLs, and checks if secret scope exists.
-func (r *SecretScopeReconciler) checkCluster(instance *databricksv1alpha1.SecretScope) error {
+// verifyWorkspace checks if Databricks cluster supports ACLs, and checks if secret scope exists.
+func (r *SecretScopeReconciler) verifyWorkspace(instance *databricksv1alpha1.SecretScope) error {
 	scope := instance.ObjectMeta.Name
 	initialManagePrincipal := instance.Spec.InitialManagePrincipal
 
