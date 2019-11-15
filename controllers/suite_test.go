@@ -30,7 +30,6 @@ import (
 
 	databricksv1alpha1 "github.com/microsoft/azure-databricks-operator/api/v1alpha1"
 	"k8s.io/client-go/kubernetes/scheme"
-	"k8s.io/client-go/rest"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
@@ -42,7 +41,6 @@ import (
 // These tests use Ginkgo (BDD-style Go testing framework). Refer to
 // http://onsi.github.io/ginkgo/ to learn more about Ginkgo.
 
-var cfg *rest.Config
 var k8sClient client.Client
 var k8sManager ctrl.Manager
 var testEnv *envtest.Environment
@@ -93,13 +91,11 @@ var _ = BeforeSuite(func(done Done) {
 		Fail("Missing environment variable required for tests. DATABRICKS_HOST and DATABRICKS_TOKEN must both be set.")
 	}
 
-	apiClient = func() dbazure.DBClient {
-		var apiClient dbazure.DBClient
-		return apiClient.Init(db.DBClientOption{
-			Host:  host,
-			Token: token,
-		})
-	}()
+	var apiClient dbazure.DBClient
+	apiClient.Init(db.DBClientOption{
+		Host:  host,
+		Token: token,
+	})
 
 	err = (&SecretScopeReconciler{
 		Client:    k8sManager.GetClient(),

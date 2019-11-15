@@ -52,10 +52,12 @@ type DbfsBlock struct {
 	Status *DbfsBlockStatus `json:"status,omitempty"`
 }
 
+// IsBeingDeleted returns true if a deletion timestamp is set
 func (dbfsBlock *DbfsBlock) IsBeingDeleted() bool {
 	return !dbfsBlock.ObjectMeta.DeletionTimestamp.IsZero()
 }
 
+// IsSubmitted returns true if the item has been submitted to DataBricks
 func (dbfsBlock *DbfsBlock) IsSubmitted() bool {
 	if dbfsBlock.Status == nil ||
 		dbfsBlock.Status.FileInfo == nil ||
@@ -81,21 +83,28 @@ func (dbfsBlock *DbfsBlock) GetHash() string {
 		return ""
 	}
 	h := sha1.New()
-	h.Write(data)
+	_, err = h.Write(data)
+	if err != nil {
+		return ""
+	}
 	bs := h.Sum(nil)
 	return fmt.Sprintf("%x", bs)
 }
 
+// DbfsBlockFinalizerName is the name of the dbfs block finalizer
 const DbfsBlockFinalizerName = "dbfsBlock.finalizers.databricks.microsoft.com"
 
+// HasFinalizer returns true if the item has the specified finalizer
 func (dbfsBlock *DbfsBlock) HasFinalizer(finalizerName string) bool {
 	return containsString(dbfsBlock.ObjectMeta.Finalizers, finalizerName)
 }
 
+// AddFinalizer adds the specified finalizer
 func (dbfsBlock *DbfsBlock) AddFinalizer(finalizerName string) {
 	dbfsBlock.ObjectMeta.Finalizers = append(dbfsBlock.ObjectMeta.Finalizers, finalizerName)
 }
 
+// RemoveFinalizer removes the specified finalizer
 func (dbfsBlock *DbfsBlock) RemoveFinalizer(finalizerName string) {
 	dbfsBlock.ObjectMeta.Finalizers = removeString(dbfsBlock.ObjectMeta.Finalizers, finalizerName)
 }

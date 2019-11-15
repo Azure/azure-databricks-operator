@@ -78,7 +78,7 @@ manifests: controller-gen
 
 # Run go fmt against code
 fmt:
-	go fmt ./...
+	find . -name '*.go' | grep -v vendor | xargs gofmt -s -w
 
 # Run linting
 checks:

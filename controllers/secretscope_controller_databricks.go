@@ -43,9 +43,8 @@ func (r *SecretScopeReconciler) get(scope string) (*dbmodels.SecretScope, error)
 
 	if (dbmodels.SecretScope{}) == matchingScope {
 		return nil, fmt.Errorf("get for secret scope failed. scope not found: %s", scope)
-	} else {
-		return &matchingScope, nil
 	}
+	return &matchingScope, nil
 }
 
 func (r *SecretScopeReconciler) submitSecrets(instance *databricksv1alpha1.SecretScope) error {
@@ -109,21 +108,20 @@ func (r *SecretScopeReconciler) getSecretValueFrom(namespace string, scopeSecret
 
 		value := string(secret.Data[scopeSecret.ValueFrom.SecretKeyRef.Key])
 		return value, nil
-	} else {
-		return "", fmt.Errorf("No ValueFrom present to extract secret")
 	}
+	return "", fmt.Errorf("No ValueFrom present to extract secret")
 }
 
 func (r *SecretScopeReconciler) submitACLs(instance *databricksv1alpha1.SecretScope) error {
 	scope := instance.ObjectMeta.Name
-	scopeSecretAcls, err := r.APIClient.Secrets().ListSecretACLs(scope)
+	scopeSecretACLs, err := r.APIClient.Secrets().ListSecretACLs(scope)
 	if err != nil {
 		return err
 	}
 
-	if len(scopeSecretAcls) > 0 {
-		for _, existingAcl := range scopeSecretAcls {
-			err = r.APIClient.Secrets().DeleteSecretACL(scope, existingAcl.Principal)
+	if len(scopeSecretACLs) > 0 {
+		for _, existingACL := range scopeSecretACLs {
+			err = r.APIClient.Secrets().DeleteSecretACL(scope, existingACL.Principal)
 			if err != nil {
 				return err
 			}
@@ -190,7 +188,7 @@ func (r *SecretScopeReconciler) update(instance *databricksv1alpha1.SecretScope)
 }
 
 func (r *SecretScopeReconciler) delete(instance *databricksv1alpha1.SecretScope) error {
-	
+
 	if instance.Status.SecretScope != nil {
 		scope := instance.Status.SecretScope.Name
 		err := r.APIClient.Secrets().DeleteSecretScope(scope)

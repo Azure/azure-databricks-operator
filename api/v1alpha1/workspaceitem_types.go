@@ -55,10 +55,12 @@ type WorkspaceItem struct {
 	Status *WorkspaceItemStatus `json:"status,omitempty"`
 }
 
+// IsBeingDeleted returns true if a deletion timestamp is set
 func (wi *WorkspaceItem) IsBeingDeleted() bool {
 	return !wi.ObjectMeta.DeletionTimestamp.IsZero()
 }
 
+// IsSubmitted returns true if the item has been submitted to DataBricks
 func (wi *WorkspaceItem) IsSubmitted() bool {
 	if wi.Status == nil || wi.Status.ObjectInfo == nil || wi.Status.ObjectInfo.Path == "" {
 		return false
@@ -82,21 +84,28 @@ func (wi *WorkspaceItem) GetHash() string {
 		return ""
 	}
 	h := sha1.New()
-	h.Write(data)
+	_, err = h.Write(data)
+	if err != nil {
+		return ""
+	}
 	bs := h.Sum(nil)
 	return fmt.Sprintf("%x", bs)
 }
 
+// WorkspaceItemFinalizerName is the name of the workspace item finalizer
 const WorkspaceItemFinalizerName = "workspaceitem.finalizers.databricks.microsoft.com"
 
+// HasFinalizer returns true if the item has the specified finalizer
 func (wi *WorkspaceItem) HasFinalizer(finalizerName string) bool {
 	return containsString(wi.ObjectMeta.Finalizers, finalizerName)
 }
 
+// AddFinalizer adds the specified finalizer
 func (wi *WorkspaceItem) AddFinalizer(finalizerName string) {
 	wi.ObjectMeta.Finalizers = append(wi.ObjectMeta.Finalizers, finalizerName)
 }
 
+// RemoveFinalizer removes the specified finalizer
 func (wi *WorkspaceItem) RemoveFinalizer(finalizerName string) {
 	wi.ObjectMeta.Finalizers = removeString(wi.ObjectMeta.Finalizers, finalizerName)
 }

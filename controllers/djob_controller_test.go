@@ -42,7 +42,7 @@ var _ = Describe("Djob Controller", func() {
 		// Add any teardown steps that needs to be executed after each test
 	})
 
-	// Add Tests for OpenAPI validation (or additonal CRD features) specified in
+	// Add Tests for OpenAPI validation (or additional CRD features) specified in
 	// your API definition.
 	// Avoid adding tests for vanilla CRUD operations because they would
 	// test Kubernetes API server, which isn't the goal here.
@@ -61,10 +61,10 @@ var _ = Describe("Djob Controller", func() {
 					NumWorkers:   10,
 				},
 				Libraries: []dbmodels.Library{
-					dbmodels.Library{
+					{
 						Jar: "dbfs:/my-jar.jar",
 					},
-					dbmodels.Library{
+					{
 						Maven: &dbmodels.MavenLibrary{
 							Coordinates: "org.jsoup:jsoup:1.7.2",
 						},

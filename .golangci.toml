@@ -19,7 +19,7 @@
 
   [linters-settings.misspell]
     locale = "US"
-    ignore-words = ["listend", "analyses"]
+    ignore-words = ["listend", "analyses", "cancelling"]
 
 [linters]
   enable = ["vet", "golint", "gofmt", "deadcode", "varcheck", "structcheck", "misspell", "errcheck", "gosimple", "govet", "ineffassign"]

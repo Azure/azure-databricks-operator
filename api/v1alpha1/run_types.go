@@ -51,10 +51,12 @@ type Run struct {
 	Status *dbazure.JobsRunsGetOutputResponse `json:"status,omitempty"`
 }
 
+// IsBeingDeleted returns true if a deletion timestamp is set
 func (run *Run) IsBeingDeleted() bool {
 	return !run.ObjectMeta.DeletionTimestamp.IsZero()
 }
 
+// IsSubmitted returns true if the item has been submitted to DataBricks
 func (run *Run) IsSubmitted() bool {
 	if run.Status == nil || run.Status.Metadata.JobID == 0 {
 		return false
@@ -62,16 +64,20 @@ func (run *Run) IsSubmitted() bool {
 	return run.Status.Metadata.JobID > 0
 }
 
+// RunFinalizerName is the name of the run finalizer
 const RunFinalizerName = "run.finalizers.databricks.microsoft.com"
 
+// HasFinalizer returns true if the item has the specified finalizer
 func (run *Run) HasFinalizer(finalizerName string) bool {
 	return containsString(run.ObjectMeta.Finalizers, finalizerName)
 }
 
+// AddFinalizer adds the specified finalizer
 func (run *Run) AddFinalizer(finalizerName string) {
 	run.ObjectMeta.Finalizers = append(run.ObjectMeta.Finalizers, finalizerName)
 }
 
+// RemoveFinalizer removes the specified finalizer
 func (run *Run) RemoveFinalizer(finalizerName string) {
 	run.ObjectMeta.Finalizers = removeString(run.ObjectMeta.Finalizers, finalizerName)
 }
