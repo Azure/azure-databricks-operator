@@ -178,15 +178,6 @@ func (r *SecretScopeReconciler) submit(instance *databricksv1alpha1.SecretScope)
 	return r.Update(context.Background(), instance)
 }
 
-func (r *SecretScopeReconciler) update(instance *databricksv1alpha1.SecretScope) error {
-	err := r.submitSecrets(instance)
-	if err != nil {
-		return err
-	}
-
-	return r.submitACLs(instance)
-}
-
 func (r *SecretScopeReconciler) delete(instance *databricksv1alpha1.SecretScope) error {
 
 	if instance.Status.SecretScope != nil {
