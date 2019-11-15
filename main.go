@@ -39,7 +39,7 @@ var (
 )
 
 func init() {
-	kscheme.AddToScheme(scheme)
+	_ = kscheme.AddToScheme(scheme)
 	_ = databricksv1alpha1.AddToScheme(scheme)
 	// +kubebuilder:scaffold:scheme
 }

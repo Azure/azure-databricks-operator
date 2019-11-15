@@ -71,7 +71,7 @@ var _ = Describe("WorkspaceItem Controller", func() {
 			By("Expecting submitted")
 			Eventually(func() bool {
 				f := &databricksv1alpha1.WorkspaceItem{}
-				k8sClient.Get(context.Background(), key, f)
+				_ = k8sClient.Get(context.Background(), key, f)
 				return f.IsSubmitted()
 			}, timeout, interval).Should(BeTrue())
 
@@ -86,7 +86,7 @@ var _ = Describe("WorkspaceItem Controller", func() {
 			By("Expecting to delete successfully")
 			Eventually(func() error {
 				f := &databricksv1alpha1.WorkspaceItem{}
-				k8sClient.Get(context.Background(), key, f)
+				_ = k8sClient.Get(context.Background(), key, f)
 				return k8sClient.Delete(context.Background(), f)
 			}, timeout, interval).Should(Succeed())
 

@@ -50,11 +50,11 @@ var _ = Describe("DbfsBlock Controller", func() {
 		It("Should create successfully", func() {
 
 			data := make([]byte, 5000)
-			rand.Read(data)
+			_, _ = rand.Read(data)
 			dataStr := base64.StdEncoding.EncodeToString(data)
 
 			data2 := make([]byte, 5500)
-			rand.Read(data2)
+			_, _ = rand.Read(data2)
 			dataStr2 := base64.StdEncoding.EncodeToString(data2)
 
 			key := types.NamespacedName{
@@ -79,14 +79,14 @@ var _ = Describe("DbfsBlock Controller", func() {
 			By("Expecting submitted")
 			Eventually(func() bool {
 				f := &databricksv1alpha1.DbfsBlock{}
-				k8sClient.Get(context.Background(), key, f)
+				_ = k8sClient.Get(context.Background(), key, f)
 				return f.IsSubmitted()
 			}, timeout, interval).Should(BeTrue())
 
 			By("Expecting size to be 5000")
 			Eventually(func() int64 {
 				f := &databricksv1alpha1.DbfsBlock{}
-				k8sClient.Get(context.Background(), key, f)
+				_ = k8sClient.Get(context.Background(), key, f)
 				return f.Status.FileInfo.FileSize
 			}, timeout, interval).Should(Equal(int64(5000)))
 
@@ -100,7 +100,7 @@ var _ = Describe("DbfsBlock Controller", func() {
 			By("Expecting size to be 5500")
 			Eventually(func() int64 {
 				f := &databricksv1alpha1.DbfsBlock{}
-				k8sClient.Get(context.Background(), key, f)
+				_ = k8sClient.Get(context.Background(), key, f)
 				return f.Status.FileInfo.FileSize
 			}, timeout, interval).Should(Equal(int64(5500)))
 
@@ -108,7 +108,7 @@ var _ = Describe("DbfsBlock Controller", func() {
 			By("Expecting to delete successfully")
 			Eventually(func() error {
 				f := &databricksv1alpha1.DbfsBlock{}
-				k8sClient.Get(context.Background(), key, f)
+				_ = k8sClient.Get(context.Background(), key, f)
 				return k8sClient.Delete(context.Background(), f)
 			}, timeout, interval).Should(Succeed())
 

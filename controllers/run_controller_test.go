@@ -124,7 +124,7 @@ var _ = Describe("Run Controller", func() {
 			By("Expecting run to be submitted")
 			Eventually(func() bool {
 				f := &databricksv1alpha1.Run{}
-				k8sClient.Get(context.Background(), runKey, f)
+				_ = k8sClient.Get(context.Background(), runKey, f)
 				return f.IsSubmitted()
 			}, timeout, interval).Should(BeTrue())
 
@@ -134,7 +134,7 @@ var _ = Describe("Run Controller", func() {
 			By("Expecting run to be deleted successfully")
 			Eventually(func() error {
 				f := &databricksv1alpha1.Run{}
-				k8sClient.Get(context.Background(), runKey, f)
+				_ = k8sClient.Get(context.Background(), runKey, f)
 				return k8sClient.Delete(context.Background(), f)
 			}, timeout, interval).Should(Succeed())
 

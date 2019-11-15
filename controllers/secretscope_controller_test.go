@@ -41,7 +41,7 @@ var _ = Describe("SecretScope Controller", func() {
 		// failed test runs that don't clean up leave resources behind.
 		keys := []string{aclKeyName, secretsKeyName}
 		for _, value := range keys {
-			apiClient.Secrets().DeleteSecretScope(value)
+			_ = apiClient.Secrets().DeleteSecretScope(value)
 		}
 	})
 
@@ -84,7 +84,7 @@ var _ = Describe("SecretScope Controller", func() {
 
 			fetched := &databricksv1alpha1.SecretScope{}
 			Eventually(func() bool {
-				k8sClient.Get(context.Background(), key, fetched)
+				_ = k8sClient.Get(context.Background(), key, fetched)
 				return fetched.IsSubmitted()
 			}, timeout, interval).Should(BeTrue())
 
@@ -104,14 +104,14 @@ var _ = Describe("SecretScope Controller", func() {
 			Expect(k8sClient.Update(context.Background(), fetched)).Should(Succeed())
 			fetchedUpdated := &databricksv1alpha1.SecretScope{}
 			Eventually(func() []databricksv1alpha1.SecretScopeACL {
-				k8sClient.Get(context.Background(), key, fetchedUpdated)
+				_ = k8sClient.Get(context.Background(), key, fetchedUpdated)
 				return fetchedUpdated.Spec.SecretScopeACLs
 			}, timeout, interval).Should(Equal(updatedACLs))
 
 			By("Deleting the scope")
 			Eventually(func() error {
 				f := &databricksv1alpha1.SecretScope{}
-				k8sClient.Get(context.Background(), key, f)
+				_ = k8sClient.Get(context.Background(), key, f)
 				return k8sClient.Delete(context.Background(), f)
 			}, timeout, interval).Should(Succeed())
 
@@ -192,7 +192,7 @@ var _ = Describe("SecretScope Controller", func() {
 
 			fetched := &databricksv1alpha1.SecretScope{}
 			Eventually(func() bool {
-				k8sClient.Get(context.Background(), key, fetched)
+				_ = k8sClient.Get(context.Background(), key, fetched)
 				return fetched.IsSubmitted()
 			}, timeout, interval).Should(BeTrue())
 
@@ -216,14 +216,14 @@ var _ = Describe("SecretScope Controller", func() {
 			Expect(k8sClient.Update(context.Background(), fetched)).Should(Succeed())
 			fetchedUpdated := &databricksv1alpha1.SecretScope{}
 			Eventually(func() []databricksv1alpha1.SecretScopeSecret {
-				k8sClient.Get(context.Background(), key, fetchedUpdated)
+				_ = k8sClient.Get(context.Background(), key, fetchedUpdated)
 				return fetchedUpdated.Spec.SecretScopeSecrets
 			}, timeout, interval).Should(Equal(updatedSecrets))
 
 			By("Deleting the scope")
 			Eventually(func() error {
 				f := &databricksv1alpha1.SecretScope{}
-				k8sClient.Get(context.Background(), key, f)
+				_ = k8sClient.Get(context.Background(), key, f)
 				return k8sClient.Delete(context.Background(), f)
 			}, timeout, interval).Should(Succeed())
 
