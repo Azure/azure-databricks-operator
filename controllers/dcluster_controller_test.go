@@ -64,8 +64,8 @@ var _ = Describe("DbfsBlock Controller", func() {
 						MaxWorkers: 5,
 					},
 					AutoterminationMinutes: 15,
-					NodeTypeID:   "Standard_D3_v2",
-					SparkVersion: "5.3.x-scala2.11",
+					NodeTypeID:             "Standard_D3_v2",
+					SparkVersion:           "5.3.x-scala2.11",
 				},
 			}
 
