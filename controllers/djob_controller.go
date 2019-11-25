@@ -43,6 +43,7 @@ type DjobReconciler struct {
 // +kubebuilder:rbac:groups=databricks.microsoft.com,resources=djobs,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=databricks.microsoft.com,resources=djobs/status,verbs=get;update;patch
 
+// Reconcile implements the reconciliation loop for the operator
 func (r *DjobReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	_ = context.Background()
 	_ = r.Log.WithValues("djob", req.NamespacedName)
@@ -96,6 +97,7 @@ func (r *DjobReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	return ctrl.Result{RequeueAfter: 30 * time.Second}, nil
 }
 
+// SetupWithManager adds the controller manager
 func (r *DjobReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&databricksv1alpha1.Djob{}).

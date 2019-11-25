@@ -39,7 +39,7 @@ var (
 )
 
 func init() {
-	kscheme.AddToScheme(scheme)
+	_ = kscheme.AddToScheme(scheme)
 	_ = databricksv1alpha1.AddToScheme(scheme)
 	// +kubebuilder:scaffold:scheme
 }
@@ -68,7 +68,7 @@ func main() {
 		host, token := os.Getenv("DATABRICKS_HOST"), os.Getenv("DATABRICKS_TOKEN")
 		if len(host) < 10 && len(token) < 10 {
 			err = fmt.Errorf("no valid databricks host / key configured")
-			setupLog.Error(err, "unable to initialise databricks api client")
+			setupLog.Error(err, "unable to initialize databricks api client")
 			os.Exit(1)
 		}
 		var apiClient dbazure.DBClient

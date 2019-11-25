@@ -17,15 +17,11 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"time"
-
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("Helpers", func() {
-
-	const timeout = time.Second * 5
 
 	BeforeEach(func() {
 		// Add any setup steps that needs to be executed before each test
@@ -35,7 +31,7 @@ var _ = Describe("Helpers", func() {
 		// Add any teardown steps that needs to be executed after each test
 	})
 
-	// Add Tests for OpenAPI validation (or additonal CRD features) specified in
+	// Add Tests for OpenAPI validation (or additional CRD features) specified in
 	// your API definition.
 	// Avoid adding tests for vanilla CRUD operations because they would
 	// test Kubernetes API server, which isn't the goal here.
