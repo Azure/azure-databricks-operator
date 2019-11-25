@@ -67,6 +67,8 @@ steps:
     go get -u github.com/AlekSi/gocov-xml
     go get -u github.com/matm/gocov-html
     # run test
+    curl -X POST -H "Authorization: Bearer $DATABRICKS_TOKEN" -H "ContentType: application/json" $DATABRICKS_HOST/api/2.0/secrets/scopes/delete --data '{"scope": "secretscope-with-acls"}' 
+    curl -X POST -H "Authorization: Bearer $DATABRICKS_TOKEN" -H "ContentType: application/json" $DATABRICKS_HOST/api/2.0/secrets/scopes/delete --data '{"scope": "secretscope-with-secrets"}' 
     make test
   continueOnError: 'false'
   displayName: 'Install kubebuilder, kustomize and Run unit tests'
