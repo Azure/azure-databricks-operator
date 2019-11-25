@@ -44,6 +44,15 @@ var _ = Describe("SecretScope Controller", func() {
 		keys := []string{aclKeyName, secretsKeyName}
 		for _, value := range keys {
 			apiClient.Secrets().DeleteSecretScope(value)
+
+			ss := &databricksv1alpha1.SecretScope{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      value,
+					Namespace: "default",
+				},
+			}
+
+			k8sClient.Delete(context.Background(), ss)
 		}
 	})
 
@@ -52,6 +61,15 @@ var _ = Describe("SecretScope Controller", func() {
 		keys := []string{aclKeyName, secretsKeyName}
 		for _, value := range keys {
 			apiClient.Secrets().DeleteSecretScope(value)
+
+			ss := &databricksv1alpha1.SecretScope{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      value,
+					Namespace: "default",
+				},
+			}
+
+			k8sClient.Delete(context.Background(), ss)
 		}
 	})
 
@@ -115,11 +133,7 @@ var _ = Describe("SecretScope Controller", func() {
 			}, timeout, interval).Should(Equal(updatedACLs))
 
 			By("Deleting the scope")
-			Eventually(func() error {
-				f := &databricksv1alpha1.SecretScope{}
-				k8sClient.Get(context.Background(), key, f)
-				return k8sClient.Delete(context.Background(), f)
-			}, timeout, interval).Should(Succeed())
+			Expect(k8sClient.Delete(context.Background(), toCreate)).Should(Succeed())
 
 			Eventually(func() error {
 				f := &databricksv1alpha1.SecretScope{}
