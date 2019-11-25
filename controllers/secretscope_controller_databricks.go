@@ -168,13 +168,6 @@ func (r *SecretScopeReconciler) verifyWorkspace(instance *databricksv1alpha1.Sec
 		}
 	}
 
-	// try to list ACLs to see if cluster supports ACL.
-	if instance.Spec.SecretScopeACLs != nil {
-		if _, err = r.APIClient.Secrets().ListSecretACLs(scope); err != nil {
-			return err
-		}
-	}
-
 	return nil
 }
 
