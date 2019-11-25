@@ -7,7 +7,7 @@ CRD_OPTIONS ?= "crd:trivialVersions=true"
 all: manager
 
 # Run tests
-test: generate fmt checks manifests
+test: generate fmt lint manifests
 	rm -rf cover.* cover
 	mkdir -p cover
 
@@ -20,7 +20,7 @@ test: generate fmt checks manifests
 	rm -f cover.out cover.out.tmp cover.json
 
 # Run tests with existing cluster
-test-existing: generate fmt checks manifests
+test-existing: generate fmt lint manifests
 	rm -rf cover.* cover
 	mkdir -p cover
 
@@ -33,11 +33,11 @@ test-existing: generate fmt checks manifests
 	rm -f cover.out cover.out.tmp cover.json
 
 # Build manager binary
-manager: generate fmt checks
+manager: generate fmt lint
 	go build -o bin/manager main.go
 
 # Run against the configured Kubernetes cluster in ~/.kube/config
-run: generate fmt checks
+run: generate fmt lint
 	go run ./main.go
 
 # Install CRDs into a cluster
@@ -81,7 +81,7 @@ fmt:
 	find . -name '*.go' | grep -v vendor | xargs gofmt -s -w
 
 # Run linting
-checks:
+lint:
 	GO111MODULE=on golangci-lint run
 	
 # Generate code
