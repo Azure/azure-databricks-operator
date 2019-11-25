@@ -37,7 +37,7 @@ var _ = Describe("SecretScope Controller", func() {
 	const timeout = time.Second * 30
 	const interval = time.Second * 1
 
-	const aclKeyName = "secretscope-with-acls"
+	const aclKeyName = "secretscope-with-acls2"
 	const secretsKeyName = "secretscope-with-secrets"
 
 	BeforeEach(func() {
@@ -46,14 +46,14 @@ var _ = Describe("SecretScope Controller", func() {
 		for _, value := range keys {
 			apiClient.Secrets().DeleteSecretScope(value)
 
-			// ss := &databricksv1alpha1.SecretScope{
-			// 	ObjectMeta: metav1.ObjectMeta{
-			// 		Name:      value,
-			// 		Namespace: "default",
-			// 	},
-			// }
+			ss := &databricksv1alpha1.SecretScope{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      value,
+					Namespace: "default",
+				},
+			}
 
-			// k8sClient.Delete(context.Background(), ss)
+			k8sClient.Delete(context.Background(), ss)
 		}
 	})
 
@@ -63,14 +63,14 @@ var _ = Describe("SecretScope Controller", func() {
 		for _, value := range keys {
 			apiClient.Secrets().DeleteSecretScope(value)
 
-			// ss := &databricksv1alpha1.SecretScope{
-			// 	ObjectMeta: metav1.ObjectMeta{
-			// 		Name:      value,
-			// 		Namespace: "default",
-			// 	},
-			// }
+			ss := &databricksv1alpha1.SecretScope{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      value,
+					Namespace: "default",
+				},
+			}
 
-			// k8sClient.Delete(context.Background(), ss)
+			k8sClient.Delete(context.Background(), ss)
 		}
 	})
 
@@ -83,11 +83,11 @@ var _ = Describe("SecretScope Controller", func() {
 			spec := databricksv1alpha1.SecretScopeSpec{
 				InitialManagePrincipal: "users",
 				SecretScopeSecrets:     make([]databricksv1alpha1.SecretScopeSecret, 0),
-				SecretScopeACLs: []databricksv1alpha1.SecretScopeACL{
-					databricksv1alpha1.SecretScopeACL{Principal: "admins", Permission: "WRITE"},
-					databricksv1alpha1.SecretScopeACL{Principal: "admins", Permission: "READ"},
-					databricksv1alpha1.SecretScopeACL{Principal: "admins", Permission: "MANAGE"},
-				},
+				// SecretScopeACLs: []databricksv1alpha1.SecretScopeACL{
+				// 	databricksv1alpha1.SecretScopeACL{Principal: "admins", Permission: "WRITE"},
+				// 	databricksv1alpha1.SecretScopeACL{Principal: "admins", Permission: "READ"},
+				// 	databricksv1alpha1.SecretScopeACL{Principal: "admins", Permission: "MANAGE"},
+				// },
 			}
 
 			key := types.NamespacedName{
@@ -112,7 +112,7 @@ var _ = Describe("SecretScope Controller", func() {
 			k8sClient.Get(context.Background(), key, fetched)
 
 			fmt.Println(fetched.IsSubmitted())
-			fmt.Println(fetched)
+			fmt.Println(fetched.Status)
 
 			Eventually(func() bool {
 				k8sClient.Get(context.Background(), key, fetched)
