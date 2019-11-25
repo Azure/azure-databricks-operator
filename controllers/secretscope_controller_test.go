@@ -24,12 +24,12 @@ import (
 	databricksv1alpha1 "github.com/microsoft/azure-databricks-operator/api/v1alpha1"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	// databricks "github.com/xinsnake/databricks-sdk-golang"
-	// dbazure "github.com/xinsnake/databricks-sdk-golang/azure"
+	databricks "github.com/xinsnake/databricks-sdk-golang"
+	dbazure "github.com/xinsnake/databricks-sdk-golang/azure"
 	// v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	// "os"
+	"os"
 )
 
 var _ = Describe("SecretScope Controller", func() {
@@ -80,6 +80,22 @@ var _ = Describe("SecretScope Controller", func() {
 	// test Kubernetes API server, which isn't the goal here.
 	Context("Secret Scope with ACLs", func() {
 		It("Should handle scope and ACLs correctly", func() {
+
+			var o databricks.DBClientOption
+			o.Host = os.Getenv("DATABRICKS_HOST")
+			o.Token = os.Getenv("DATABRICKS_TOKEN")
+
+			var APIClient dbazure.DBClient
+			APIClient.Init(o)
+
+			_, err := APIClient.Secrets().ListSecretACLs(aclKeyName)
+
+			fmt.Println(err)
+
+			l, _ := APIClient.Secrets().ListSecretScopes()
+
+			fmt.Println(l)
+
 			spec := databricksv1alpha1.SecretScopeSpec{
 				InitialManagePrincipal: "users",
 				SecretScopeSecrets:     make([]databricksv1alpha1.SecretScopeSecret, 0),
