@@ -20,10 +20,9 @@ import (
 	"context"
 	"time"
 
+	databricksv1alpha1 "github.com/microsoft/azure-databricks-operator/api/v1alpha1"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-
-	databricksv1alpha1 "github.com/microsoft/azure-databricks-operator/api/v1alpha1"
 	databricks "github.com/xinsnake/databricks-sdk-golang"
 	dbazure "github.com/xinsnake/databricks-sdk-golang/azure"
 	v1 "k8s.io/api/core/v1"
@@ -50,6 +49,10 @@ var _ = Describe("SecretScope Controller", func() {
 
 	AfterEach(func() {
 		// Add any teardown steps that needs to be executed after each test
+		keys := []string{aclKeyName, secretsKeyName}
+		for _, value := range keys {
+			apiClient.Secrets().DeleteSecretScope(value)
+		}
 	})
 
 	// Add Tests for OpenAPI validation (or additonal CRD features) specified in
@@ -224,11 +227,7 @@ var _ = Describe("SecretScope Controller", func() {
 			}, timeout, interval).Should(Equal(updatedSecrets))
 
 			By("Deleting the scope")
-			Eventually(func() error {
-				f := &databricksv1alpha1.SecretScope{}
-				k8sClient.Get(context.Background(), key, f)
-				return k8sClient.Delete(context.Background(), f)
-			}, timeout, interval).Should(Succeed())
+			Expect(k8sClient.Delete(context.Background(), toCreate)).Should(Succeed())
 
 			Eventually(func() error {
 				f := &databricksv1alpha1.SecretScope{}
@@ -269,6 +268,7 @@ var _ = Describe("SecretScope Controller", func() {
 
 			By("Creating the scope successfully")
 			Expect(k8sClient.Create(context.Background(), toCreate)).Should(Succeed())
+			time.Sleep(time.Second * 5)
 
 			By("Scope has not been marked as IsSubmitted")
 			fetched := &databricksv1alpha1.SecretScope{}
@@ -308,11 +308,7 @@ var _ = Describe("SecretScope Controller", func() {
 			}, timeout, interval).Should(BeTrue())
 
 			By("Deleting the scope")
-			Eventually(func() error {
-				f := &databricksv1alpha1.SecretScope{}
-				k8sClient.Get(context.Background(), key, f)
-				return k8sClient.Delete(context.Background(), f)
-			}, timeout, interval).Should(Succeed())
+			Expect(k8sClient.Delete(context.Background(), toCreate)).Should(Succeed())
 
 			Eventually(func() error {
 				f := &databricksv1alpha1.SecretScope{}
@@ -395,18 +391,12 @@ var _ = Describe("SecretScope Controller", func() {
 			}, timeout, interval).Should(BeFalse())
 
 			By("Deleting the scope")
-			Eventually(func() error {
-				f := &databricksv1alpha1.SecretScope{}
-				k8sClient.Get(context.Background(), key, f)
-				return k8sClient.Delete(context.Background(), f)
-			}, timeout, interval).Should(Succeed())
+			Expect(k8sClient.Delete(context.Background(), toCreate)).Should(Succeed())
 
 			Eventually(func() error {
 				f := &databricksv1alpha1.SecretScope{}
 				return k8sClient.Get(context.Background(), key, f)
 			}, timeout, interval).ShouldNot(Succeed())
-
-			Expect(APIClient.Secrets().DeleteSecretScope(aclKeyName)).Should(Succeed())
 		})
 	})
 })
