@@ -46,14 +46,14 @@ var _ = Describe("SecretScope Controller", func() {
 		for _, value := range keys {
 			apiClient.Secrets().DeleteSecretScope(value)
 
-			ss := &databricksv1alpha1.SecretScope{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      value,
-					Namespace: "default",
-				},
-			}
+			// ss := &databricksv1alpha1.SecretScope{
+			// 	ObjectMeta: metav1.ObjectMeta{
+			// 		Name:      value,
+			// 		Namespace: "default",
+			// 	},
+			// }
 
-			k8sClient.Delete(context.Background(), ss)
+			// k8sClient.Delete(context.Background(), ss)
 		}
 	})
 
@@ -63,14 +63,14 @@ var _ = Describe("SecretScope Controller", func() {
 		for _, value := range keys {
 			apiClient.Secrets().DeleteSecretScope(value)
 
-			ss := &databricksv1alpha1.SecretScope{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      value,
-					Namespace: "default",
-				},
-			}
+			// ss := &databricksv1alpha1.SecretScope{
+			// 	ObjectMeta: metav1.ObjectMeta{
+			// 		Name:      value,
+			// 		Namespace: "default",
+			// 	},
+			// }
 
-			k8sClient.Delete(context.Background(), ss)
+			// k8sClient.Delete(context.Background(), ss)
 		}
 	})
 
