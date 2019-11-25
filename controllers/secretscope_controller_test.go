@@ -18,6 +18,7 @@ package controllers
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	databricksv1alpha1 "github.com/microsoft/azure-databricks-operator/api/v1alpha1"
@@ -107,6 +108,11 @@ var _ = Describe("SecretScope Controller", func() {
 			time.Sleep(time.Second * 5)
 
 			fetched := &databricksv1alpha1.SecretScope{}
+
+			k8sClient.Get(context.Background(), key, fetched)
+
+			fmt.Println(fetched.Status)
+
 			Eventually(func() bool {
 				k8sClient.Get(context.Background(), key, fetched)
 				return fetched.IsSubmitted()
@@ -211,6 +217,11 @@ var _ = Describe("SecretScope Controller", func() {
 			time.Sleep(time.Second * 5)
 
 			fetched := &databricksv1alpha1.SecretScope{}
+
+			k8sClient.Get(context.Background(), key, fetched)
+
+			fmt.Println(fetched.Status)
+
 			Eventually(func() bool {
 				k8sClient.Get(context.Background(), key, fetched)
 				return fetched.IsSubmitted()
