@@ -37,7 +37,7 @@ var _ = Describe("SecretScope Controller", func() {
 	const timeout = time.Second * 30
 	const interval = time.Second * 1
 
-	const aclKeyName = "secretscope-with-acls3"
+	const aclKeyName = "secretscope-with-acls"
 	const secretsKeyName = "secretscope-with-secrets"
 
 	BeforeEach(func() {
@@ -83,11 +83,11 @@ var _ = Describe("SecretScope Controller", func() {
 			spec := databricksv1alpha1.SecretScopeSpec{
 				InitialManagePrincipal: "users",
 				SecretScopeSecrets:     make([]databricksv1alpha1.SecretScopeSecret, 0),
-				SecretScopeACLs: []databricksv1alpha1.SecretScopeACL{
-					databricksv1alpha1.SecretScopeACL{Principal: "admins", Permission: "WRITE"},
-					databricksv1alpha1.SecretScopeACL{Principal: "admins", Permission: "READ"},
-					databricksv1alpha1.SecretScopeACL{Principal: "admins", Permission: "MANAGE"},
-				},
+				// SecretScopeACLs: []databricksv1alpha1.SecretScopeACL{
+				// 	databricksv1alpha1.SecretScopeACL{Principal: "admins", Permission: "WRITE"},
+				// 	databricksv1alpha1.SecretScopeACL{Principal: "admins", Permission: "READ"},
+				// 	databricksv1alpha1.SecretScopeACL{Principal: "admins", Permission: "MANAGE"},
+				// },
 			}
 
 			key := types.NamespacedName{
