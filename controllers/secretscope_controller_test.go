@@ -111,7 +111,7 @@ var _ = Describe("SecretScope Controller", func() {
 
 			k8sClient.Get(context.Background(), key, fetched)
 
-			fmt.Println(fetched.Status)
+			fmt.Println(fetched.IsSubmitted())
 
 			Eventually(func() bool {
 				k8sClient.Get(context.Background(), key, fetched)
@@ -220,7 +220,7 @@ var _ = Describe("SecretScope Controller", func() {
 
 			k8sClient.Get(context.Background(), key, fetched)
 
-			fmt.Println(fetched.Status)
+			fmt.Println(fetched.IsSubmitted())
 
 			Eventually(func() bool {
 				k8sClient.Get(context.Background(), key, fetched)
