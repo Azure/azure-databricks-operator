@@ -94,7 +94,7 @@ func (r *SecretScopeReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error)
 
 		if err = r.submit(instance); err != nil {
 			r.Recorder.Event(instance, corev1.EventTypeWarning, "Failed", err.Error())
-			return ctrl.Result{}, fmt.Errorf("error when submitting secret scope to the API: %v", err)
+			return ctrl.Result{}, nil
 		}
 	}
 
