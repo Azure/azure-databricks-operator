@@ -37,7 +37,7 @@ var _ = Describe("SecretScope Controller", func() {
 	const timeout = time.Second * 30
 	const interval = time.Second * 1
 
-	const aclKeyName = "secretscope-with-acls2"
+	const aclKeyName = "secretscope-with-acls3"
 	const secretsKeyName = "secretscope-with-secrets"
 
 	BeforeEach(func() {
