@@ -27,12 +27,15 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+
+	"math/rand"
 )
 
 var _ = Describe("SecretScope Controller", func() {
 
 	const timeout = time.Second * 30
 	const interval = time.Second * 1
+	const charset = "abcdefghijklmnopqrstuvwxyz"
 
 	const aclKeyName = "secretscope-with-acls"
 	const secretsKeyName = "secretscope-with-secrets"
@@ -78,26 +81,20 @@ var _ = Describe("SecretScope Controller", func() {
 	Context("Secret Scope with ACLs", func() {
 		It("Should handle scope and ACLs correctly", func() {
 
-			e := apiClient.Secrets().DeleteSecretScope(aclKeyName)
-
-			fmt.Println(e)
-
-			l, _ := apiClient.Secrets().ListSecretScopes()
-
-			fmt.Println(l)
-
 			spec := databricksv1alpha1.SecretScopeSpec{
 				InitialManagePrincipal: "users",
 				SecretScopeSecrets:     make([]databricksv1alpha1.SecretScopeSecret, 0),
-				SecretScopeACLs: []databricksv1alpha1.SecretScopeACL{
+				SecretScopeACLs:        []databricksv1alpha1.SecretScopeACL{
 					{Principal: "admins", Permission: "WRITE"},
 					{Principal: "admins", Permission: "READ"},
 					{Principal: "admins", Permission: "MANAGE"},
 				},
 			}
 
+			name := aclKeyName + "-" + randomStringWithCharset(10, charset)
+
 			key := types.NamespacedName{
-				Name:      aclKeyName,
+				Name:      name,
 				Namespace: "default",
 			}
 
@@ -112,6 +109,10 @@ var _ = Describe("SecretScope Controller", func() {
 			By("Creating the scope with ACLs successfully")
 			Expect(k8sClient.Create(context.Background(), toCreate)).Should(Succeed())
 			time.Sleep(time.Second * 5)
+			defer func() {
+				Expect(k8sClient.Delete(context.Background(), toCreate)).Should(Succeed())
+				time.Sleep(time.Second * 5)
+			}()
 
 			fetched := &databricksv1alpha1.SecretScope{}
 
@@ -433,3 +434,12 @@ var _ = Describe("SecretScope Controller", func() {
 		})
 	})
 })
+
+func randomStringWithCharset(length int, charset string) string {
+	var seededRand = rand.New(rand.NewSource(time.Now().UnixNano()))
+	b := make([]byte, length)
+	for i := range b {
+		b[i] = charset[seededRand.Intn(len(charset))]
+	}
+	return string(b)
+}
