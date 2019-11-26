@@ -66,6 +66,9 @@ steps:
     go get -u golang.org/x/tools/cmd/cover
     go get -u github.com/AlekSi/gocov-xml
     go get -u github.com/matm/gocov-html
+    # clean out left-over test secrets
+    curl -X POST -H "Authorization: Bearer $DATABRICKS_TOKEN" -H "ContentType: application/json" $DATABRICKS_HOST/api/2.0/secrets/scopes/delete --data '{"scope": "secretscope-with-acls"}' 
+    curl -X POST -H "Authorization: Bearer $DATABRICKS_TOKEN" -H "ContentType: application/json" $DATABRICKS_HOST/api/2.0/secrets/scopes/delete --data '{"scope": "secretscope-with-secrets"}'
     # run test
     make test
   continueOnError: 'false'
