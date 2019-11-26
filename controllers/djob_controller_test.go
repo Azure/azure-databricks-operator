@@ -54,11 +54,11 @@ var _ = Describe("Djob Controller", func() {
 				Namespace: "default",
 			}
 
-			spec := &dbmodels.JobSettings{
+			spec := databricksv1alpha1.JobSettings{
 				NewCluster: &dbmodels.NewCluster{
 					SparkVersion: "5.3.x-scala2.11",
 					NodeTypeID:   "Standard_D3_v2",
-					NumWorkers:   10,
+					NumWorkers:   2,
 				},
 				Libraries: []dbmodels.Library{
 					{
@@ -86,7 +86,7 @@ var _ = Describe("Djob Controller", func() {
 					Name:      key.Name,
 					Namespace: key.Namespace,
 				},
-				Spec: spec,
+				Spec: &spec,
 			}
 
 			// Create

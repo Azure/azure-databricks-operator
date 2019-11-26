@@ -22,14 +22,14 @@ import (
 	"time"
 
 	"github.com/go-logr/logr"
+	databricksv1alpha1 "github.com/microsoft/azure-databricks-operator/api/v1alpha1"
 	dbazure "github.com/xinsnake/databricks-sdk-golang/azure"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-
-	databricksv1alpha1 "github.com/microsoft/azure-databricks-operator/api/v1alpha1"
 )
 
 // DclusterReconciler reconciles a Dcluster object
@@ -103,8 +103,24 @@ func (r *DclusterReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	return ctrl.Result{RequeueAfter: 30 * time.Second}, nil
 }
 
+const dclusterIndexKey = ".status.cluster_info.cluster_id"
+
 // SetupWithManager adds the controller manager
 func (r *DclusterReconciler) SetupWithManager(mgr ctrl.Manager) error {
+
+	if err := mgr.GetFieldIndexer().IndexField(&databricksv1alpha1.Dcluster{}, dclusterIndexKey, func(rawObj runtime.Object) []string {
+		dcluster := rawObj.(*databricksv1alpha1.Dcluster)
+		if dcluster == nil {
+			return nil
+		}
+		if dcluster.Status == nil || dcluster.Status.ClusterInfo == nil {
+			return nil
+		}
+		return []string{dcluster.Status.ClusterInfo.ClusterID}
+	}); err != nil {
+		return err
+	}
+
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&databricksv1alpha1.Dcluster{}).
 		Complete(r)

@@ -59,7 +59,7 @@ var _ = Describe("Run Controller", func() {
 				Namespace: "default",
 			}
 
-			jobSpec := &dbmodels.JobSettings{
+			jobSpec := &databricksv1alpha1.JobSettings{
 				NewCluster: &dbmodels.NewCluster{
 					SparkVersion: "5.3.x-scala2.11",
 					NodeTypeID:   "Standard_D3_v2",

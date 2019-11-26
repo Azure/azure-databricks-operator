@@ -10,10 +10,13 @@
 
 Kubernetes offers the facility of extending its API through the concept of 'Operators' ([Introducing Operators: Putting Operational Knowledge into Software](https://coreos.com/blog/introducing-operators.html)). This repository contains the resources and code to deploy an Azure Databricks Operator for Kubernetes.
 
+![alt text](docs/images/azure-databricks-operator-highlevel.jpg "high level architecture")
+
+
+The Databricks operator is useful in situations where Kubernetes hosted applications wish to launch and use Databricks data engineering and machine learning tasks.
 
 ![alt text](docs/images/azure-databricks-operator.jpg "high level architecture")
 
-The Databricks operator is useful in situations where Kubernetes hosted applications wish to launch and use Databricks data engineering and machine learning tasks.
 
 The project was built using
 

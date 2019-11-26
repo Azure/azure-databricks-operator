@@ -36,6 +36,10 @@ spec:
         metadata:
           type: object
         spec:
+          description: JobSettings is similar to dbmodels.JobSettings, the reason
+            it exists is because dbmodels.JobSettings doesn't support ExistingClusterName
+            ExistingClusterName allows discovering databricks clusters by it's kubernetese
+            object name
           properties:
             email_notifications:
               properties:
@@ -55,6 +59,8 @@ spec:
                   type: array
               type: object
             existing_cluster_id:
+              type: string
+            existing_cluster_name:
               type: string
             libraries:
               items:

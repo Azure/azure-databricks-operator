@@ -19,23 +19,60 @@ package controllers
 import (
 	"context"
 	"fmt"
-	"reflect"
-	"strings"
-
 	databricksv1alpha1 "github.com/microsoft/azure-databricks-operator/api/v1alpha1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"reflect"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+	"strings"
 )
 
 func (r *DjobReconciler) submit(instance *databricksv1alpha1.Djob) error {
 	r.Log.Info(fmt.Sprintf("Submitting job %s", instance.GetName()))
-
 	instance.Spec.Name = instance.GetName()
-
-	job, err := r.APIClient.Jobs().Create(*instance.Spec)
+	//Get exisiting dbricks cluster by cluster name and set ExistingClusterID or
+	//Get exisiting dbricks cluster by cluster id
+	var ownerInstance databricksv1alpha1.Dcluster
+	if len(instance.Spec.ExistingClusterName) > 0 {
+		dClusterNamespacedName := types.NamespacedName{Name: instance.Spec.ExistingClusterName, Namespace: instance.Namespace}
+		err := r.Get(context.Background(), dClusterNamespacedName, &ownerInstance)
+		if err != nil {
+			return err
+		}
+		if (ownerInstance.Status != nil) && (ownerInstance.Status.ClusterInfo != nil) && len(ownerInstance.Status.ClusterInfo.ClusterID) > 0 {
+			instance.Spec.ExistingClusterID = ownerInstance.Status.ClusterInfo.ClusterID
+		} else {
+			return fmt.Errorf("failed to get ClusterID of %v", instance.Spec.ExistingClusterName)
+		}
+	} else if len(instance.Spec.ExistingClusterID) > 0 {
+		var dclusters databricksv1alpha1.DclusterList
+		err := r.List(context.Background(), &dclusters, client.InNamespace(instance.Namespace), client.MatchingField(dclusterIndexKey, instance.Spec.ExistingClusterID))
+		if err != nil {
+			return err
+		}
+		if len(dclusters.Items) == 1 {
+			ownerInstance = dclusters.Items[0]
+		} else {
+			return fmt.Errorf("failed to get ClusterID of %v", instance.Spec.ExistingClusterID)
+		}
+	}
+	//Set Exisiting cluster as Owner of JOb
+	if &ownerInstance != nil && len(ownerInstance.APIVersion) > 0 && len(ownerInstance.Kind) > 0 && len(ownerInstance.GetName()) > 0 {
+		references := []metav1.OwnerReference{
+			{
+				APIVersion: ownerInstance.APIVersion,
+				Kind:       ownerInstance.Kind,
+				Name:       ownerInstance.GetName(),
+				UID:        ownerInstance.GetUID(),
+			},
+		}
+		instance.ObjectMeta.SetOwnerReferences(references)
+	}
+	jobSettings := databricksv1alpha1.ToDatabricksJobSettings(instance.Spec)
+	job, err := r.APIClient.Jobs().Create(jobSettings)
 	if err != nil {
 		return err
 	}
-
 	instance.Spec.Name = instance.GetName()
 	instance.Status = &databricksv1alpha1.DjobStatus{
 		JobStatus: &job,
