@@ -359,7 +359,13 @@ var _ = Describe("SecretScope Controller", func() {
 	Context("Secret Scope with ACLs", func() {
 		It("Should fail if secret scope exist in Databricks", func() {
 
-			Expect(apiClient.Secrets().CreateSecretScope(aclKeyName, "users")).Should(Succeed())
+			name := aclKeyName + "-" + randomStringWithCharset(10, charset)
+
+			Expect(apiClient.Secrets().CreateSecretScope(name, "users")).Should(Succeed())
+			defer func() {
+				Expect(apiClient.Secrets().DeleteSecretScope(name)).Should(Succeed())
+				time.Sleep(time.Second * 5)
+			}()
 
 			spec := databricksv1alpha1.SecretScopeSpec{
 				InitialManagePrincipal: "users",
@@ -375,8 +381,6 @@ var _ = Describe("SecretScope Controller", func() {
 					},
 				},
 			}
-
-			name := aclKeyName + "-" + randomStringWithCharset(10, charset)
 
 			key := types.NamespacedName{
 				Name:      name,
