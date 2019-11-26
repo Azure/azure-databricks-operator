@@ -24,12 +24,9 @@ import (
 	databricksv1alpha1 "github.com/microsoft/azure-databricks-operator/api/v1alpha1"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	databricks "github.com/xinsnake/databricks-sdk-golang"
-	dbazure "github.com/xinsnake/databricks-sdk-golang/azure"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"os"
 )
 
 var _ = Describe("SecretScope Controller", func() {
@@ -81,18 +78,11 @@ var _ = Describe("SecretScope Controller", func() {
 	Context("Secret Scope with ACLs", func() {
 		It("Should handle scope and ACLs correctly", func() {
 
-			var o databricks.DBClientOption
-			o.Host = os.Getenv("DATABRICKS_HOST")
-			o.Token = os.Getenv("DATABRICKS_TOKEN")
+			e := apiClient.Secrets().DeleteSecretScope(aclKeyName)
 
-			var APIClient dbazure.DBClient
-			APIClient.Init(o)
+			fmt.Println(e)
 
-			_, err := APIClient.Secrets().ListSecretACLs(aclKeyName)
-
-			fmt.Println(err)
-
-			l, _ := APIClient.Secrets().ListSecretScopes()
+			l, _ := apiClient.Secrets().ListSecretScopes()
 
 			fmt.Println(l)
 
@@ -370,14 +360,7 @@ var _ = Describe("SecretScope Controller", func() {
 	Context("Secret Scope with ACLs", func() {
 		It("Should fail if secret scope exist in Databricks", func() {
 
-			var o databricks.DBClientOption
-			o.Host = os.Getenv("DATABRICKS_HOST")
-			o.Token = os.Getenv("DATABRICKS_TOKEN")
-
-			var APIClient dbazure.DBClient
-			APIClient.Init(o)
-
-			Expect(APIClient.Secrets().CreateSecretScope(aclKeyName, "users")).Should(Succeed())
+			Expect(apiClient.Secrets().CreateSecretScope(aclKeyName, "users")).Should(Succeed())
 
 			spec := databricksv1alpha1.SecretScopeSpec{
 				InitialManagePrincipal: "users",
