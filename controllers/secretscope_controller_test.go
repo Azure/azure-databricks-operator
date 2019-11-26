@@ -44,7 +44,7 @@ var _ = Describe("SecretScope Controller", func() {
 		// failed test runs that don't clean up leave resources behind.
 		keys := []string{aclKeyName, secretsKeyName}
 		for _, value := range keys {
-			apiClient.Secrets().DeleteSecretScope(value)
+			_ = apiClient.Secrets().DeleteSecretScope(value)
 
 			ss := &databricksv1alpha1.SecretScope{
 				ObjectMeta: metav1.ObjectMeta{
@@ -53,7 +53,7 @@ var _ = Describe("SecretScope Controller", func() {
 				},
 			}
 
-			k8sClient.Delete(context.Background(), ss)
+			_ = k8sClient.Delete(context.Background(), ss)
 		}
 	})
 
@@ -61,7 +61,7 @@ var _ = Describe("SecretScope Controller", func() {
 		// Add any teardown steps that needs to be executed after each test
 		keys := []string{aclKeyName, secretsKeyName}
 		for _, value := range keys {
-			apiClient.Secrets().DeleteSecretScope(value)
+			_ = apiClient.Secrets().DeleteSecretScope(value)
 
 			ss := &databricksv1alpha1.SecretScope{
 				ObjectMeta: metav1.ObjectMeta{
@@ -70,7 +70,7 @@ var _ = Describe("SecretScope Controller", func() {
 				},
 			}
 
-			k8sClient.Delete(context.Background(), ss)
+			_ = k8sClient.Delete(context.Background(), ss)
 		}
 	})
 
@@ -125,7 +125,7 @@ var _ = Describe("SecretScope Controller", func() {
 
 			fetched := &databricksv1alpha1.SecretScope{}
 
-			k8sClient.Get(context.Background(), key, fetched)
+			_ = k8sClient.Get(context.Background(), key, fetched)
 
 			fmt.Println(fetched.IsSubmitted())
 			fmt.Println(fetched.Status)
@@ -239,7 +239,7 @@ var _ = Describe("SecretScope Controller", func() {
 
 			fetched := &databricksv1alpha1.SecretScope{}
 
-			k8sClient.Get(context.Background(), key, fetched)
+			_ = k8sClient.Get(context.Background(), key, fetched)
 
 			fmt.Println(fetched.IsSubmitted())
 
@@ -323,7 +323,7 @@ var _ = Describe("SecretScope Controller", func() {
 			By("Scope has not been marked as IsSubmitted")
 			fetched := &databricksv1alpha1.SecretScope{}
 			Eventually(func() bool {
-				k8sClient.Get(context.Background(), key, fetched)
+				_ = k8sClient.Get(context.Background(), key, fetched)
 				return fetched.IsSubmitted()
 			}, timeout, interval).Should(BeFalse())
 
@@ -353,7 +353,7 @@ var _ = Describe("SecretScope Controller", func() {
 
 			fetched = &databricksv1alpha1.SecretScope{}
 			Eventually(func() bool {
-				k8sClient.Get(context.Background(), key, fetched)
+				_ = k8sClient.Get(context.Background(), key, fetched)
 				return fetched.IsSubmitted()
 			}, timeout, interval).Should(BeTrue())
 
@@ -436,7 +436,7 @@ var _ = Describe("SecretScope Controller", func() {
 			By("Scope has been marked as IsSubmitted")
 			fetched := &databricksv1alpha1.SecretScope{}
 			Eventually(func() bool {
-				k8sClient.Get(context.Background(), key, fetched)
+				_ = k8sClient.Get(context.Background(), key, fetched)
 				return fetched.IsSubmitted()
 			}, timeout, interval).Should(BeFalse())
 
