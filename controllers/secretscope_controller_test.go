@@ -26,7 +26,7 @@ import (
 	. "github.com/onsi/gomega"
 	databricks "github.com/xinsnake/databricks-sdk-golang"
 	dbazure "github.com/xinsnake/databricks-sdk-golang/azure"
-	// v1 "k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"os"
@@ -165,280 +165,280 @@ var _ = Describe("SecretScope Controller", func() {
 		})
 	})
 
-	// Context("Secret Scope with secrets", func() {
-	// 	It("Should handle scope and secrets correctly", func() {
+	Context("Secret Scope with secrets", func() {
+		It("Should handle scope and secrets correctly", func() {
 
-	// 		// setup k8s secret
-	// 		k8SecretKey := types.NamespacedName{
-	// 			Name:      "k8secret",
-	// 			Namespace: "default",
-	// 		}
+			// setup k8s secret
+			k8SecretKey := types.NamespacedName{
+				Name:      "k8secret",
+				Namespace: "default",
+			}
 
-	// 		data := make(map[string][]byte)
-	// 		data["username"] = []byte("Josh")
-	// 		k8Secret := &v1.Secret{
-	// 			ObjectMeta: metav1.ObjectMeta{
-	// 				Name:      k8SecretKey.Name,
-	// 				Namespace: k8SecretKey.Namespace,
-	// 			},
-	// 			Data: data,
-	// 		}
-	// 		Expect(k8sClient.Create(context.Background(), k8Secret)).Should(Succeed())
-	// 		time.Sleep(time.Second * 8)
-	// 		defer func() {
-	// 			Expect(k8sClient.Delete(context.Background(), k8Secret)).Should(Succeed())
-	// 			time.Sleep(time.Second * 5)
-	// 		}()
+			data := make(map[string][]byte)
+			data["username"] = []byte("Josh")
+			k8Secret := &v1.Secret{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      k8SecretKey.Name,
+					Namespace: k8SecretKey.Namespace,
+				},
+				Data: data,
+			}
+			Expect(k8sClient.Create(context.Background(), k8Secret)).Should(Succeed())
+			time.Sleep(time.Second * 8)
+			defer func() {
+				Expect(k8sClient.Delete(context.Background(), k8Secret)).Should(Succeed())
+				time.Sleep(time.Second * 5)
+			}()
 
-	// 		secretValue := "secretValue"
-	// 		byteSecretValue := "aGVsbG8="
-	// 		initialSecrets := []databricksv1alpha1.SecretScopeSecret{
-	// 			databricksv1alpha1.SecretScopeSecret{Key: "secretKey", StringValue: secretValue},
-	// 			databricksv1alpha1.SecretScopeSecret{
-	// 				Key: "secretFromSecret",
-	// 				ValueFrom: &databricksv1alpha1.SecretScopeValueFrom{
-	// 					SecretKeyRef: databricksv1alpha1.SecretScopeKeyRef{
-	// 						Name: "k8secret",
-	// 						Key:  "username",
-	// 					},
-	// 				},
-	// 			},
-	// 			databricksv1alpha1.SecretScopeSecret{Key: "byteSecretKey", ByteValue: byteSecretValue},
-	// 		}
+			secretValue := "secretValue"
+			byteSecretValue := "aGVsbG8="
+			initialSecrets := []databricksv1alpha1.SecretScopeSecret{
+				databricksv1alpha1.SecretScopeSecret{Key: "secretKey", StringValue: secretValue},
+				databricksv1alpha1.SecretScopeSecret{
+					Key: "secretFromSecret",
+					ValueFrom: &databricksv1alpha1.SecretScopeValueFrom{
+						SecretKeyRef: databricksv1alpha1.SecretScopeKeyRef{
+							Name: "k8secret",
+							Key:  "username",
+						},
+					},
+				},
+				databricksv1alpha1.SecretScopeSecret{Key: "byteSecretKey", ByteValue: byteSecretValue},
+			}
 
-	// 		spec := databricksv1alpha1.SecretScopeSpec{
-	// 			InitialManagePrincipal: "users",
-	// 			SecretScopeSecrets:     initialSecrets,
-	// 			SecretScopeACLs: []databricksv1alpha1.SecretScopeACL{
-	// 				databricksv1alpha1.SecretScopeACL{Principal: "admins", Permission: "WRITE"},
-	// 				databricksv1alpha1.SecretScopeACL{Principal: "admins", Permission: "READ"},
-	// 				databricksv1alpha1.SecretScopeACL{Principal: "admins", Permission: "MANAGE"},
-	// 			},
-	// 		}
+			spec := databricksv1alpha1.SecretScopeSpec{
+				InitialManagePrincipal: "users",
+				SecretScopeSecrets:     initialSecrets,
+				SecretScopeACLs: []databricksv1alpha1.SecretScopeACL{
+					databricksv1alpha1.SecretScopeACL{Principal: "admins", Permission: "WRITE"},
+					databricksv1alpha1.SecretScopeACL{Principal: "admins", Permission: "READ"},
+					databricksv1alpha1.SecretScopeACL{Principal: "admins", Permission: "MANAGE"},
+				},
+			}
 
-	// 		key := types.NamespacedName{
-	// 			Name:      secretsKeyName,
-	// 			Namespace: "default",
-	// 		}
+			key := types.NamespacedName{
+				Name:      secretsKeyName,
+				Namespace: "default",
+			}
 
-	// 		toCreate := &databricksv1alpha1.SecretScope{
-	// 			ObjectMeta: metav1.ObjectMeta{
-	// 				Name:      key.Name,
-	// 				Namespace: key.Namespace,
-	// 			},
-	// 			Spec: spec,
-	// 		}
+			toCreate := &databricksv1alpha1.SecretScope{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      key.Name,
+					Namespace: key.Namespace,
+				},
+				Spec: spec,
+			}
 
-	// 		By("Creating the scope with secrets successfully")
-	// 		Expect(k8sClient.Create(context.Background(), toCreate)).Should(Succeed())
-	// 		time.Sleep(time.Second * 5)
+			By("Creating the scope with secrets successfully")
+			Expect(k8sClient.Create(context.Background(), toCreate)).Should(Succeed())
+			time.Sleep(time.Second * 5)
 
-	// 		fetched := &databricksv1alpha1.SecretScope{}
+			fetched := &databricksv1alpha1.SecretScope{}
 
-	// 		k8sClient.Get(context.Background(), key, fetched)
+			k8sClient.Get(context.Background(), key, fetched)
 
-	// 		fmt.Println(fetched.IsSubmitted())
+			fmt.Println(fetched.IsSubmitted())
 
-	// 		Eventually(func() bool {
-	// 			k8sClient.Get(context.Background(), key, fetched)
-	// 			return fetched.IsSubmitted()
-	// 		}, timeout, interval).Should(BeTrue())
+			Eventually(func() bool {
+				k8sClient.Get(context.Background(), key, fetched)
+				return fetched.IsSubmitted()
+			}, timeout, interval).Should(BeTrue())
 
-	// 		By("Updating secrets successfully")
-	// 		newSecretValue := "newSecretValue"
-	// 		updatedSecrets := []databricksv1alpha1.SecretScopeSecret{
-	// 			databricksv1alpha1.SecretScopeSecret{Key: "newSecretKey", StringValue: newSecretValue},
-	// 		}
+			By("Updating secrets successfully")
+			newSecretValue := "newSecretValue"
+			updatedSecrets := []databricksv1alpha1.SecretScopeSecret{
+				databricksv1alpha1.SecretScopeSecret{Key: "newSecretKey", StringValue: newSecretValue},
+			}
 
-	// 		updateSpec := databricksv1alpha1.SecretScopeSpec{
-	// 			InitialManagePrincipal: "users",
-	// 			SecretScopeSecrets:     updatedSecrets,
-	// 			SecretScopeACLs: []databricksv1alpha1.SecretScopeACL{
-	// 				databricksv1alpha1.SecretScopeACL{Principal: "admins", Permission: "WRITE"},
-	// 				databricksv1alpha1.SecretScopeACL{Principal: "admins", Permission: "READ"},
-	// 			},
-	// 		}
+			updateSpec := databricksv1alpha1.SecretScopeSpec{
+				InitialManagePrincipal: "users",
+				SecretScopeSecrets:     updatedSecrets,
+				SecretScopeACLs: []databricksv1alpha1.SecretScopeACL{
+					databricksv1alpha1.SecretScopeACL{Principal: "admins", Permission: "WRITE"},
+					databricksv1alpha1.SecretScopeACL{Principal: "admins", Permission: "READ"},
+				},
+			}
 
-	// 		fetched.Spec = updateSpec
+			fetched.Spec = updateSpec
 
-	// 		Expect(k8sClient.Update(context.Background(), fetched)).Should(Succeed())
-	// 		fetchedUpdated := &databricksv1alpha1.SecretScope{}
-	// 		Eventually(func() []databricksv1alpha1.SecretScopeSecret {
-	// 			k8sClient.Get(context.Background(), key, fetchedUpdated)
-	// 			return fetchedUpdated.Spec.SecretScopeSecrets
-	// 		}, timeout, interval).Should(Equal(updatedSecrets))
+			Expect(k8sClient.Update(context.Background(), fetched)).Should(Succeed())
+			fetchedUpdated := &databricksv1alpha1.SecretScope{}
+			Eventually(func() []databricksv1alpha1.SecretScopeSecret {
+				k8sClient.Get(context.Background(), key, fetchedUpdated)
+				return fetchedUpdated.Spec.SecretScopeSecrets
+			}, timeout, interval).Should(Equal(updatedSecrets))
 
-	// 		By("Deleting the scope")
-	// 		Expect(k8sClient.Delete(context.Background(), toCreate)).Should(Succeed())
+			By("Deleting the scope")
+			Expect(k8sClient.Delete(context.Background(), toCreate)).Should(Succeed())
 
-	// 		Eventually(func() error {
-	// 			f := &databricksv1alpha1.SecretScope{}
-	// 			return k8sClient.Get(context.Background(), key, f)
-	// 		}, timeout, interval).ShouldNot(Succeed())
-	// 	})
-	// })
+			Eventually(func() error {
+				f := &databricksv1alpha1.SecretScope{}
+				return k8sClient.Get(context.Background(), key, f)
+			}, timeout, interval).ShouldNot(Succeed())
+		})
+	})
 
-	// Context("Secret Scope with ACLs", func() {
-	// 	It("Should handle missing k8s secrets", func() {
-	// 		spec := databricksv1alpha1.SecretScopeSpec{
-	// 			InitialManagePrincipal: "users",
-	// 			SecretScopeSecrets: []databricksv1alpha1.SecretScopeSecret{
-	// 				databricksv1alpha1.SecretScopeSecret{
-	// 					Key: "secretFromSecret",
-	// 					ValueFrom: &databricksv1alpha1.SecretScopeValueFrom{
-	// 						SecretKeyRef: databricksv1alpha1.SecretScopeKeyRef{
-	// 							Name: "k8secret",
-	// 							Key:  "username",
-	// 						},
-	// 					},
-	// 				},
-	// 			},
-	// 		}
+	Context("Secret Scope with ACLs", func() {
+		It("Should handle missing k8s secrets", func() {
+			spec := databricksv1alpha1.SecretScopeSpec{
+				InitialManagePrincipal: "users",
+				SecretScopeSecrets: []databricksv1alpha1.SecretScopeSecret{
+					databricksv1alpha1.SecretScopeSecret{
+						Key: "secretFromSecret",
+						ValueFrom: &databricksv1alpha1.SecretScopeValueFrom{
+							SecretKeyRef: databricksv1alpha1.SecretScopeKeyRef{
+								Name: "k8secret",
+								Key:  "username",
+							},
+						},
+					},
+				},
+			}
 
-	// 		key := types.NamespacedName{
-	// 			Name:      aclKeyName,
-	// 			Namespace: "default",
-	// 		}
+			key := types.NamespacedName{
+				Name:      aclKeyName,
+				Namespace: "default",
+			}
 
-	// 		toCreate := &databricksv1alpha1.SecretScope{
-	// 			ObjectMeta: metav1.ObjectMeta{
-	// 				Name:      key.Name,
-	// 				Namespace: key.Namespace,
-	// 			},
-	// 			Spec: spec,
-	// 		}
+			toCreate := &databricksv1alpha1.SecretScope{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      key.Name,
+					Namespace: key.Namespace,
+				},
+				Spec: spec,
+			}
 
-	// 		By("Creating the scope successfully")
-	// 		Expect(k8sClient.Create(context.Background(), toCreate)).Should(Succeed())
-	// 		time.Sleep(time.Second * 5)
+			By("Creating the scope successfully")
+			Expect(k8sClient.Create(context.Background(), toCreate)).Should(Succeed())
+			time.Sleep(time.Second * 5)
 
-	// 		By("Scope has not been marked as IsSubmitted")
-	// 		fetched := &databricksv1alpha1.SecretScope{}
-	// 		Eventually(func() bool {
-	// 			k8sClient.Get(context.Background(), key, fetched)
-	// 			return fetched.IsSubmitted()
-	// 		}, timeout, interval).Should(BeFalse())
+			By("Scope has not been marked as IsSubmitted")
+			fetched := &databricksv1alpha1.SecretScope{}
+			Eventually(func() bool {
+				k8sClient.Get(context.Background(), key, fetched)
+				return fetched.IsSubmitted()
+			}, timeout, interval).Should(BeFalse())
 
-	// 		// setup k8s secret
-	// 		k8SecretKey := types.NamespacedName{
-	// 			Name:      "k8secret",
-	// 			Namespace: "default",
-	// 		}
+			// setup k8s secret
+			k8SecretKey := types.NamespacedName{
+				Name:      "k8secret",
+				Namespace: "default",
+			}
 
-	// 		data := make(map[string][]byte)
-	// 		data["username"] = []byte("Josh")
-	// 		k8Secret := &v1.Secret{
-	// 			ObjectMeta: metav1.ObjectMeta{
-	// 				Name:      k8SecretKey.Name,
-	// 				Namespace: k8SecretKey.Namespace,
-	// 			},
-	// 			Data: data,
-	// 		}
-	// 		Expect(k8sClient.Create(context.Background(), k8Secret)).Should(Succeed())
-	// 		time.Sleep(time.Second * 8)
-	// 		defer func() {
-	// 			Expect(k8sClient.Delete(context.Background(), k8Secret)).Should(Succeed())
-	// 			time.Sleep(time.Second * 5)
-	// 		}()
+			data := make(map[string][]byte)
+			data["username"] = []byte("Josh")
+			k8Secret := &v1.Secret{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      k8SecretKey.Name,
+					Namespace: k8SecretKey.Namespace,
+				},
+				Data: data,
+			}
+			Expect(k8sClient.Create(context.Background(), k8Secret)).Should(Succeed())
+			time.Sleep(time.Second * 8)
+			defer func() {
+				Expect(k8sClient.Delete(context.Background(), k8Secret)).Should(Succeed())
+				time.Sleep(time.Second * 5)
+			}()
 
-	// 		By("Scope has been marked as IsSubmitted")
+			By("Scope has been marked as IsSubmitted")
 
-	// 		fetched = &databricksv1alpha1.SecretScope{}
-	// 		Eventually(func() bool {
-	// 			k8sClient.Get(context.Background(), key, fetched)
-	// 			return fetched.IsSubmitted()
-	// 		}, timeout, interval).Should(BeTrue())
+			fetched = &databricksv1alpha1.SecretScope{}
+			Eventually(func() bool {
+				k8sClient.Get(context.Background(), key, fetched)
+				return fetched.IsSubmitted()
+			}, timeout, interval).Should(BeTrue())
 
-	// 		By("Deleting the scope")
-	// 		Expect(k8sClient.Delete(context.Background(), toCreate)).Should(Succeed())
+			By("Deleting the scope")
+			Expect(k8sClient.Delete(context.Background(), toCreate)).Should(Succeed())
 
-	// 		Eventually(func() error {
-	// 			f := &databricksv1alpha1.SecretScope{}
-	// 			return k8sClient.Get(context.Background(), key, f)
-	// 		}, timeout, interval).ShouldNot(Succeed())
-	// 	})
-	// })
+			Eventually(func() error {
+				f := &databricksv1alpha1.SecretScope{}
+				return k8sClient.Get(context.Background(), key, f)
+			}, timeout, interval).ShouldNot(Succeed())
+		})
+	})
 
-	// Context("Secret Scope with ACLs", func() {
-	// 	It("Should fail if secret scope exist in Databricks", func() {
+	Context("Secret Scope with ACLs", func() {
+		It("Should fail if secret scope exist in Databricks", func() {
 
-	// 		var o databricks.DBClientOption
-	// 		o.Host = os.Getenv("DATABRICKS_HOST")
-	// 		o.Token = os.Getenv("DATABRICKS_TOKEN")
+			var o databricks.DBClientOption
+			o.Host = os.Getenv("DATABRICKS_HOST")
+			o.Token = os.Getenv("DATABRICKS_TOKEN")
 
-	// 		var APIClient dbazure.DBClient
-	// 		APIClient.Init(o)
+			var APIClient dbazure.DBClient
+			APIClient.Init(o)
 
-	// 		Expect(APIClient.Secrets().CreateSecretScope(aclKeyName, "users")).Should(Succeed())
+			Expect(APIClient.Secrets().CreateSecretScope(aclKeyName, "users")).Should(Succeed())
 
-	// 		spec := databricksv1alpha1.SecretScopeSpec{
-	// 			InitialManagePrincipal: "users",
-	// 			SecretScopeSecrets: []databricksv1alpha1.SecretScopeSecret{
-	// 				databricksv1alpha1.SecretScopeSecret{
-	// 					Key: "secretFromSecret",
-	// 					ValueFrom: &databricksv1alpha1.SecretScopeValueFrom{
-	// 						SecretKeyRef: databricksv1alpha1.SecretScopeKeyRef{
-	// 							Name: "k8secret",
-	// 							Key:  "username",
-	// 						},
-	// 					},
-	// 				},
-	// 			},
-	// 		}
+			spec := databricksv1alpha1.SecretScopeSpec{
+				InitialManagePrincipal: "users",
+				SecretScopeSecrets: []databricksv1alpha1.SecretScopeSecret{
+					databricksv1alpha1.SecretScopeSecret{
+						Key: "secretFromSecret",
+						ValueFrom: &databricksv1alpha1.SecretScopeValueFrom{
+							SecretKeyRef: databricksv1alpha1.SecretScopeKeyRef{
+								Name: "k8secret",
+								Key:  "username",
+							},
+						},
+					},
+				},
+			}
 
-	// 		key := types.NamespacedName{
-	// 			Name:      aclKeyName,
-	// 			Namespace: "default",
-	// 		}
+			key := types.NamespacedName{
+				Name:      aclKeyName,
+				Namespace: "default",
+			}
 
-	// 		toCreate := &databricksv1alpha1.SecretScope{
-	// 			ObjectMeta: metav1.ObjectMeta{
-	// 				Name:      key.Name,
-	// 				Namespace: key.Namespace,
-	// 			},
-	// 			Spec: spec,
-	// 		}
+			toCreate := &databricksv1alpha1.SecretScope{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      key.Name,
+					Namespace: key.Namespace,
+				},
+				Spec: spec,
+			}
 
-	// 		// setup k8s secret
-	// 		k8SecretKey := types.NamespacedName{
-	// 			Name:      "k8secret",
-	// 			Namespace: "default",
-	// 		}
+			// setup k8s secret
+			k8SecretKey := types.NamespacedName{
+				Name:      "k8secret",
+				Namespace: "default",
+			}
 
-	// 		data := make(map[string][]byte)
-	// 		data["username"] = []byte("Josh")
-	// 		k8Secret := &v1.Secret{
-	// 			ObjectMeta: metav1.ObjectMeta{
-	// 				Name:      k8SecretKey.Name,
-	// 				Namespace: k8SecretKey.Namespace,
-	// 			},
-	// 			Data: data,
-	// 		}
-	// 		Expect(k8sClient.Create(context.Background(), k8Secret)).Should(Succeed())
-	// 		time.Sleep(time.Second * 8)
-	// 		defer func() {
-	// 			Expect(k8sClient.Delete(context.Background(), k8Secret)).Should(Succeed())
-	// 			time.Sleep(time.Second * 5)
-	// 		}()
+			data := make(map[string][]byte)
+			data["username"] = []byte("Josh")
+			k8Secret := &v1.Secret{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      k8SecretKey.Name,
+					Namespace: k8SecretKey.Namespace,
+				},
+				Data: data,
+			}
+			Expect(k8sClient.Create(context.Background(), k8Secret)).Should(Succeed())
+			time.Sleep(time.Second * 8)
+			defer func() {
+				Expect(k8sClient.Delete(context.Background(), k8Secret)).Should(Succeed())
+				time.Sleep(time.Second * 5)
+			}()
 
-	// 		By("Creating the scope successfully")
-	// 		Expect(k8sClient.Create(context.Background(), toCreate)).Should(Succeed())
-	// 		time.Sleep(time.Second * 5)
+			By("Creating the scope successfully")
+			Expect(k8sClient.Create(context.Background(), toCreate)).Should(Succeed())
+			time.Sleep(time.Second * 5)
 
-	// 		By("Scope has been marked as IsSubmitted")
-	// 		fetched := &databricksv1alpha1.SecretScope{}
-	// 		Eventually(func() bool {
-	// 			k8sClient.Get(context.Background(), key, fetched)
-	// 			return fetched.IsSubmitted()
-	// 		}, timeout, interval).Should(BeFalse())
+			By("Scope has been marked as IsSubmitted")
+			fetched := &databricksv1alpha1.SecretScope{}
+			Eventually(func() bool {
+				k8sClient.Get(context.Background(), key, fetched)
+				return fetched.IsSubmitted()
+			}, timeout, interval).Should(BeFalse())
 
-	// 		By("Deleting the scope")
-	// 		Expect(k8sClient.Delete(context.Background(), toCreate)).Should(Succeed())
+			By("Deleting the scope")
+			Expect(k8sClient.Delete(context.Background(), toCreate)).Should(Succeed())
 
-	// 		Eventually(func() error {
-	// 			f := &databricksv1alpha1.SecretScope{}
-	// 			return k8sClient.Get(context.Background(), key, f)
-	// 		}, timeout, interval).ShouldNot(Succeed())
-	// 	})
-	// })
+			Eventually(func() error {
+				f := &databricksv1alpha1.SecretScope{}
+				return k8sClient.Get(context.Background(), key, f)
+			}, timeout, interval).ShouldNot(Succeed())
+		})
+	})
 })
