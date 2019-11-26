@@ -24,7 +24,7 @@ import (
 	"time"
 
 	databricksv1alpha1 "github.com/microsoft/azure-databricks-operator/api/v1alpha1"
-	models "github.com/xinsnake/databricks-sdk-golang/azure/models"
+	dbmodels "github.com/xinsnake/databricks-sdk-golang/azure/models"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -143,7 +143,7 @@ func (r *DjobReconciler) delete(instance *databricksv1alpha1.Djob) error {
 	})
 }
 
-func (r *DjobReconciler) getJob(jobID int64) (job models.Job, err error) {
+func (r *DjobReconciler) getJob(jobID int64) (job dbmodels.Job, err error) {
 	defer trackMillisecondsTaken(time.Now(), djobGetDuration)
 
 	job, err = r.APIClient.Jobs().Get(jobID)
@@ -153,7 +153,7 @@ func (r *DjobReconciler) getJob(jobID int64) (job models.Job, err error) {
 	return job, err
 }
 
-func (r *DjobReconciler) createJob(instance *databricksv1alpha1.Djob) (job models.Job, err error) {
+func (r *DjobReconciler) createJob(instance *databricksv1alpha1.Djob) (job dbmodels.Job, err error) {
 	defer trackMillisecondsTaken(time.Now(), djobCreateDuration)
 
 	jobSettings := databricksv1alpha1.ToDatabricksJobSettings(instance.Spec)

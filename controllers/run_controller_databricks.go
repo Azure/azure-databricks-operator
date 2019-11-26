@@ -26,7 +26,6 @@ import (
 	databricksv1alpha1 "github.com/microsoft/azure-databricks-operator/api/v1alpha1"
 	"github.com/xinsnake/databricks-sdk-golang/azure"
 	dbmodels "github.com/xinsnake/databricks-sdk-golang/azure/models"
-	models "github.com/xinsnake/databricks-sdk-golang/azure/models"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"k8s.io/apimachinery/pkg/types"
@@ -117,7 +116,7 @@ func (r *RunReconciler) delete(instance *databricksv1alpha1.Run) error {
 	})
 }
 
-func (r *RunReconciler) runUsingRunNow(instance *databricksv1alpha1.Run) (*models.Run, error) {
+func (r *RunReconciler) runUsingRunNow(instance *databricksv1alpha1.Run) (*dbmodels.Run, error) {
 	defer trackMillisecondsTaken(time.Now(), runNowDuration)
 	runParameters := dbmodels.RunParameters{
 		JarParams:         instance.Spec.JarParams,
@@ -134,7 +133,7 @@ func (r *RunReconciler) runUsingRunNow(instance *databricksv1alpha1.Run) (*model
 	}
 
 	instance.ObjectMeta.SetOwnerReferences([]metav1.OwnerReference{
-		metav1.OwnerReference{
+		{
 			APIVersion: "v1alpha1", // TODO should this be a referenced value?
 			Kind:       "Djob",     // TODO should this be a referenced value?
 			Name:       k8sJob.GetName(),
@@ -147,7 +146,7 @@ func (r *RunReconciler) runUsingRunNow(instance *databricksv1alpha1.Run) (*model
 	return &run, err
 }
 
-func (r *RunReconciler) runUsingRunsSubmit(instance *databricksv1alpha1.Run) (*models.Run, error) {
+func (r *RunReconciler) runUsingRunsSubmit(instance *databricksv1alpha1.Run) (*dbmodels.Run, error) {
 	defer trackMillisecondsTaken(time.Now(), runSubmitDuration)
 
 	clusterSpec := dbmodels.ClusterSpec{
@@ -167,7 +166,7 @@ func (r *RunReconciler) runUsingRunsSubmit(instance *databricksv1alpha1.Run) (*m
 	return &run, err
 }
 
-func (r *RunReconciler) getRun(runID int64) (models.Run, error) {
+func (r *RunReconciler) getRun(runID int64) (dbmodels.Run, error) {
 	defer trackMillisecondsTaken(time.Now(), runGetDuration)
 
 	runOutput, err := r.APIClient.Jobs().RunsGet(runID)
