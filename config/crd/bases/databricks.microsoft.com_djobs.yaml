@@ -218,6 +218,7 @@ spec:
               type: integer
           type: object
         status:
+          description: DjobStatus is the status object for the Djob
           properties:
             job_status:
               properties:

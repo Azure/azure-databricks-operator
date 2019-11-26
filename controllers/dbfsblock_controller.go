@@ -42,6 +42,7 @@ type DbfsBlockReconciler struct {
 // +kubebuilder:rbac:groups=databricks.microsoft.com,resources=dbfsblocks,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=databricks.microsoft.com,resources=dbfsblocks/status,verbs=get;update;patch
 
+// Reconcile implements the reconciliation loop for the operator
 func (r *DbfsBlockReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	_ = context.Background()
 	_ = r.Log.WithValues("dbfsblock", req.NamespacedName)
@@ -88,6 +89,7 @@ func (r *DbfsBlockReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	return ctrl.Result{}, nil
 }
 
+// SetupWithManager adds the controller manager
 func (r *DbfsBlockReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&databricksv1alpha1.DbfsBlock{}).

@@ -66,6 +66,9 @@ RUN apt-get update \
 RUN apt-get -y install git procps wget nano zsh inotify-tools jq
 RUN wget https://github.com/robbyrussell/oh-my-zsh/raw/master/tools/install.sh -O - | zsh || true
 
+# Install golangci-linter
+RUN curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh| sh -s -- -b $(go env GOPATH)/bin v1.21.0
+
 ENV PATH="/usr/local/kubebuilder/bin:${PATH}"
 
 ENV GO111MODULE=on

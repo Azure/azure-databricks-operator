@@ -42,6 +42,7 @@ type WorkspaceItemReconciler struct {
 // +kubebuilder:rbac:groups=databricks.microsoft.com,resources=workspaceitems,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=databricks.microsoft.com,resources=workspaceitems/status,verbs=get;update;patch
 
+// Reconcile implements the reconciliation loop for the operator
 func (r *WorkspaceItemReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	_ = context.Background()
 	_ = r.Log.WithValues("workspaceitem", req.NamespacedName)
@@ -88,6 +89,7 @@ func (r *WorkspaceItemReconciler) Reconcile(req ctrl.Request) (ctrl.Result, erro
 	return ctrl.Result{}, nil
 }
 
+// SetupWithManager adds the controller manager
 func (r *WorkspaceItemReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&databricksv1alpha1.WorkspaceItem{}).

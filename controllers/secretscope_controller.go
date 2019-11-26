@@ -45,6 +45,7 @@ type SecretScopeReconciler struct {
 // +kubebuilder:rbac:groups=databricks.microsoft.com,resources=secretscopes,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=databricks.microsoft.com,resources=secretscopes/status,verbs=get;update;patch
 
+// Reconcile implements the reconciliation loop for the operator
 func (r *SecretScopeReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	_ = r.Log.WithValues("secretscope", req.NamespacedName)
 
@@ -63,7 +64,7 @@ func (r *SecretScopeReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error)
 	}
 
 	if instance.IsBeingDeleted() {
-		err := r.handleFinalizer(instance)
+		err = r.handleFinalizer(instance)
 		if err != nil {
 			return reconcile.Result{}, fmt.Errorf("error when handling finalizer: %v", err)
 		}
@@ -102,6 +103,7 @@ func (r *SecretScopeReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error)
 	return ctrl.Result{}, nil
 }
 
+// SetupWithManager adds the controller manager
 func (r *SecretScopeReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&databricksv1alpha1.SecretScope{}).
