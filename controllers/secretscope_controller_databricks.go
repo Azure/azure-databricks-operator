@@ -155,6 +155,7 @@ func (r *SecretScopeReconciler) submitACLs(instance *databricksv1alpha1.SecretSc
 // verifyWorkspace checks if Databricks cluster supports ACLs, and checks if secret scope exists.
 func (r *SecretScopeReconciler) verifyWorkspace(instance *databricksv1alpha1.SecretScope) error {
 	scope := instance.ObjectMeta.Name
+	initialManagePrincipal := instance.Spec.InitialManagePrincipal
 
 	// try create secret scope to see if exists or not.
 	list, err := r.APIClient.Secrets().ListSecretScopes()
@@ -165,6 +166,21 @@ func (r *SecretScopeReconciler) verifyWorkspace(instance *databricksv1alpha1.Sec
 	for _, n := range list {
 		if n.Name == scope {
 			return fmt.Errorf("Secret scope %v exists", scope)
+		}
+	}
+
+	// create the secret scope here otherwise we cannot verify ACL support.
+	err = r.APIClient.Secrets().CreateSecretScope(scope, initialManagePrincipal)
+	if err != nil {
+		return err
+	}
+
+	// try to list ACLs to see if cluster supports ACL.
+	if instance.Spec.SecretScopeACLs != nil {
+		if _, err = r.APIClient.Secrets().ListSecretACLs(scope); err != nil {
+			// delete secret scope because we're unable to deploy scope with ACL.
+			_ = r.APIClient.Secrets().DeleteSecretScope(scope)
+			return err
 		}
 	}
 
@@ -189,15 +205,8 @@ func (r *SecretScopeReconciler) checkSecrets(instance *databricksv1alpha1.Secret
 
 func (r *SecretScopeReconciler) submit(instance *databricksv1alpha1.SecretScope) error {
 	scope := instance.ObjectMeta.Name
-	initialManagePrincipal := instance.Spec.InitialManagePrincipal
 
-	// try create secret scope to see if exists or not.
-	err := r.APIClient.Secrets().CreateSecretScope(scope, initialManagePrincipal)
-	if err != nil {
-		return err
-	}
-
-	err = r.submitSecrets(instance)
+	err := r.submitSecrets(instance)
 	if err != nil {
 		return err
 	}
