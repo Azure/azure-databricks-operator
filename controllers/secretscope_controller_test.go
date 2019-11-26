@@ -24,10 +24,12 @@ import (
 	databricksv1alpha1 "github.com/microsoft/azure-databricks-operator/api/v1alpha1"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	databricks "github.com/xinsnake/databricks-sdk-golang"
+	dbazure "github.com/xinsnake/databricks-sdk-golang/azure"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-
+	"os"
 	"math/rand"
 )
 
@@ -361,9 +363,16 @@ var _ = Describe("SecretScope Controller", func() {
 
 			name := aclKeyName + "-" + randomStringWithCharset(10, charset)
 
-			Expect(apiClient.Secrets().CreateSecretScope(name, "users")).Should(Succeed())
+			var o databricks.DBClientOption
+			o.Host = os.Getenv("DATABRICKS_HOST")
+			o.Token = os.Getenv("DATABRICKS_TOKEN")
+
+			var APIClient dbazure.DBClient
+			APIClient.Init(o)
+
+			Expect(APIClient.Secrets().CreateSecretScope(name, "users")).Should(Succeed())
 			defer func() {
-				Expect(apiClient.Secrets().DeleteSecretScope(name)).Should(Succeed())
+				Expect(APIClient.Secrets().DeleteSecretScope(name)).Should(Succeed())
 				time.Sleep(time.Second * 5)
 			}()
 
