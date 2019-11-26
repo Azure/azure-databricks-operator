@@ -111,12 +111,6 @@ var _ = Describe("SecretScope Controller", func() {
 			time.Sleep(time.Second * 5)
 
 			fetched := &databricksv1alpha1.SecretScope{}
-
-			_ = k8sClient.Get(context.Background(), key, fetched)
-
-			fmt.Println(fetched.IsSubmitted())
-			fmt.Println(fetched.Status)
-
 			Eventually(func() bool {
 				_ = k8sClient.Get(context.Background(), key, fetched)
 				return fetched.IsSubmitted()
@@ -207,8 +201,10 @@ var _ = Describe("SecretScope Controller", func() {
 				},
 			}
 
+			name := secretsKeyName + "-" + randomStringWithCharset(10, charset)
+
 			key := types.NamespacedName{
-				Name:      secretsKeyName,
+				Name:      name,
 				Namespace: "default",
 			}
 
@@ -290,8 +286,10 @@ var _ = Describe("SecretScope Controller", func() {
 				},
 			}
 
+			name := aclKeyName + "-" + randomStringWithCharset(10, charset)
+
 			key := types.NamespacedName{
-				Name:      aclKeyName,
+				Name:      name,
 				Namespace: "default",
 			}
 
@@ -345,7 +343,11 @@ var _ = Describe("SecretScope Controller", func() {
 			}, timeout, interval).Should(BeTrue())
 
 			By("Deleting the scope")
-			Expect(k8sClient.Delete(context.Background(), toCreate)).Should(Succeed())
+			Eventually(func() error {
+				f := &databricksv1alpha1.SecretScope{}
+				_ = k8sClient.Get(context.Background(), key, f)
+				return k8sClient.Delete(context.Background(), f)
+			}, timeout, interval).Should(Succeed())
 
 			Eventually(func() error {
 				f := &databricksv1alpha1.SecretScope{}
@@ -374,8 +376,10 @@ var _ = Describe("SecretScope Controller", func() {
 				},
 			}
 
+			name := aclKeyName + "-" + randomStringWithCharset(10, charset)
+
 			key := types.NamespacedName{
-				Name:      aclKeyName,
+				Name:      name,
 				Namespace: "default",
 			}
 
@@ -421,7 +425,11 @@ var _ = Describe("SecretScope Controller", func() {
 			}, timeout, interval).Should(BeFalse())
 
 			By("Deleting the scope")
-			Expect(k8sClient.Delete(context.Background(), toCreate)).Should(Succeed())
+			Eventually(func() error {
+				f := &databricksv1alpha1.SecretScope{}
+				_ = k8sClient.Get(context.Background(), key, f)
+				return k8sClient.Delete(context.Background(), f)
+			}, timeout, interval).Should(Succeed())
 
 			Eventually(func() error {
 				f := &databricksv1alpha1.SecretScope{}
