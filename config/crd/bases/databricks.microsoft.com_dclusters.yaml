@@ -107,6 +107,7 @@ spec:
               type: string
           type: object
         status:
+          description: DclusterStatus represents the status for a Dcluster
           properties:
             cluster_info:
               description: DclusterInfo is similar to dbmodels.ClusterInfo, the reason

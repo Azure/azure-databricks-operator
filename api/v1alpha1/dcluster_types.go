@@ -21,6 +21,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+// DclusterStatus represents the status for a Dcluster
 type DclusterStatus struct {
 	ClusterInfo *DclusterInfo `json:"cluster_info,omitempty"`
 }
@@ -40,10 +41,12 @@ type Dcluster struct {
 	Status *DclusterStatus      `json:"status,omitempty"`
 }
 
+// IsBeingDeleted returns true if a deletion timestamp is set
 func (dcluster *Dcluster) IsBeingDeleted() bool {
 	return !dcluster.ObjectMeta.DeletionTimestamp.IsZero()
 }
 
+// IsSubmitted returns true if the item has been submitted to DataBricks
 func (dcluster *Dcluster) IsSubmitted() bool {
 	if dcluster.Status == nil ||
 		dcluster.Status.ClusterInfo == nil ||
@@ -53,16 +56,20 @@ func (dcluster *Dcluster) IsSubmitted() bool {
 	return true
 }
 
+// DclusterFinalizerName is the name of the finalizer for the Dcluster operator
 const DclusterFinalizerName = "dcluster.finalizers.databricks.microsoft.com"
 
+// HasFinalizer returns true if the item has the specified finalizer
 func (dcluster *Dcluster) HasFinalizer(finalizerName string) bool {
 	return containsString(dcluster.ObjectMeta.Finalizers, finalizerName)
 }
 
+// AddFinalizer adds the specified finalizer
 func (dcluster *Dcluster) AddFinalizer(finalizerName string) {
 	dcluster.ObjectMeta.Finalizers = append(dcluster.ObjectMeta.Finalizers, finalizerName)
 }
 
+// RemoveFinalizer removes the specified finalizer
 func (dcluster *Dcluster) RemoveFinalizer(finalizerName string) {
 	dcluster.ObjectMeta.Finalizers = removeString(dcluster.ObjectMeta.Finalizers, finalizerName)
 }

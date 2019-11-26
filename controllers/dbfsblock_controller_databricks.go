@@ -45,7 +45,7 @@ func (r *DbfsBlockReconciler) submit(instance *databricksv1alpha1.DbfsBlock) err
 		if i+g <= len(data) {
 			err = r.APIClient.Dbfs().AddBlock(createResponse.Handle, data[i:i+g])
 		} else {
-			err = r.APIClient.Dbfs().AddBlock(createResponse.Handle, data[i:len(data)])
+			err = r.APIClient.Dbfs().AddBlock(createResponse.Handle, data[i:])
 		}
 		if err != nil {
 			return err

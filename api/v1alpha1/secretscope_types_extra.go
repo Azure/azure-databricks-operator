@@ -16,6 +16,7 @@ limitations under the License.
 
 package v1alpha1
 
+// SecretScopeSecret represents a secret in a secret scope
 type SecretScopeSecret struct {
 	Key         string                `json:"key,omitempty"`
 	StringValue string                `json:"string_value,omitempty"`
@@ -23,15 +24,18 @@ type SecretScopeSecret struct {
 	ValueFrom   *SecretScopeValueFrom `json:"value_from,omitempty"`
 }
 
+// SecretScopeACL represents ACLs for a secret scope
 type SecretScopeACL struct {
 	Principal  string `json:"principal,omitempty"`
 	Permission string `json:"permission,omitempty"`
 }
 
+// SecretScopeValueFrom references a secret scope
 type SecretScopeValueFrom struct {
 	SecretKeyRef SecretScopeKeyRef `json:"secret_key_ref,omitempty"`
 }
 
+// SecretScopeKeyRef refers to a secret scope Key
 type SecretScopeKeyRef struct {
 	Name string `json:"name,omitempty"`
 	Key  string `json:"key,omitempty"`

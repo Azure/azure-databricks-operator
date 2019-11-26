@@ -43,6 +43,7 @@ type RunReconciler struct {
 // +kubebuilder:rbac:groups=databricks.microsoft.com,resources=runs,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=databricks.microsoft.com,resources=runs/status,verbs=get;update;patch
 
+// Reconcile implements the reconciliation loop for the operator
 func (r *RunReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	_ = context.Background()
 	_ = r.Log.WithValues("run", req.NamespacedName)
@@ -88,6 +89,7 @@ func (r *RunReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	return ctrl.Result{RequeueAfter: 30 * time.Second}, nil
 }
 
+// SetupWithManager adds the controller manager
 func (r *RunReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&databricksv1alpha1.Run{}).
