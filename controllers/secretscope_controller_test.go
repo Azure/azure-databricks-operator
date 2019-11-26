@@ -29,8 +29,8 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"os"
 	"math/rand"
+	"os"
 )
 
 var _ = Describe("SecretScope Controller", func() {
@@ -86,7 +86,7 @@ var _ = Describe("SecretScope Controller", func() {
 			spec := databricksv1alpha1.SecretScopeSpec{
 				InitialManagePrincipal: "users",
 				SecretScopeSecrets:     make([]databricksv1alpha1.SecretScopeSecret, 0),
-				SecretScopeACLs:        []databricksv1alpha1.SecretScopeACL{
+				SecretScopeACLs: []databricksv1alpha1.SecretScopeACL{
 					{Principal: "admins", Permission: "WRITE"},
 					{Principal: "admins", Permission: "READ"},
 					{Principal: "admins", Permission: "MANAGE"},
@@ -276,7 +276,7 @@ var _ = Describe("SecretScope Controller", func() {
 			spec := databricksv1alpha1.SecretScopeSpec{
 				InitialManagePrincipal: "users",
 				SecretScopeSecrets: []databricksv1alpha1.SecretScopeSecret{
-					databricksv1alpha1.SecretScopeSecret{
+					{
 						Key: "secretFromSecret",
 						ValueFrom: &databricksv1alpha1.SecretScopeValueFrom{
 							SecretKeyRef: databricksv1alpha1.SecretScopeKeyRef{
@@ -379,7 +379,7 @@ var _ = Describe("SecretScope Controller", func() {
 			spec := databricksv1alpha1.SecretScopeSpec{
 				InitialManagePrincipal: "users",
 				SecretScopeSecrets: []databricksv1alpha1.SecretScopeSecret{
-					databricksv1alpha1.SecretScopeSecret{
+					{
 						Key: "secretFromSecret",
 						ValueFrom: &databricksv1alpha1.SecretScopeValueFrom{
 							SecretKeyRef: databricksv1alpha1.SecretScopeKeyRef{
