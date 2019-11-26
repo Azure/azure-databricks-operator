@@ -109,10 +109,6 @@ var _ = Describe("SecretScope Controller", func() {
 			By("Creating the scope with ACLs successfully")
 			Expect(k8sClient.Create(context.Background(), toCreate)).Should(Succeed())
 			time.Sleep(time.Second * 5)
-			defer func() {
-				Expect(k8sClient.Delete(context.Background(), toCreate)).Should(Succeed())
-				time.Sleep(time.Second * 5)
-			}()
 
 			fetched := &databricksv1alpha1.SecretScope{}
 
