@@ -81,21 +81,24 @@ func (r *SecretScopeReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error)
 		return ctrl.Result{}, nil
 	}
 
-	if !instance.IsSubmitted() {
-
+	if !instance.IsVerified() {
 		if err = r.verifyWorkspace(instance); err != nil {
 			r.Recorder.Event(instance, corev1.EventTypeWarning, "Failed", err.Error())
 			return ctrl.Result{}, nil
 		}
+	}
 
+	if !instance.IsSecretAvailable() {
 		if err = r.checkSecrets(instance); err != nil {
 			r.Recorder.Event(instance, corev1.EventTypeWarning, "Failed", err.Error())
 			return ctrl.Result{Requeue: true, RequeueAfter: 30 * time.Second}, fmt.Errorf("error when submitting secret scope to the API: %v", err)
 		}
+	}
 
+	if !instance.IsSubmitted() {
 		if err = r.submit(instance); err != nil {
 			r.Recorder.Event(instance, corev1.EventTypeWarning, "Failed", err.Error())
-			return ctrl.Result{}, nil
+			return ctrl.Result{}, fmt.Errorf("error when submitting secret scope to the API: %v", err)
 		}
 	}
 

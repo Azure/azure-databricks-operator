@@ -184,27 +184,25 @@ func (r *SecretScopeReconciler) verifyWorkspace(instance *databricksv1alpha1.Sec
 		}
 	}
 
-	return nil
+	instance.Status.WorkspaceVerified = true
+	return r.Update(context.Background(), instance)
 }
 
 // checkSecrets checks if referenced secret is present in k8s or not.
 func (r *SecretScopeReconciler) checkSecrets(instance *databricksv1alpha1.SecretScope) error {
-	scope := instance.ObjectMeta.Name
 	namespace := instance.Namespace
 
 	// if secret in cluster is reference, see if secret exists.
 	for _, secret := range instance.Spec.SecretScopeSecrets {
 		if secret.ValueFrom != nil {
 			if _, err := r.getSecretValueFrom(namespace, secret); err != nil {
-				// delete scope here because next time the config is applied, it will fail
-				// because the secret scope already exists from the previous run.
-				_ = r.APIClient.Secrets().DeleteSecretScope(scope)
 				return err
 			}
 		}
 	}
 
-	return nil
+	instance.Status.SecretInClusterAvailable = true
+	return r.Update(context.Background(), instance)
 }
 
 func (r *SecretScopeReconciler) submit(instance *databricksv1alpha1.SecretScope) error {

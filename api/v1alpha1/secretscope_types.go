@@ -38,7 +38,7 @@ type SecretScopeStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 	SecretScope              *dbmodels.SecretScope `json:"secretscope,omitempty"`
-	SecretScopeCreated       bool                  `json:"secretscopecreated,omitempty"`
+	WorkspaceVerified        bool                  `json:"workspaceverified,omitempty"`
 	SecretInClusterAvailable bool                  `json:"secretinclusteravailable,omitempty"`
 }
 
@@ -58,9 +58,9 @@ func (ss *SecretScope) IsSecretAvailable() bool {
 	return ss.Status.SecretInClusterAvailable
 }
 
-// IsCreated returns SecretScopeCreated's value
-func (ss *SecretScope) IsCreated() bool {
-	return ss.Status.SecretScopeCreated
+// IsVerified returns true if the workspace has been verified as deployable ready
+func (ss *SecretScope) IsVerified() bool {
+	return ss.Status.WorkspaceVerified
 }
 
 // IsSubmitted returns true if the item has been submitted to DataBricks
