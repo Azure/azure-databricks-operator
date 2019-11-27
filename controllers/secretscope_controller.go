@@ -31,7 +31,6 @@ import (
 
 	databricksv1alpha1 "github.com/microsoft/azure-databricks-operator/api/v1alpha1"
 	dbazure "github.com/xinsnake/databricks-sdk-golang/azure"
-	corev1 "k8s.io/api/core/v1"
 )
 
 // SecretScopeReconciler reconciles a SecretScope object
