@@ -37,7 +37,9 @@ type SecretScopeSpec struct {
 type SecretScopeStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
-	SecretScope *dbmodels.SecretScope `json:"secretscope,omitempty"`
+	SecretScope              *dbmodels.SecretScope `json:"secretscope,omitempty"`
+	SecretScopeCreated       bool                  `json:"secretscopecreated,omitempty"`
+	SecretInClusterAvailable bool                  `json:"secretinclusteravailable,omitempty"`
 }
 
 // +kubebuilder:object:root=true
@@ -49,6 +51,16 @@ type SecretScope struct {
 
 	Spec   SecretScopeSpec   `json:"spec,omitempty"`
 	Status SecretScopeStatus `json:"status,omitempty"`
+}
+
+// IsSecretAvailable returns true if secret in cluster is available
+func (ss *SecretScope) IsSecretAvailable() bool {
+	return ss.Status.SecretInClusterAvailable
+}
+
+// IsCreated returns SecretScopeCreated's value
+func (ss *SecretScope) IsCreated() bool {
+	return ss.Status.SecretScopeCreated
 }
 
 // IsSubmitted returns true if the item has been submitted to DataBricks
