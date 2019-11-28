@@ -27,12 +27,14 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"math/rand"
 )
 
 var _ = Describe("SecretScope Controller", func() {
 
 	const timeout = time.Second * 30
 	const interval = time.Second * 1
+	const charset = "abcdefghijklmnopqrstuvwxyz"
 
 	const aclKeyName = "secretscope-with-acls"
 	const secretsKeyName = "secretscope-with-secrets"
@@ -65,8 +67,10 @@ var _ = Describe("SecretScope Controller", func() {
 				},
 			}
 
+			name := aclKeyName + "-" + randomStringWithCharset(10, charset)
+
 			key := types.NamespacedName{
-				Name:      aclKeyName,
+				Name:      name,
 				Namespace: "default",
 			}
 
@@ -173,8 +177,10 @@ var _ = Describe("SecretScope Controller", func() {
 				},
 			}
 
+			name := secretsKeyName + "-" + randomStringWithCharset(10, charset)
+
 			key := types.NamespacedName{
-				Name:      secretsKeyName,
+				Name:      name,
 				Namespace: "default",
 			}
 
@@ -234,3 +240,12 @@ var _ = Describe("SecretScope Controller", func() {
 		})
 	})
 })
+
+func randomStringWithCharset(length int, charset string) string {
+	var seededRand = rand.New(rand.NewSource(time.Now().UnixNano()))
+	b := make([]byte, length)
+	for i := range b {
+		b[i] = charset[seededRand.Intn(len(charset))]
+	}
+	return string(b)
+}
