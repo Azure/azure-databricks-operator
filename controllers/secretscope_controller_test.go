@@ -29,7 +29,6 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"math/rand"
 	"os"
 )
 
@@ -37,7 +36,6 @@ var _ = Describe("SecretScope Controller", func() {
 
 	const timeout = time.Second * 30
 	const interval = time.Second * 1
-	const charset = "abcdefghijklmnopqrstuvwxyz"
 
 	const aclKeyName = "secretscope-with-acls"
 	const secretsKeyName = "secretscope-with-secrets"
@@ -93,10 +91,8 @@ var _ = Describe("SecretScope Controller", func() {
 				},
 			}
 
-			name := aclKeyName + "-" + randomStringWithCharset(10, charset)
-
 			key := types.NamespacedName{
-				Name:      name,
+				Name:      aclKeyName,
 				Namespace: "default",
 			}
 
@@ -203,10 +199,8 @@ var _ = Describe("SecretScope Controller", func() {
 				},
 			}
 
-			name := secretsKeyName + "-" + randomStringWithCharset(10, charset)
-
 			key := types.NamespacedName{
-				Name:      name,
+				Name:      secretsKeyName,
 				Namespace: "default",
 			}
 
@@ -288,10 +282,8 @@ var _ = Describe("SecretScope Controller", func() {
 				},
 			}
 
-			name := aclKeyName + "-" + randomStringWithCharset(10, charset)
-
 			key := types.NamespacedName{
-				Name:      name,
+				Name:      aclKeyName,
 				Namespace: "default",
 			}
 
@@ -361,8 +353,6 @@ var _ = Describe("SecretScope Controller", func() {
 	Context("Secret Scope with ACLs", func() {
 		It("Should fail if secret scope exist in Databricks", func() {
 
-			name := aclKeyName + "-" + randomStringWithCharset(10, charset)
-
 			var o databricks.DBClientOption
 			o.Host = os.Getenv("DATABRICKS_HOST")
 			o.Token = os.Getenv("DATABRICKS_TOKEN")
@@ -370,9 +360,9 @@ var _ = Describe("SecretScope Controller", func() {
 			var APIClient dbazure.DBClient
 			APIClient.Init(o)
 
-			Expect(APIClient.Secrets().CreateSecretScope(name, "users")).Should(Succeed())
+			Expect(APIClient.Secrets().CreateSecretScope(aclKeyName, "users")).Should(Succeed())
 			defer func() {
-				Expect(APIClient.Secrets().DeleteSecretScope(name)).Should(Succeed())
+				Expect(APIClient.Secrets().DeleteSecretScope(aclKeyName)).Should(Succeed())
 				time.Sleep(time.Second * 5)
 			}()
 
@@ -392,7 +382,7 @@ var _ = Describe("SecretScope Controller", func() {
 			}
 
 			key := types.NamespacedName{
-				Name:      name,
+				Name:      aclKeyName,
 				Namespace: "default",
 			}
 
@@ -451,12 +441,3 @@ var _ = Describe("SecretScope Controller", func() {
 		})
 	})
 })
-
-func randomStringWithCharset(length int, charset string) string {
-	var seededRand = rand.New(rand.NewSource(time.Now().UnixNano()))
-	b := make([]byte, length)
-	for i := range b {
-		b[i] = charset[seededRand.Intn(len(charset))]
-	}
-	return string(b)
-}
