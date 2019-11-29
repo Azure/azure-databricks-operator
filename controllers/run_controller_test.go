@@ -55,7 +55,7 @@ var _ = Describe("Run Controller", func() {
 		It("Should create successfully", func() {
 			By("Create job for run")
 			jobKey := types.NamespacedName{
-				Name:      "integreation-test-job-for-run",
+				Name:      "t-job-for-run" + "-" + randomStringWithCharset(10, charset),
 				Namespace: "default",
 			}
 
@@ -99,7 +99,7 @@ var _ = Describe("Run Controller", func() {
 
 			By("Create the run itself")
 			runKey := types.NamespacedName{
-				Name:      "integreation-test-job-for-run-run",
+				Name:      "t-job-for-run-run" + "-" + randomStringWithCharset(10, charset),
 				Namespace: "default",
 			}
 

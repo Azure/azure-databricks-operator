@@ -28,6 +28,9 @@ import (
 func (r *WorkspaceItemReconciler) submit(instance *databricksv1alpha1.WorkspaceItem) error {
 	r.Log.Info(fmt.Sprintf("Create item %s", instance.GetName()))
 
+	if instance.Spec == nil || len(instance.Spec.Content) <= 0 {
+		return fmt.Errorf("Workspace Content is empty")
+	}
 	data, err := base64.StdEncoding.DecodeString(instance.Spec.Content)
 	if err != nil {
 		return err

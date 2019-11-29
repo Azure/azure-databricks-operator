@@ -27,7 +27,6 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"math/rand"
 )
 
 var _ = Describe("SecretScope Controller", func() {
@@ -36,8 +35,8 @@ var _ = Describe("SecretScope Controller", func() {
 	const interval = time.Second * 1
 	const charset = "abcdefghijklmnopqrstuvwxyz"
 
-	const aclKeyName = "secretscope-with-acls"
-	const secretsKeyName = "secretscope-with-secrets"
+	var aclKeyName = "t-secretscope-with-acls" + randomStringWithCharset(10, charset)
+	var secretsKeyName = "t-secretscope-with-secrets" + randomStringWithCharset(10, charset)
 
 	BeforeEach(func() {
 		// failed test runs that don't clean up leave resources behind.
@@ -67,10 +66,8 @@ var _ = Describe("SecretScope Controller", func() {
 				},
 			}
 
-			name := aclKeyName + "-" + randomStringWithCharset(10, charset)
-
 			key := types.NamespacedName{
-				Name:      name,
+				Name:      aclKeyName,
 				Namespace: "default",
 			}
 
@@ -131,7 +128,7 @@ var _ = Describe("SecretScope Controller", func() {
 
 			// setup k8s secret
 			k8SecretKey := types.NamespacedName{
-				Name:      "k8secret",
+				Name:      "t-k8secret",
 				Namespace: "default",
 			}
 
@@ -159,7 +156,7 @@ var _ = Describe("SecretScope Controller", func() {
 					Key: "secretFromSecret",
 					ValueFrom: &databricksv1alpha1.SecretScopeValueFrom{
 						SecretKeyRef: databricksv1alpha1.SecretScopeKeyRef{
-							Name: "k8secret",
+							Name: "t-k8secret",
 							Key:  "username",
 						},
 					},
@@ -177,10 +174,8 @@ var _ = Describe("SecretScope Controller", func() {
 				},
 			}
 
-			name := secretsKeyName + "-" + randomStringWithCharset(10, charset)
-
 			key := types.NamespacedName{
-				Name:      name,
+				Name:      secretsKeyName,
 				Namespace: "default",
 			}
 
@@ -240,12 +235,3 @@ var _ = Describe("SecretScope Controller", func() {
 		})
 	})
 })
-
-func randomStringWithCharset(length int, charset string) string {
-	var seededRand = rand.New(rand.NewSource(time.Now().UnixNano()))
-	b := make([]byte, length)
-	for i := range b {
-		b[i] = charset[seededRand.Intn(len(charset))]
-	}
-	return string(b)
-}

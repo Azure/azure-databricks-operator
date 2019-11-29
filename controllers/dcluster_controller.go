@@ -107,20 +107,15 @@ const dclusterIndexKey = ".status.cluster_info.cluster_id"
 
 // SetupWithManager adds the controller manager
 func (r *DclusterReconciler) SetupWithManager(mgr ctrl.Manager) error {
-
 	if err := mgr.GetFieldIndexer().IndexField(&databricksv1alpha1.Dcluster{}, dclusterIndexKey, func(rawObj runtime.Object) []string {
 		dcluster := rawObj.(*databricksv1alpha1.Dcluster)
-		if dcluster == nil {
-			return nil
-		}
-		if dcluster.Status == nil || dcluster.Status.ClusterInfo == nil {
+		if dcluster == nil || dcluster.Status == nil || dcluster.Status.ClusterInfo == nil {
 			return nil
 		}
 		return []string{dcluster.Status.ClusterInfo.ClusterID}
 	}); err != nil {
 		return err
 	}
-
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&databricksv1alpha1.Dcluster{}).
 		Complete(r)
