@@ -134,6 +134,8 @@ endif
 	
 	kubectl cluster-info
 
+	@echo "deploying controller to cluster"
+	make deploy-controller
 
 install-kind:
 ifeq (,$(shell which kind))

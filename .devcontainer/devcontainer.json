@@ -8,7 +8,7 @@
 	"postCreateCommand": "make set-kindcluster",
     "runArgs": [
 		// Mount the env file
-		"--env-file", "${localWorkspaceFolder}/.env",
+		"--env-file", "${localWorkspaceFolder}/.devcontainer/.env",
 		// Mount go mod cache
 		"-v", "dboperator-gomodcache:/go/pkg",
 		// Cache vscode exentsions installs and homedir
