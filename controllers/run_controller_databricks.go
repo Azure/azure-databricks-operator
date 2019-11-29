@@ -18,6 +18,7 @@ package controllers
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"reflect"
 	"strings"
@@ -52,11 +53,11 @@ func (r *RunReconciler) submit(instance *databricksv1alpha1.Run) error {
 		// Here we set the owner attribute
 		k8sJobNamespacedName := types.NamespacedName{Namespace: instance.GetNamespace(), Name: instance.Spec.JobName}
 		var k8sJob databricksv1alpha1.Djob
-		if err := r.Client.Get(context.Background(), k8sJobNamespacedName, &k8sJob); err != nil {
+		if err = r.Client.Get(context.Background(), k8sJobNamespacedName, &k8sJob); err != nil {
 			return err
 		}
 		instance.ObjectMeta.SetOwnerReferences([]metav1.OwnerReference{
-			metav1.OwnerReference{
+			{
 				APIVersion: "v1alpha1", // TODO should this be a referenced value?
 				Kind:       "Djob",     // TODO should this be a referenced value?
 				Name:       k8sJob.GetName(),
@@ -103,6 +104,9 @@ func (r *RunReconciler) refresh(instance *databricksv1alpha1.Run) error {
 	if err != nil {
 		return err
 	}
+	if len(runOutput.Error) > 0 {
+		return errors.New(runOutput.Error)
+	}
 
 	err = r.Get(context.Background(), types.NamespacedName{
 		Name:      instance.GetName(),
@@ -139,7 +143,7 @@ func (r *RunReconciler) delete(instance *databricksv1alpha1.Run) error {
 
 	// We will not check for error when cancelling a job,
 	// if it fails just let it be
-	r.APIClient.Jobs().RunsCancel(runID)
+	r.APIClient.Jobs().RunsCancel(runID) //nolint:errcheck
 
 	// It takes time for DataBricks to cancel a run
 	time.Sleep(15 * time.Second)

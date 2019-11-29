@@ -7,7 +7,7 @@ CRD_OPTIONS ?= "crd:trivialVersions=true"
 all: manager
 
 # Run tests
-test: generate fmt vet manifests
+test: generate fmt lint vet manifests
 	rm -rf cover.* cover
 	mkdir -p cover
 
@@ -20,7 +20,7 @@ test: generate fmt vet manifests
 	rm -f cover.out cover.out.tmp cover.json
 
 # Run tests with existing cluster
-test-existing: generate fmt vet manifests
+test-existing: generate fmt lint vet manifests
 	rm -rf cover.* cover
 	mkdir -p cover
 
@@ -33,11 +33,11 @@ test-existing: generate fmt vet manifests
 	rm -f cover.out cover.out.tmp cover.json
 
 # Build manager binary
-manager: generate fmt vet
+manager: generate fmt lint vet
 	go build -o bin/manager main.go
 
 # Run against the configured Kubernetes cluster in ~/.kube/config
-run: generate fmt vet
+run: generate fmt lint vet
 	go run ./main.go
 
 # Install CRDs into a cluster
@@ -78,12 +78,16 @@ manifests: controller-gen
 
 # Run go fmt against code
 fmt:
-	go fmt ./...
+	find . -name '*.go' | grep -v vendor | xargs gofmt -s -w
 
 # Run go vet against code
 vet:
 	go vet ./...
-
+	
+# Run linting
+lint:
+	GO111MODULE=on golangci-lint run
+	
 # Generate code
 generate: controller-gen
 	$(CONTROLLER_GEN) object:headerFile=./hack/boilerplate.go.txt paths=./api/...

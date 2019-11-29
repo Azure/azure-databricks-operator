@@ -23,6 +23,7 @@ import (
 
 	"github.com/go-logr/logr"
 	dbazure "github.com/xinsnake/databricks-sdk-golang/azure"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -43,6 +44,7 @@ type DclusterReconciler struct {
 // +kubebuilder:rbac:groups=databricks.microsoft.com,resources=dclusters,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=databricks.microsoft.com,resources=dclusters/status,verbs=get;update;patch
 
+// Reconcile implements the reconciliation loop for the operator
 func (r *DclusterReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	_ = context.Background()
 	_ = r.Log.WithValues("dcluster", req.NamespacedName)
@@ -62,41 +64,46 @@ func (r *DclusterReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	if instance.IsBeingDeleted() {
 		r.Log.Info(fmt.Sprintf("HandleFinalizer for %v", req.NamespacedName))
 		if err := r.handleFinalizer(instance); err != nil {
+			r.Recorder.Event(instance, corev1.EventTypeWarning, "deleting finalizer", fmt.Sprintf("Failed to delete finalizer: %s", err))
 			return ctrl.Result{}, fmt.Errorf("error when handling finalizer: %v", err)
 		}
-		r.Recorder.Event(instance, "Normal", "Deleted", "Object finalizer is deleted")
+		r.Recorder.Event(instance, corev1.EventTypeNormal, "Deleted", "Object finalizer is deleted")
 		return ctrl.Result{}, nil
 	}
 
 	if !instance.HasFinalizer(databricksv1alpha1.DclusterFinalizerName) {
 		r.Log.Info(fmt.Sprintf("AddFinalizer for %v", req.NamespacedName))
 		if err := r.addFinalizer(instance); err != nil {
+			r.Recorder.Event(instance, corev1.EventTypeWarning, "Adding finalizer", fmt.Sprintf("Failed to add finalizer: %s", err))
 			return ctrl.Result{}, fmt.Errorf("error when adding finalizer: %v", err)
 		}
-		r.Recorder.Event(instance, "Normal", "Added", "Object finalizer is added")
+		r.Recorder.Event(instance, corev1.EventTypeNormal, "Added", "Object finalizer is added")
 		return ctrl.Result{}, nil
 	}
 
 	if !instance.IsSubmitted() {
 		r.Log.Info(fmt.Sprintf("Submit for %v", req.NamespacedName))
 		if err := r.submit(instance); err != nil {
+			r.Recorder.Event(instance, corev1.EventTypeWarning, "Submitting object", fmt.Sprintf("Failed to submit object: %s", err))
 			return ctrl.Result{}, fmt.Errorf("error when submitting cluster: %v", err)
 		}
-		r.Recorder.Event(instance, "Normal", "Submitted", "Object is submitted")
+		r.Recorder.Event(instance, corev1.EventTypeNormal, "Submitted", "Object is submitted")
 		return ctrl.Result{}, nil
 	}
 
 	if instance.IsSubmitted() {
 		r.Log.Info(fmt.Sprintf("Refresh for %v", req.NamespacedName))
 		if err := r.refresh(instance); err != nil {
+			r.Recorder.Event(instance, corev1.EventTypeWarning, "Refreshing object", fmt.Sprintf("Failed to refresh object: %s", err))
 			return ctrl.Result{}, fmt.Errorf("error when refreshing cluster: %v", err)
 		}
-		r.Recorder.Event(instance, "Normal", "Refreshed", "Object is refreshed")
+		r.Recorder.Event(instance, corev1.EventTypeNormal, "Refreshed", "Object is refreshed")
 	}
 
 	return ctrl.Result{RequeueAfter: 30 * time.Second}, nil
 }
 
+// SetupWithManager adds the controller manager
 func (r *DclusterReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&databricksv1alpha1.Dcluster{}).

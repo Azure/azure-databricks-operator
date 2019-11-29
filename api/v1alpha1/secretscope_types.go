@@ -51,24 +51,30 @@ type SecretScope struct {
 	Status SecretScopeStatus `json:"status,omitempty"`
 }
 
+// IsSubmitted returns true if the item has been submitted to DataBricks
 func (ss *SecretScope) IsSubmitted() bool {
 	return ss.Status.SecretScope != nil
 }
 
+// IsBeingDeleted returns true if a deletion timestamp is set
 func (ss *SecretScope) IsBeingDeleted() bool {
 	return !ss.ObjectMeta.DeletionTimestamp.IsZero()
 }
 
+// SecretScopeFinalizerName is the name of the secretscope finalizer
 const SecretScopeFinalizerName = "secretscope.finalizers.databricks.microsoft.com"
 
+// HasFinalizer returns true if the item has the specified finalizer
 func (ss *SecretScope) HasFinalizer(finalizerName string) bool {
 	return containsString(ss.ObjectMeta.Finalizers, finalizerName)
 }
 
+// AddFinalizer adds the specified finalizer
 func (ss *SecretScope) AddFinalizer(finalizerName string) {
 	ss.ObjectMeta.Finalizers = append(ss.ObjectMeta.Finalizers, finalizerName)
 }
 
+// RemoveFinalizer removes the specified finalizer
 func (ss *SecretScope) RemoveFinalizer(finalizerName string) {
 	ss.ObjectMeta.Finalizers = removeString(ss.ObjectMeta.Finalizers, finalizerName)
 }

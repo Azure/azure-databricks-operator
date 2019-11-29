@@ -107,6 +107,7 @@ spec:
               type: string
           type: object
         status:
+          description: DclusterStatus represents the status for a Dcluster
           properties:
             cluster_info:
               description: DclusterInfo is similar to dbmodels.ClusterInfo, the reason
@@ -153,14 +154,9 @@ spec:
                 creator_user_name:
                   type: string
                 default_tags:
-                  items:
-                    properties:
-                      key:
-                        type: string
-                      value:
-                        type: string
-                    type: object
-                  type: array
+                  additionalProperties:
+                    type: string
+                  type: object
                 driver:
                   properties:
                     host_private_ip:
