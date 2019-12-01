@@ -1,0 +1,20 @@
+apiVersion: databricks.microsoft.com/v1alpha1
+kind: Djob
+metadata:
+  name: djob-basic-on-new-cluster
+spec:
+  # This spec is directly linked to the JobSettings structure
+  # https://docs.databricks.com/api/latest/jobs.html#jobsettings
+  new_cluster:
+    spark_version: 5.3.x-scala2.11
+    node_type_id: Standard_D3_v2
+    num_workers: 3
+  timeout_seconds: 3600
+  max_retries: 1
+  schedule:
+    quartz_cron_expression: 0 0/5 * * * ?
+    timezone_id: America/Los_Angeles
+  notebook_task:
+    base_parameters:
+      "name":  "Azadeh"
+    notebook_path: "/samples/basic1" 

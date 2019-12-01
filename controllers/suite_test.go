@@ -17,16 +17,16 @@ limitations under the License.
 package controllers
 
 import (
-	"os"
-	"path/filepath"
-	"testing"
-	"time"
-
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
 	db "github.com/xinsnake/databricks-sdk-golang"
 	dbazure "github.com/xinsnake/databricks-sdk-golang/azure"
+	"math/rand"
+	"os"
+	"path/filepath"
+	"testing"
+	"time"
 
 	databricksv1alpha1 "github.com/microsoft/azure-databricks-operator/api/v1alpha1"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -162,3 +162,14 @@ var _ = AfterSuite(func() {
 	err := testEnv.Stop()
 	Expect(err).ToNot(HaveOccurred())
 })
+
+const charset = "abcdefghijklmnopqrstuvwxyz"
+
+func randomStringWithCharset(length int, charset string) string {
+	var seededRand = rand.New(rand.NewSource(time.Now().UnixNano()))
+	b := make([]byte, length)
+	for i := range b {
+		b[i] = charset[seededRand.Intn(len(charset))]
+	}
+	return string(b)
+}

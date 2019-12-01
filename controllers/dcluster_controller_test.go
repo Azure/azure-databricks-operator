@@ -28,7 +28,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
-var _ = Describe("DbfsBlock Controller", func() {
+var _ = Describe("Dcluster Controller", func() {
 
 	const timeout = time.Second * 30
 	const interval = time.Second * 1
@@ -49,7 +49,7 @@ var _ = Describe("DbfsBlock Controller", func() {
 		It("Should create successfully", func() {
 
 			key := types.NamespacedName{
-				Name:      "test-cluster",
+				Name:      "t-cluster" + "-" + randomStringWithCharset(10, charset),
 				Namespace: "default",
 			}
 
@@ -63,7 +63,7 @@ var _ = Describe("DbfsBlock Controller", func() {
 						MinWorkers: 2,
 						MaxWorkers: 5,
 					},
-					AutoterminationMinutes: 15,
+					AutoterminationMinutes: 10,
 					NodeTypeID:             "Standard_D3_v2",
 					SparkVersion:           "5.3.x-scala2.11",
 				},

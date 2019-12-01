@@ -58,7 +58,7 @@ var _ = Describe("DbfsBlock Controller", func() {
 			dataStr2 := base64.StdEncoding.EncodeToString(data2)
 
 			key := types.NamespacedName{
-				Name:      "block-greater-than-1mb",
+				Name:      "t-block-greater-than-1mb" + randomStringWithCharset(10, charset),
 				Namespace: "default",
 			}
 

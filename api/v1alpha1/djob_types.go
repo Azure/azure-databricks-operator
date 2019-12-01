@@ -36,8 +36,8 @@ type Djob struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   *dbmodels.JobSettings `json:"spec,omitempty"`
-	Status *DjobStatus           `json:"status,omitempty"`
+	Spec   *JobSettings `json:"spec,omitempty"`
+	Status *DjobStatus  `json:"status,omitempty"`
 }
 
 // IsBeingDeleted returns true if a deletion timestamp is set

@@ -16,9 +16,6 @@ spec:
   - JSONPath: .status.cluster_info.state
     name: State
     type: string
-  - JSONPath: .status.cluster_info.num_workers
-    name: NumWorkers
-    type: integer
   group: databricks.microsoft.com
   names:
     kind: Dcluster
