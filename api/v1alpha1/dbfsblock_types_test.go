@@ -54,7 +54,7 @@ var _ = Describe("DbfsBlock", func() {
 		It("should create an object successfully", func() {
 
 			key = types.NamespacedName{
-				Name:      "foo"+ RandomString(5),
+				Name:      "foo" + RandomString(5),
 				Namespace: "default",
 			}
 			created = &DbfsBlock{
