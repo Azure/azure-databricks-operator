@@ -152,42 +152,6 @@ func (r *SecretScopeReconciler) submitACLs(instance *databricksv1alpha1.SecretSc
 	return nil
 }
 
-// verifyWorkspace checks if Databricks cluster supports ACLs, and checks if secret scope exists.
-func (r *SecretScopeReconciler) verifyWorkspace(instance *databricksv1alpha1.SecretScope) error {
-	scope := instance.ObjectMeta.Name
-	initialManagePrincipal := instance.Spec.InitialManagePrincipal
-
-	// try create secret scope to see if exists or not.
-	list, err := r.APIClient.Secrets().ListSecretScopes()
-	if err != nil {
-		return err
-	}
-
-	for _, n := range list {
-		if n.Name == scope {
-			return fmt.Errorf("Secret scope %v exists", scope)
-		}
-	}
-
-	// create the secret scope here otherwise we cannot verify ACL support.
-	err = r.APIClient.Secrets().CreateSecretScope(scope, initialManagePrincipal)
-	if err != nil {
-		return err
-	}
-
-	// try to list ACLs to see if cluster supports ACL.
-	if instance.Spec.SecretScopeACLs != nil {
-		if _, err = r.APIClient.Secrets().ListSecretACLs(scope); err != nil {
-			// delete secret scope because we're unable to deploy scope with ACL.
-			_ = r.APIClient.Secrets().DeleteSecretScope(scope)
-			return err
-		}
-	}
-
-	instance.Status.WorkspaceVerified = true
-	return r.Update(context.Background(), instance)
-}
-
 // checkSecrets checks if referenced secret is present in k8s or not.
 func (r *SecretScopeReconciler) checkSecrets(instance *databricksv1alpha1.SecretScope) error {
 	namespace := instance.Namespace
@@ -205,28 +169,36 @@ func (r *SecretScopeReconciler) checkSecrets(instance *databricksv1alpha1.Secret
 	return r.Update(context.Background(), instance)
 }
 
-func (r *SecretScopeReconciler) submit(instance *databricksv1alpha1.SecretScope) error {
+func (r *SecretScopeReconciler) submit(instance *databricksv1alpha1.SecretScope) (requeue bool, err error) {
 	scope := instance.ObjectMeta.Name
+	initialManagePrincipal := instance.Spec.InitialManagePrincipal
 
-	err := r.submitSecrets(instance)
+	err = r.APIClient.Secrets().CreateSecretScope(scope, initialManagePrincipal)
 	if err != nil {
-		return err
+		return
+	}
+
+	err = r.submitSecrets(instance)
+	if err != nil {
+		requeue = true
+		return
 	}
 
 	if instance.Spec.SecretScopeACLs != nil {
-		err := r.submitACLs(instance)
+		err = r.submitACLs(instance)
 		if err != nil {
-			return err
+			return
 		}
 	}
 
 	remoteScope, err := r.get(scope)
 	if err != nil {
-		return err
+		requeue = true
+		return
 	}
 
 	instance.Status.SecretScope = remoteScope
-	return r.Update(context.Background(), instance)
+	return true, r.Update(context.Background(), instance)
 }
 
 func (r *SecretScopeReconciler) delete(instance *databricksv1alpha1.SecretScope) error {

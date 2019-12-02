@@ -83,26 +83,27 @@ func (r *SecretScopeReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error)
 		return ctrl.Result{}, nil
 	}
 
-	if !instance.IsVerified() {
-		if err = r.verifyWorkspace(instance); err != nil {
-			r.Recorder.Event(instance, corev1.EventTypeWarning, "Failed", err.Error())
-			return ctrl.Result{}, nil
-		}
-	}
-
 	if !instance.IsSecretAvailable() {
 		if err = r.checkSecrets(instance); err != nil {
 			r.Recorder.Event(instance, corev1.EventTypeWarning, "Failed", err.Error())
-			return ctrl.Result{Requeue: true, RequeueAfter: 30 * time.Second}, fmt.Errorf("error when submitting secret scope to the API: %v", err)
+			return ctrl.Result{RequeueAfter: 30 * time.Second}, fmt.Errorf("error when submitting secret scope to the API: %v", err)
 		}
+		r.Recorder.Event(instance, corev1.EventTypeNormal, "Passed", "Secrets are available")
+		return ctrl.Result{}, nil
 	}
 
 	if !instance.IsSubmitted() {
-		if err = r.submit(instance); err != nil {
-			r.Recorder.Event(instance, corev1.EventTypeWarning, "Submitting object", fmt.Sprintf("Failed to submit object: %s", err))
-			return ctrl.Result{}, fmt.Errorf("error when submitting secret scope to the API: %v", err)
+		var requeue bool
+		requeue, err = r.submit(instance)
+		if err != nil {
+			r.Recorder.Event(instance, corev1.EventTypeWarning, "Failed", fmt.Sprintf("Failed to submit object: %s", err))
+			if requeue {
+				return ctrl.Result{RequeueAfter: 30 * time.Second}, fmt.Errorf("error when submitting secret scope to the API: %v", err)
+			}
+			return ctrl.Result{}, nil
 		}
 		r.Recorder.Event(instance, corev1.EventTypeNormal, "Submitted", "Object is submitted")
+		return ctrl.Result{}, nil
 	}
 
 	r.Recorder.Event(instance, corev1.EventTypeNormal, "Completed", "Object has completed")
