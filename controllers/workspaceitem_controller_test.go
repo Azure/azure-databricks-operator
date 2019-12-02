@@ -48,7 +48,7 @@ var _ = Describe("WorkspaceItem Controller", func() {
 		It("Should create successfully", func() {
 
 			key := types.NamespacedName{
-				Name:      "block-greater-than-1mb",
+				Name:      "t-workspace-item" + randomStringWithCharset(10, charset),
 				Namespace: "default",
 			}
 

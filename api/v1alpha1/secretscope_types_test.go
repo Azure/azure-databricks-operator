@@ -53,13 +53,13 @@ var _ = Describe("SecretScope", func() {
 		It("should create an object successfully", func() {
 
 			key = types.NamespacedName{
-				Name:      "foo",
+				Name:      "foo-" + RandomString(5),
 				Namespace: "default",
 			}
 			created = &SecretScope{
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      "foo",
-					Namespace: "default",
+					Name:      key.Name,
+					Namespace: key.Namespace,
 				}}
 
 			By("creating an API obj")

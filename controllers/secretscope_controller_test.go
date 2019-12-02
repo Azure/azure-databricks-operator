@@ -36,9 +36,10 @@ var _ = Describe("SecretScope Controller", func() {
 
 	const timeout = time.Second * 30
 	const interval = time.Second * 1
+	const charset = "abcdefghijklmnopqrstuvwxyz"
 
-	const aclKeyName = "secretscope-with-acls"
-	const secretsKeyName = "secretscope-with-secrets"
+	var aclKeyName = "t-secretscope-with-acls" + randomStringWithCharset(10, charset)
+	var secretsKeyName = "t-secretscope-with-secrets" + randomStringWithCharset(10, charset)
 
 	BeforeEach(func() {
 		// failed test runs that don't clean up leave resources behind.
@@ -153,7 +154,7 @@ var _ = Describe("SecretScope Controller", func() {
 
 			// setup k8s secret
 			k8SecretKey := types.NamespacedName{
-				Name:      "k8secret",
+				Name:      "t-k8secret",
 				Namespace: "default",
 			}
 
@@ -181,7 +182,7 @@ var _ = Describe("SecretScope Controller", func() {
 					Key: "secretFromSecret",
 					ValueFrom: &databricksv1alpha1.SecretScopeValueFrom{
 						SecretKeyRef: databricksv1alpha1.SecretScopeKeyRef{
-							Name: "k8secret",
+							Name: "t-k8secret",
 							Key:  "username",
 						},
 					},
