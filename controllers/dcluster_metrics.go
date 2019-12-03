@@ -22,53 +22,32 @@ import (
 )
 
 var (
-	dclusterCreateSuccess = prometheus.NewCounter(
+	dclusterCounterVec = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Name: "dcluster_create_success_total",
-			Help: "Number of create dcluster success",
+			Name: metricPrefix + "dcluster_total",
+			Help: "Counter related to the dCluster CRD partitioned by status and method invoked. Status = success/fail and method indicates REST endpoint",
 		},
-	)
-	dclusterCreateFailure = prometheus.NewCounter(
-		prometheus.CounterOpts{
-			Name: "dcluster_create_failures_total",
-			Help: "Number of create dcluster failures",
-		},
-	)
-
-	dclusterGetSuccess = prometheus.NewCounter(
-		prometheus.CounterOpts{
-			Name: "dcluster_get_success_total",
-			Help: "Number of create dcluster success",
-		},
-	)
-	dclusterGetFailure = prometheus.NewCounter(
-		prometheus.CounterOpts{
-			Name: "dcluster_get_failures_total",
-			Help: "Number of create dcluster failures",
-		},
+		[]string{"status", "method"},
 	)
 
 	dclusterCreateDuration = prometheus.NewHistogram(prometheus.HistogramOpts{
-		Name:    "dcluster_creation_duration",
-		Help:    "Duration of DB api dcluster create calls.",
-		Buckets: prometheus.LinearBuckets(100, 10, 20),
+		Name: metricPrefix + "dcluster_creation_request_duration_seconds",
+		Help: "Duration of DB api dcluster create calls.",
 	})
 
 	dclusterGetDuration = prometheus.NewHistogram(prometheus.HistogramOpts{
-		Name:    "dcluster_get_duration",
-		Help:    "Duration of DB api dcluster get calls.",
-		Buckets: prometheus.LinearBuckets(100, 10, 20),
+		Name: metricPrefix + "dcluster_get_request_duration_seconds",
+		Help: "Duration of DB api dcluster get calls.",
 	})
 
 	dclusterDeleteDuration = prometheus.NewHistogram(prometheus.HistogramOpts{
-		Name:    "dcluster_delete_duration",
-		Help:    "Duration of DB api dcluster delete calls.",
-		Buckets: prometheus.LinearBuckets(100, 10, 20),
+		Name: metricPrefix + "dcluster_delete_request_duration_seconds",
+		Help: "Duration of DB api dcluster delete calls.",
 	})
 )
 
 func init() {
 	// Register custom metrics with the global prometheus registry
-	metrics.Registry.MustRegister(dclusterCreateSuccess, dclusterCreateFailure, dclusterGetSuccess, dclusterGetFailure,
+	metrics.Registry.MustRegister(dclusterCounterVec,
 		dclusterCreateDuration, dclusterGetDuration, dclusterDeleteDuration)
 }

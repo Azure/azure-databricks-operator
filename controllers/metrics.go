@@ -17,28 +17,25 @@ limitations under the License.
 package controllers
 
 import (
-	"time"
-
 	"github.com/prometheus/client_golang/prometheus"
 )
 
+const (
+	metricPrefix  = "databricks_"
+	successMetric = "success"
+	failureMetric = "failure"
+)
+
 func trackExecutionTime(histogram prometheus.Histogram, f func() error) error {
-	startTime := time.Now()
-
-	defer trackMillisecondsTaken(startTime, histogram)
-
+	timer := prometheus.NewTimer(histogram)
+	defer timer.ObserveDuration()
 	return f()
 }
 
-func trackMillisecondsTaken(startTime time.Time, histogram prometheus.Histogram) {
-	duration := float64(time.Since(startTime) / time.Millisecond)
-	histogram.Observe(duration)
-}
-
-func trackSuccessFailure(err error, success prometheus.Counter, failure prometheus.Counter) {
+func trackSuccessFailure(err error, counterVec *prometheus.CounterVec, method string) {
 	if err == nil {
-		success.Inc()
+		counterVec.With(prometheus.Labels{"status": successMetric, "method": method}).Inc()
 	} else {
-		failure.Inc()
+		counterVec.With(prometheus.Labels{"status": failureMetric, "method": method}).Inc()
 	}
 }

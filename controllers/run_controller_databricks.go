@@ -24,6 +24,7 @@ import (
 	"time"
 
 	databricksv1alpha1 "github.com/microsoft/azure-databricks-operator/api/v1alpha1"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/xinsnake/databricks-sdk-golang/azure"
 	dbmodels "github.com/xinsnake/databricks-sdk-golang/azure/models"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -112,12 +113,16 @@ func (r *RunReconciler) delete(instance *databricksv1alpha1.Run) error {
 	time.Sleep(15 * time.Second)
 
 	return trackExecutionTime(runDeleteDuration, func() error {
-		return r.APIClient.Jobs().RunsDelete(runID)
+		err := r.APIClient.Jobs().RunsDelete(runID)
+		trackSuccessFailure(err, runCounterVec, "delete")
+		return err
 	})
 }
 
 func (r *RunReconciler) runUsingRunNow(instance *databricksv1alpha1.Run) (*dbmodels.Run, error) {
-	defer trackMillisecondsTaken(time.Now(), runNowDuration)
+	timer := prometheus.NewTimer(runNowDuration)
+	defer timer.ObserveDuration()
+
 	runParameters := dbmodels.RunParameters{
 		JarParams:         instance.Spec.JarParams,
 		NotebookParams:    instance.Spec.NotebookParams,
@@ -142,12 +147,13 @@ func (r *RunReconciler) runUsingRunNow(instance *databricksv1alpha1.Run) (*dbmod
 	})
 
 	run, err := r.APIClient.Jobs().RunNow(k8sJob.Status.JobStatus.JobID, runParameters)
-	trackSuccessFailure(err, runNowSuccess, runNowFailure)
+	trackSuccessFailure(err, runCounterVec, "runsnow")
 	return &run, err
 }
 
 func (r *RunReconciler) runUsingRunsSubmit(instance *databricksv1alpha1.Run) (*dbmodels.Run, error) {
-	defer trackMillisecondsTaken(time.Now(), runSubmitDuration)
+	timer := prometheus.NewTimer(runSubmitDuration)
+	defer timer.ObserveDuration()
 
 	clusterSpec := dbmodels.ClusterSpec{
 		NewCluster:        instance.Spec.NewCluster,
@@ -162,26 +168,28 @@ func (r *RunReconciler) runUsingRunsSubmit(instance *databricksv1alpha1.Run) (*d
 	}
 
 	run, err := r.APIClient.Jobs().RunsSubmit(instance.Spec.RunName, clusterSpec, jobTask, instance.Spec.TimeoutSeconds)
-	trackSuccessFailure(err, runSubmitSuccess, runSubmitFailure)
+	trackSuccessFailure(err, runCounterVec, "runssubmit")
 	return &run, err
 }
 
 func (r *RunReconciler) getRun(runID int64) (dbmodels.Run, error) {
-	defer trackMillisecondsTaken(time.Now(), runGetDuration)
+	timer := prometheus.NewTimer(runGetDuration)
+	defer timer.ObserveDuration()
 
 	runOutput, err := r.APIClient.Jobs().RunsGet(runID)
 
-	trackSuccessFailure(err, runGetSuccess, runGetFailure)
+	trackSuccessFailure(err, runCounterVec, "get")
 
 	return runOutput, err
 }
 
 func (r *RunReconciler) getRunOutput(runID int64) (azure.JobsRunsGetOutputResponse, error) {
-	defer trackMillisecondsTaken(time.Now(), runGetOutputDuration)
+	timer := prometheus.NewTimer(runGetOutputDuration)
+	defer timer.ObserveDuration()
 
 	runOutput, err := r.APIClient.Jobs().RunsGetOutput(runID)
 
-	trackSuccessFailure(err, runGetOutputSuccess, runGetOutputFailure)
+	trackSuccessFailure(err, runCounterVec, "getoutput")
 
 	return runOutput, err
 }

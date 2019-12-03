@@ -22,93 +22,42 @@ import (
 )
 
 var (
-	runNowSuccess = prometheus.NewCounter(
+	runCounterVec = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Name: "run_now_success_total",
-			Help: "Number of run now success",
+			Name: metricPrefix + "run_total",
+			Help: "Counter related to the Run CRD partitioned by status and method invoked. Status = success/fail and method indicates REST endpoint",
 		},
-	)
-	runNowFailure = prometheus.NewCounter(
-		prometheus.CounterOpts{
-			Name: "run_now_failures_total",
-			Help: "Number of run now failures",
-		},
-	)
-
-	runSubmitSuccess = prometheus.NewCounter(
-		prometheus.CounterOpts{
-			Name: "run_submit_success_total",
-			Help: "Number of run submit success",
-		},
-	)
-	runSubmitFailure = prometheus.NewCounter(
-		prometheus.CounterOpts{
-			Name: "run_submit_failures_total",
-			Help: "Number of run submit failures",
-		},
-	)
-
-	runGetSuccess = prometheus.NewCounter(
-		prometheus.CounterOpts{
-			Name: "run_get_success_total",
-			Help: "Number of get run success",
-		},
-	)
-	runGetFailure = prometheus.NewCounter(
-		prometheus.CounterOpts{
-			Name: "run_get_failures_total",
-			Help: "Number of get run failures",
-		},
-	)
-
-	runGetOutputSuccess = prometheus.NewCounter(
-		prometheus.CounterOpts{
-			Name: "run_getoutput_success_total",
-			Help: "Number of get run success",
-		},
-	)
-
-	runGetOutputFailure = prometheus.NewCounter(
-		prometheus.CounterOpts{
-			Name: "run_getoutput_failures_total",
-			Help: "Number of get run failures",
-		},
+		[]string{"status", "method"},
 	)
 
 	runSubmitDuration = prometheus.NewHistogram(prometheus.HistogramOpts{
-		Name:    "run_submit_duration",
-		Help:    "Duration of DB api run submit calls.",
-		Buckets: prometheus.LinearBuckets(100, 10, 20),
+		Name: metricPrefix + "run_submit_request_duration_seconds",
+		Help: "Duration of DB api run submit calls.",
 	})
 
 	runNowDuration = prometheus.NewHistogram(prometheus.HistogramOpts{
-		Name:    "run_now_duration",
-		Help:    "Duration of DB api run now calls.",
-		Buckets: prometheus.LinearBuckets(100, 10, 20),
+		Name: metricPrefix + "run_now_request_duration_seconds",
+		Help: "Duration of DB api run now calls.",
 	})
 
 	runGetDuration = prometheus.NewHistogram(prometheus.HistogramOpts{
-		Name:    "run_get_duration",
-		Help:    "Duration of DB api run get calls.",
-		Buckets: prometheus.LinearBuckets(100, 10, 20),
+		Name: metricPrefix + "run_get_request_duration_seconds",
+		Help: "Duration of DB api run get calls.",
 	})
 
 	runGetOutputDuration = prometheus.NewHistogram(prometheus.HistogramOpts{
-		Name:    "run_get_output_duration",
-		Help:    "Duration of DB api run get output calls.",
-		Buckets: prometheus.LinearBuckets(100, 10, 20),
+		Name: metricPrefix + "run_get_output_request_duration_seconds",
+		Help: "Duration of DB api run get output calls.",
 	})
 
 	runDeleteDuration = prometheus.NewHistogram(prometheus.HistogramOpts{
-		Name:    "run_delete_duration",
-		Help:    "Duration of DB api run delete calls.",
-		Buckets: prometheus.LinearBuckets(100, 10, 20),
+		Name: metricPrefix + "run_delete_request_duration_seconds",
+		Help: "Duration of DB api run delete calls.",
 	})
 )
 
 func init() {
 	// Register custom metrics with the global prometheus registry
-	metrics.Registry.MustRegister(runNowSuccess, runNowFailure, runSubmitSuccess, runSubmitFailure,
-		runGetSuccess, runGetFailure, runGetOutputSuccess, runGetOutputFailure, runSubmitDuration,
+	metrics.Registry.MustRegister(runCounterVec, runSubmitDuration,
 		runNowDuration, runGetDuration, runGetOutputDuration, runDeleteDuration)
 }

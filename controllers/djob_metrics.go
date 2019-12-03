@@ -22,53 +22,32 @@ import (
 )
 
 var (
-	djobCreateSuccess = prometheus.NewCounter(
+	djobCounterVec = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Name: "djob_create_success_total",
-			Help: "Number of create djob success",
+			Name: metricPrefix + "djob_total",
+			Help: "Counter related to the dJob CRD partitioned by status and method invoked. Status = success/fail and method indicates REST endpoint",
 		},
-	)
-	djobCreateFailure = prometheus.NewCounter(
-		prometheus.CounterOpts{
-			Name: "djob_create_failures_total",
-			Help: "Number of create djob failures",
-		},
-	)
-
-	djobGetSuccess = prometheus.NewCounter(
-		prometheus.CounterOpts{
-			Name: "djob_get_success_total",
-			Help: "Number of get djob success",
-		},
-	)
-	djobGetFailure = prometheus.NewCounter(
-		prometheus.CounterOpts{
-			Name: "djob_get_failures_total",
-			Help: "Number of get djob failures",
-		},
+		[]string{"status", "method"},
 	)
 
 	djobCreateDuration = prometheus.NewHistogram(prometheus.HistogramOpts{
-		Name:    "djob_creation_duration",
-		Help:    "Duration of DB api djob create calls.",
-		Buckets: prometheus.LinearBuckets(100, 10, 20),
+		Name: metricPrefix + "djob_creation_request_duration_seconds",
+		Help: "Duration of DB api djob create calls.",
 	})
 
 	djobGetDuration = prometheus.NewHistogram(prometheus.HistogramOpts{
-		Name:    "djob_get_duration",
-		Help:    "Duration of DB api djob get calls.",
-		Buckets: prometheus.LinearBuckets(100, 10, 20),
+		Name: metricPrefix + "djob_get_request_duration_seconds",
+		Help: "Duration of DB api djob get calls.",
 	})
 
 	djobDeleteDuration = prometheus.NewHistogram(prometheus.HistogramOpts{
-		Name:    "djob_delete_duration",
-		Help:    "Duration of DB api djob delete calls.",
-		Buckets: prometheus.LinearBuckets(100, 10, 20),
+		Name: metricPrefix + "djob_delete_request_duration_seconds",
+		Help: "Duration of DB api djob delete calls.",
 	})
 )
 
 func init() {
 	// Register custom metrics with the global prometheus registry
-	metrics.Registry.MustRegister(djobCreateSuccess, djobCreateFailure, djobGetSuccess, djobGetFailure,
+	metrics.Registry.MustRegister(djobCounterVec,
 		djobCreateDuration, djobGetDuration, djobDeleteDuration)
 }

@@ -20,9 +20,9 @@ import (
 	"context"
 	"fmt"
 	"reflect"
-	"time"
 
 	databricksv1alpha1 "github.com/microsoft/azure-databricks-operator/api/v1alpha1"
+	"github.com/prometheus/client_golang/prometheus"
 	dbmodels "github.com/xinsnake/databricks-sdk-golang/azure/models"
 )
 
@@ -81,26 +81,30 @@ func (r *DclusterReconciler) delete(instance *databricksv1alpha1.Dcluster) error
 	}
 
 	return trackExecutionTime(dclusterDeleteDuration, func() error {
-		return r.APIClient.Clusters().PermanentDelete(instance.Status.ClusterInfo.ClusterID)
+		err := r.APIClient.Clusters().PermanentDelete(instance.Status.ClusterInfo.ClusterID)
+		trackSuccessFailure(err, dclusterCounterVec, "delete")
+		return err
 	})
 }
 
 func (r *DclusterReconciler) getCluster(clusterID string) (cluster dbmodels.ClusterInfo, err error) {
-	defer trackMillisecondsTaken(time.Now(), dclusterGetDuration)
+	timer := prometheus.NewTimer(dclusterGetDuration)
+	defer timer.ObserveDuration()
 
 	cluster, err = r.APIClient.Clusters().Get(clusterID)
 
-	trackSuccessFailure(err, dclusterGetSuccess, dclusterGetFailure)
+	trackSuccessFailure(err, dclusterCounterVec, "get")
 
 	return cluster, err
 }
 
 func (r *DclusterReconciler) createCluster(instance *databricksv1alpha1.Dcluster) (cluster dbmodels.ClusterInfo, err error) {
-	defer trackMillisecondsTaken(time.Now(), dclusterCreateDuration)
+	timer := prometheus.NewTimer(dclusterCreateDuration)
+	defer timer.ObserveDuration()
 
 	cluster, err = r.APIClient.Clusters().Create(*instance.Spec)
 
-	trackSuccessFailure(err, dclusterCreateSuccess, dclusterCreateFailure)
+	trackSuccessFailure(err, dclusterCounterVec, "create")
 
 	return cluster, err
 }
