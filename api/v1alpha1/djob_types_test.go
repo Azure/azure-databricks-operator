@@ -54,15 +54,14 @@ var _ = Describe("Djob", func() {
 		It("should create an object successfully", func() {
 
 			key = types.NamespacedName{
-				Name:      "foo",
+				Name:      "foo-" + RandomString(5),
 				Namespace: "default",
 			}
 			created = &Djob{
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      "foo",
-					Namespace: "default",
+					Name:      key.Name,
+					Namespace: key.Namespace,
 				}}
-
 			By("creating an API obj")
 			Expect(k8sClient.Create(context.Background(), created)).To(Succeed())
 
