@@ -44,6 +44,7 @@ func (r *SecretScopeReconciler) get(scope string) (*dbmodels.SecretScope, error)
 	if (dbmodels.SecretScope{}) == matchingScope {
 		return nil, fmt.Errorf("get for secret scope failed. scope not found: %s", scope)
 	}
+
 	return &matchingScope, nil
 }
 
@@ -109,6 +110,7 @@ func (r *SecretScopeReconciler) getSecretValueFrom(namespace string, scopeSecret
 		value := string(secret.Data[scopeSecret.ValueFrom.SecretKeyRef.Key])
 		return value, nil
 	}
+
 	return "", fmt.Errorf("No ValueFrom present to extract secret")
 }
 
@@ -150,32 +152,53 @@ func (r *SecretScopeReconciler) submitACLs(instance *databricksv1alpha1.SecretSc
 	return nil
 }
 
-func (r *SecretScopeReconciler) submit(instance *databricksv1alpha1.SecretScope) error {
+// checkSecrets checks if referenced secret is present in k8s or not.
+func (r *SecretScopeReconciler) checkSecrets(instance *databricksv1alpha1.SecretScope) error {
+	namespace := instance.Namespace
+
+	// if secret in cluster is reference, see if secret exists.
+	for _, secret := range instance.Spec.SecretScopeSecrets {
+		if secret.ValueFrom != nil {
+			if _, err := r.getSecretValueFrom(namespace, secret); err != nil {
+				return err
+			}
+		}
+	}
+
+	instance.Status.SecretInClusterAvailable = true
+	return r.Update(context.Background(), instance)
+}
+
+func (r *SecretScopeReconciler) submit(instance *databricksv1alpha1.SecretScope) (requeue bool, err error) {
 	scope := instance.ObjectMeta.Name
 	initialManagePrincipal := instance.Spec.InitialManagePrincipal
 
-	err := r.APIClient.Secrets().CreateSecretScope(scope, initialManagePrincipal)
+	err = r.APIClient.Secrets().CreateSecretScope(scope, initialManagePrincipal)
 	if err != nil {
-		return err
+		return
 	}
 
 	err = r.submitSecrets(instance)
 	if err != nil {
-		return err
+		requeue = true
+		return
 	}
 
-	err = r.submitACLs(instance)
-	if err != nil {
-		return err
+	if instance.Spec.SecretScopeACLs != nil {
+		err = r.submitACLs(instance)
+		if err != nil {
+			return
+		}
 	}
 
 	remoteScope, err := r.get(scope)
 	if err != nil {
-		return err
+		requeue = true
+		return
 	}
 
 	instance.Status.SecretScope = remoteScope
-	return r.Update(context.Background(), instance)
+	return true, r.Update(context.Background(), instance)
 }
 
 func (r *SecretScopeReconciler) delete(instance *databricksv1alpha1.SecretScope) error {
