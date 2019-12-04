@@ -5,7 +5,6 @@
 	"workspaceFolder": "/workspace",
 	"context": "..",
 	"workspaceMount": "src=${localWorkspaceFolder},dst=/workspace,type=bind",
-	"postCreateCommand": "make set-kindcluster",
     "runArgs": [
 		// Mount the env file
 		"--env-file", "${localWorkspaceFolder}/.devcontainer/.env",
