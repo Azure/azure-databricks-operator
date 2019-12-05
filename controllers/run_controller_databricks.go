@@ -25,6 +25,7 @@ import (
 	"time"
 
 	databricksv1alpha1 "github.com/microsoft/azure-databricks-operator/api/v1alpha1"
+	"github.com/xinsnake/databricks-sdk-golang/azure"
 	dbmodels "github.com/xinsnake/databricks-sdk-golang/azure/models"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -85,6 +86,17 @@ func (r *RunReconciler) submit(instance *databricksv1alpha1.Run) error {
 	if err != nil {
 		return err
 	}
+
+	// update the run state now, in case the RunsGetOutput call below fails
+	var pendingState dbmodels.RunLifeCycleState = dbmodels.RunLifeCycleStatePending
+	run.State = &dbmodels.RunState{
+		LifeCycleState: &pendingState,
+	}
+	instance.Status = &azure.JobsRunsGetOutputResponse{
+		Metadata: run,
+	}
+
+	r.Update(context.Background(), instance)
 
 	runOutput, err := r.APIClient.Jobs().RunsGetOutput(run.RunID)
 	if err != nil {
