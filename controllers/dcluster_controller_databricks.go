@@ -79,21 +79,21 @@ func (r *DclusterReconciler) delete(instance *databricksv1alpha1.Dcluster) error
 		return nil
 	}
 
-	execution := NewExecution("dcluster", "delete")
+	execution := NewExecution("dclusters", "delete")
 	err := r.APIClient.Clusters().PermanentDelete(instance.Status.ClusterInfo.ClusterID)
 	execution.Finish(err)
 	return err
 }
 
 func (r *DclusterReconciler) getCluster(clusterID string) (cluster dbmodels.ClusterInfo, err error) {
-	execution := NewExecution("dcluster", "get")
+	execution := NewExecution("dclusters", "get")
 	cluster, err = r.APIClient.Clusters().Get(clusterID)
 	execution.Finish(err)
 	return cluster, err
 }
 
 func (r *DclusterReconciler) createCluster(instance *databricksv1alpha1.Dcluster) (cluster dbmodels.ClusterInfo, err error) {
-	execution := NewExecution("dcluster", "create")
+	execution := NewExecution("dclusters", "create")
 	cluster, err = r.APIClient.Clusters().Create(*instance.Spec)
 	execution.Finish(err)
 	return cluster, err

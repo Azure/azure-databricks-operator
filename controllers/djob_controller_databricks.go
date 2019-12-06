@@ -138,21 +138,21 @@ func (r *DjobReconciler) delete(instance *databricksv1alpha1.Djob) error {
 		return err
 	}
 
-	execution := NewExecution("djob", "delete")
+	execution := NewExecution("djobs", "delete")
 	err := r.APIClient.Jobs().Delete(jobID)
 	execution.Finish(err)
 	return err
 }
 
 func (r *DjobReconciler) getJob(jobID int64) (job dbmodels.Job, err error) {
-	execution := NewExecution("djob", "get")
+	execution := NewExecution("djobs", "get")
 	job, err = r.APIClient.Jobs().Get(jobID)
 	execution.Finish(err)
 	return job, err
 }
 
 func (r *DjobReconciler) createJob(jobSettings dbmodels.JobSettings) (job dbmodels.Job, err error) {
-	execution := NewExecution("djob", "create")
+	execution := NewExecution("djobs", "create")
 	job, err = r.APIClient.Jobs().Create(jobSettings)
 	execution.Finish(err)
 	return job, err
