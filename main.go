@@ -26,7 +26,7 @@ import (
 	db "github.com/xinsnake/databricks-sdk-golang"
 	dbazure "github.com/xinsnake/databricks-sdk-golang/azure"
 	"k8s.io/apimachinery/pkg/runtime"
-	kscheme "k8s.io/client-go/kubernetes/scheme"
+	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
@@ -39,7 +39,7 @@ var (
 )
 
 func init() {
-	_ = kscheme.AddToScheme(scheme)
+	_ = clientgoscheme.AddToScheme(scheme)
 	_ = databricksv1alpha1.AddToScheme(scheme)
 	// +kubebuilder:scaffold:scheme
 }
@@ -52,12 +52,15 @@ func main() {
 		"Enable leader election for controller manager. Enabling this will ensure there is only one active controller manager.")
 	flag.Parse()
 
-	ctrl.SetLogger(zap.Logger(true))
+	ctrl.SetLogger(zap.New(func(o *zap.Options) {
+		o.Development = true
+	}))
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:             scheme,
 		MetricsBindAddress: metricsAddr,
 		LeaderElection:     enableLeaderElection,
+		Port:               9443,
 	})
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")
@@ -81,6 +84,7 @@ func main() {
 	err = (&controllers.SecretScopeReconciler{
 		Client:    mgr.GetClient(),
 		Log:       ctrl.Log.WithName("controllers").WithName("SecretScope"),
+		Scheme:    mgr.GetScheme(),
 		Recorder:  mgr.GetEventRecorderFor("secretscope-controller"),
 		APIClient: apiClient,
 	}).SetupWithManager(mgr)
@@ -91,6 +95,7 @@ func main() {
 	err = (&controllers.DjobReconciler{
 		Client:    mgr.GetClient(),
 		Log:       ctrl.Log.WithName("controllers").WithName("Djob"),
+		Scheme:    mgr.GetScheme(),
 		Recorder:  mgr.GetEventRecorderFor("djob-controller"),
 		APIClient: apiClient,
 	}).SetupWithManager(mgr)
@@ -101,6 +106,7 @@ func main() {
 	err = (&controllers.RunReconciler{
 		Client:    mgr.GetClient(),
 		Log:       ctrl.Log.WithName("controllers").WithName("Run"),
+		Scheme:    mgr.GetScheme(),
 		Recorder:  mgr.GetEventRecorderFor("run-controller"),
 		APIClient: apiClient,
 	}).SetupWithManager(mgr)
@@ -111,6 +117,7 @@ func main() {
 	err = (&controllers.DclusterReconciler{
 		Client:    mgr.GetClient(),
 		Log:       ctrl.Log.WithName("controllers").WithName("Dcluster"),
+		Scheme:    mgr.GetScheme(),
 		Recorder:  mgr.GetEventRecorderFor("dcluster-controller"),
 		APIClient: apiClient,
 	}).SetupWithManager(mgr)
@@ -121,6 +128,7 @@ func main() {
 	err = (&controllers.DbfsBlockReconciler{
 		Client:    mgr.GetClient(),
 		Log:       ctrl.Log.WithName("controllers").WithName("DbfsBlock"),
+		Scheme:    mgr.GetScheme(),
 		Recorder:  mgr.GetEventRecorderFor("dbfsblock-controller"),
 		APIClient: apiClient,
 	}).SetupWithManager(mgr)
@@ -131,6 +139,7 @@ func main() {
 	err = (&controllers.WorkspaceItemReconciler{
 		Client:    mgr.GetClient(),
 		Log:       ctrl.Log.WithName("controllers").WithName("WorkspaceItem"),
+		Scheme:    mgr.GetScheme(),
 		Recorder:  mgr.GetEventRecorderFor("workspaceitem-controller"),
 		APIClient: apiClient,
 	}).SetupWithManager(mgr)

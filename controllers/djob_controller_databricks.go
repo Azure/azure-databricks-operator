@@ -46,7 +46,7 @@ func (r *DjobReconciler) submit(instance *databricksv1alpha1.Djob) error {
 		}
 	} else if len(instance.Spec.ExistingClusterID) > 0 {
 		var dclusters databricksv1alpha1.DclusterList
-		err := r.List(context.Background(), &dclusters, client.InNamespace(instance.Namespace), client.MatchingField(dclusterIndexKey, instance.Spec.ExistingClusterID))
+		err := r.List(context.Background(), &dclusters, client.InNamespace(instance.Namespace), client.MatchingFields{dclusterIndexKey: instance.Spec.ExistingClusterID})
 		if err != nil {
 			return err
 		}
