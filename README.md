@@ -1,6 +1,9 @@
 
 [![Build Status](https://dev.azure.com/ms/azure-databricks-operator/_apis/build/status/microsoft.azure-databricks-operator?branchName=master)](https://dev.azure.com/ms/azure-databricks-operator/_build/latest?definitionId=254&branchName=master)
 
+
+[![Go Report Card](https://goreportcard.com/badge/github.com/microsoft/azure-databricks-operator)](https://goreportcard.com/report/github.com/microsoft/azure-databricks-operator)
+
 # Azure Databricks operator (for Kubernetes)
 
 > This project is experimental. Expect the API to change. It is not recommended for production environments.
