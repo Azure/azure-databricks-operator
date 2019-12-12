@@ -182,8 +182,7 @@ install-kustomize:
 ifeq (,$(shell which kustomize))
 	@echo "installing kustomize"
 	# download kustomize
-	#curl -o /usr/local/kubebuilder/bin/kustomize -sL "https://go.kubebuilder.io/kustomize/$(shell go env GOOS)/$(shell go env GOARCH)"
-	curl -sL https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv3.4.0/kustomize_v3.4.0_linux_amd64.tar.gz | tar -xz -C /tmp/
+	curl -sL https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv3.4.0/kustomize_v3.4.0_$(shell go env GOOS)_$(shell go env GOARCH).tar.gz | tar -xz -C /tmp/
 	mv /tmp/kustomize /usr/local/kubebuilder/bin/kustomize
 	# set permission
 	chmod a+x /usr/local/kubebuilder/bin/kustomize
