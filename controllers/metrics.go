@@ -18,24 +18,56 @@ package controllers
 
 import (
 	"github.com/prometheus/client_golang/prometheus"
+	"sigs.k8s.io/controller-runtime/pkg/metrics"
 )
 
 const (
-	metricPrefix  = "databricks_"
 	successMetric = "success"
 	failureMetric = "failure"
 )
 
-func trackExecutionTime(histogram prometheus.Histogram, f func() error) error {
-	timer := prometheus.NewTimer(histogram)
-	defer timer.ObserveDuration()
-	return f()
+var databricksRequestHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+	Name: "databricks_request_duration_seconds",
+	Help: "Duration of upstream calls to Databricks REST service endpoints",
+}, []string{"object_type", "action"})
+
+var databricksRequestCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
+	Name: "databricks_request_total",
+	Help: "Counter of upstream calls to Databricks REST service endpoints",
+}, []string{"object_type", "action", "outcome"})
+
+func init() {
+	// Register custom metrics with the global prometheus registry
+	metrics.Registry.MustRegister(databricksRequestHistogram, databricksRequestCounter)
 }
 
-func trackSuccessFailure(err error, counterVec *prometheus.CounterVec, method string) {
-	if err == nil {
-		counterVec.With(prometheus.Labels{"status": successMetric, "method": method}).Inc()
-	} else {
-		counterVec.With(prometheus.Labels{"status": failureMetric, "method": method}).Inc()
+// NewExecution creates an Execution instance and starts the timer
+func NewExecution(objectType string, action string) Execution {
+	labels := prometheus.Labels{"object_type": objectType, "action": action}
+	observer := databricksRequestHistogram.With(labels)
+	timer := prometheus.NewTimer(observer)
+
+	return Execution{
+		timer:  *timer,
+		labels: labels,
 	}
+}
+
+// Execution tracks state for an API execution for emitting metrics
+type Execution struct {
+	timer  prometheus.Timer
+	labels prometheus.Labels
+}
+
+// Finish is used to log duration and success/failure
+func (e *Execution) Finish(err error) {
+	e.timer.ObserveDuration()
+
+	if err == nil {
+		e.labels["outcome"] = successMetric
+	} else {
+		e.labels["outcome"] = failureMetric
+	}
+
+	databricksRequestCounter.With(e.labels).Inc()
 }
