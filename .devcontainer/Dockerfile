@@ -61,9 +61,7 @@ RUN apt-get update \
     && chmod +x /usr/local/bin/kubectl \
     # Install Helm
     && curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash \
-    && helm repo add stable https://kubernetes-charts.storage.googleapis.com/  \
-    # Install prometheus-operator
-    && helm install stable/prometheus-operator --generate-name 
+    && helm repo add stable https://kubernetes-charts.storage.googleapis.com/ 
 
 # Enable bash completion
 RUN apt-get update && apt install -y bash-completion && echo "source /etc/bash_completion" >> "/root/.bashrc"
