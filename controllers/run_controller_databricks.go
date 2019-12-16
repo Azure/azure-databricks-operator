@@ -96,7 +96,10 @@ func (r *RunReconciler) submit(instance *databricksv1alpha1.Run) error {
 		Metadata: run,
 	}
 
-	r.Update(context.Background(), instance)
+	err = r.Update(context.Background(), instance)
+	if err != nil {
+		return err
+	}
 
 	runOutput, err := r.APIClient.Jobs().RunsGetOutput(run.RunID)
 	if err != nil {
