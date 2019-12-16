@@ -3,7 +3,7 @@
 # Licensed under the MIT License. See https://go.microsoft.com/fwlink/?linkid=2090316 for license information.
 #-------------------------------------------------------------------------------------------------------------
 
-FROM golang:1.12.5
+FROM golang:1.12.5-stretch
 
 # Avoid warnings by switching to noninteractive
 ENV DEBIAN_FRONTEND=noninteractive
@@ -47,7 +47,7 @@ RUN apt-get update \
     # Clean up
     && apt-get autoremove -y \
     && apt-get clean -y \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* 
 
 RUN apt-get update \
     # Install Docker CE CLI
@@ -61,6 +61,9 @@ RUN apt-get update \
     && chmod +x /usr/local/bin/kubectl \
     # Install Helm
     && curl -s https://raw.githubusercontent.com/helm/helm/master/scripts/get | bash -
+
+# Enable bash completion
+RUN apt-get update && apt install -y bash-completion && echo "source /etc/bash_completion" >> "/root/.bashrc"
 
 # Verify git, process tools installed
 RUN apt-get -y install git procps wget nano zsh inotify-tools jq
@@ -84,3 +87,26 @@ RUN make install-kubebuilder
 RUN make install-kustomize
 RUN make install-test-dependency
 ENV SHELL /bin/bash
+
+# Save command line history 
+RUN echo "export HISTFILE=/root/commandhistory/.bash_history" >> "/root/.bashrc" \
+    && echo "export PROMPT_COMMAND='history -a'" >> "/root/.bashrc" \
+    && mkdir -p /root/commandhistory \
+    && touch /root/commandhistory/.bash_history
+
+# Add useful aliases
+RUN echo "alias k=kubectl" >> "/root/.bashrc"
+# Add autocomplete to kubectl
+RUN echo "source <(kubectl completion bash)" >> "/root/.bashrc"
+RUN echo "source <(kubectl completion bash | sed 's/kubectl/k/g')" >> "/root/.bashrc"
+# Add kubectx 
+RUN git clone https://github.com/ahmetb/kubectx.git /root/.kubectx \
+    && COMPDIR=$(pkg-config --variable=completionsdir bash-completion) \
+    && ln -sf /root/.kubectx/completion/kubens.bash $COMPDIR/kubens \
+    && ln -sf /root/.kubectx/completion/kubectx.bash $COMPDIR/kubectx 
+
+# Git command prompt
+RUN git clone https://github.com/magicmonty/bash-git-prompt.git ~/.bash-git-prompt --depth=1 \
+    && echo "if [ -f \"$HOME/.bash-git-prompt/gitprompt.sh\" ]; then GIT_PROMPT_ONLY_IN_REPO=1 && source $HOME/.bash-git-prompt/gitprompt.sh; fi" >> "/root/.bashrc"
+
+ENV PATH="/root/.kubectx:${PATH}"

@@ -19,6 +19,7 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"k8s.io/apimachinery/pkg/runtime"
 
 	"github.com/go-logr/logr"
 	dbazure "github.com/xinsnake/databricks-sdk-golang/azure"
@@ -34,8 +35,8 @@ import (
 // WorkspaceItemReconciler reconciles a WorkspaceItem object
 type WorkspaceItemReconciler struct {
 	client.Client
-	Log logr.Logger
-
+	Log       logr.Logger
+	Scheme    *runtime.Scheme
 	Recorder  record.EventRecorder
 	APIClient dbazure.DBClient
 }

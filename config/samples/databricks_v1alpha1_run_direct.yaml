@@ -7,7 +7,7 @@ spec:
   new_cluster:
     spark_version: 5.3.x-scala2.11
     node_type_id: Standard_D3_v2
-    num_workers: 10
+    num_workers: 3
   libraries:
     - jar: 'dbfs:/my-jar.jar'
     - maven:

@@ -18,7 +18,6 @@ package controllers
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"reflect"
 	"strings"
@@ -115,9 +114,6 @@ func (r *RunReconciler) refresh(instance *databricksv1alpha1.Run) error {
 	runOutput, err := r.APIClient.Jobs().RunsGetOutput(runID)
 	if err != nil {
 		return err
-	}
-	if len(runOutput.Error) > 0 {
-		return errors.New(runOutput.Error)
 	}
 
 	err = r.Get(context.Background(), types.NamespacedName{
