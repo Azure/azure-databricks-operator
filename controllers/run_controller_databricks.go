@@ -32,12 +32,10 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
-func (r *RunReconciler) submit(instance *databricksv1alpha1.Run) error {
+func (r *RunReconciler) submit(instance *databricksv1alpha1.Run) (requeue bool, err error) {
 	r.Log.Info(fmt.Sprintf("Submitting run %s", instance.GetName()))
 
 	var run *dbmodels.Run
-	var err error
-
 	instance.Spec.RunName = instance.GetName()
 
 	// If the run is not linked to a job, submit using RunsSubmit,
@@ -50,16 +48,16 @@ func (r *RunReconciler) submit(instance *databricksv1alpha1.Run) error {
 	}
 
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	runOutput, err := r.getRunOutput(run.RunID)
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	instance.Status = &runOutput
-	return r.Update(context.Background(), instance)
+	return false, r.Update(context.Background(), instance)
 }
 
 func (r *RunReconciler) refresh(instance *databricksv1alpha1.Run) error {
