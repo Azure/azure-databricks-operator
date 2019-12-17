@@ -22,6 +22,8 @@ import (
 	"reflect"
 
 	databricksv1alpha1 "github.com/microsoft/azure-databricks-operator/api/v1alpha1"
+	"github.com/prometheus/client_golang/prometheus"
+	dbmodels "github.com/xinsnake/databricks-sdk-golang/azure/models"
 )
 
 func (r *DclusterReconciler) submit(instance *databricksv1alpha1.Dcluster) error {
@@ -36,7 +38,7 @@ func (r *DclusterReconciler) submit(instance *databricksv1alpha1.Dcluster) error
 		}
 	}
 
-	clusterInfo, err := r.APIClient.Clusters().Create(*instance.Spec)
+	clusterInfo, err := r.createCluster(instance)
 	if err != nil {
 		return err
 	}
@@ -55,7 +57,7 @@ func (r *DclusterReconciler) refresh(instance *databricksv1alpha1.Dcluster) erro
 		return nil
 	}
 
-	clusterInfo, err := r.APIClient.Clusters().Get(instance.Status.ClusterInfo.ClusterID)
+	clusterInfo, err := r.getCluster(instance.Status.ClusterInfo.ClusterID)
 	if err != nil {
 		return err
 	}
@@ -78,5 +80,31 @@ func (r *DclusterReconciler) delete(instance *databricksv1alpha1.Dcluster) error
 		return nil
 	}
 
-	return r.APIClient.Clusters().PermanentDelete(instance.Status.ClusterInfo.ClusterID)
+	return trackExecutionTime(dclusterDeleteDuration, func() error {
+		err := r.APIClient.Clusters().PermanentDelete(instance.Status.ClusterInfo.ClusterID)
+		trackSuccessFailure(err, dclusterCounterVec, "delete")
+		return err
+	})
+}
+
+func (r *DclusterReconciler) getCluster(clusterID string) (cluster dbmodels.ClusterInfo, err error) {
+	timer := prometheus.NewTimer(dclusterGetDuration)
+	defer timer.ObserveDuration()
+
+	cluster, err = r.APIClient.Clusters().Get(clusterID)
+
+	trackSuccessFailure(err, dclusterCounterVec, "get")
+
+	return cluster, err
+}
+
+func (r *DclusterReconciler) createCluster(instance *databricksv1alpha1.Dcluster) (cluster dbmodels.ClusterInfo, err error) {
+	timer := prometheus.NewTimer(dclusterCreateDuration)
+	defer timer.ObserveDuration()
+
+	cluster, err = r.APIClient.Clusters().Create(*instance.Spec)
+
+	trackSuccessFailure(err, dclusterCounterVec, "create")
+
+	return cluster, err
 }
