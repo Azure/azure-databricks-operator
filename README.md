@@ -39,6 +39,7 @@ Few topics are discussed in the [resources.md](https://github.com/microsoft/azur
 - Kubernetes on WSL
 - Build pipelines
 - Dev container
+- Operator metrics
 
 ## Contributing
 
