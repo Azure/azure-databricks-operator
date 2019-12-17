@@ -28,7 +28,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
-var _ = Describe("DbfsBlock Controller", func() {
+var _ = Describe("Dcluster Controller", func() {
 
 	const timeout = time.Second * 30
 	const interval = time.Second * 1
@@ -41,7 +41,7 @@ var _ = Describe("DbfsBlock Controller", func() {
 		// Add any teardown steps that needs to be executed after each test
 	})
 
-	// Add Tests for OpenAPI validation (or additonal CRD features) specified in
+	// Add Tests for OpenAPI validation (or additional CRD features) specified in
 	// your API definition.
 	// Avoid adding tests for vanilla CRUD operations because they would
 	// test Kubernetes API server, which isn't the goal here.
@@ -49,7 +49,7 @@ var _ = Describe("DbfsBlock Controller", func() {
 		It("Should create successfully", func() {
 
 			key := types.NamespacedName{
-				Name:      "test-cluster",
+				Name:      "t-cluster" + "-" + randomStringWithCharset(10, charset),
 				Namespace: "default",
 			}
 
@@ -63,9 +63,9 @@ var _ = Describe("DbfsBlock Controller", func() {
 						MinWorkers: 2,
 						MaxWorkers: 5,
 					},
-					AutoterminationMinutes: 15,
-					NodeTypeID:   "Standard_D3_v2",
-					SparkVersion: "5.3.x-scala2.11",
+					AutoterminationMinutes: 10,
+					NodeTypeID:             "Standard_D3_v2",
+					SparkVersion:           "5.3.x-scala2.11",
 				},
 			}
 
@@ -75,7 +75,7 @@ var _ = Describe("DbfsBlock Controller", func() {
 			By("Expecting submitted")
 			Eventually(func() bool {
 				f := &databricksv1alpha1.Dcluster{}
-				k8sClient.Get(context.Background(), key, f)
+				_ = k8sClient.Get(context.Background(), key, f)
 				return f.IsSubmitted()
 			}, timeout, interval).Should(BeTrue())
 
@@ -83,7 +83,7 @@ var _ = Describe("DbfsBlock Controller", func() {
 			By("Expecting to delete successfully")
 			Eventually(func() error {
 				f := &databricksv1alpha1.Dcluster{}
-				k8sClient.Get(context.Background(), key, f)
+				_ = k8sClient.Get(context.Background(), key, f)
 				return k8sClient.Delete(context.Background(), f)
 			}, timeout, interval).Should(Succeed())
 

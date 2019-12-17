@@ -24,9 +24,7 @@ steps:
 
 - script: |
     set -x
-
     ls -l /usr/local/go*
-
     mkdir -p '$(GOBIN)'
     mkdir -p '$(GOPATH)/pkg'
     mkdir -p '$(MODULE_PATH)'
@@ -34,7 +32,6 @@ steps:
     mv !(gopath) '$(MODULE_PATH)'
     echo '##vso[task.prependpath]$(GOBIN)'
     echo '##vso[task.prependpath]$(GOROOT)/bin'
-
     go version
     go env
   displayName: 'Set up the Go workspace'
@@ -43,27 +40,24 @@ steps:
 
 - script: |
     set -x
-
     mkdir -p '$(MODULE_PATH)/bin'
-
     os=$(go env GOOS)
     arch=$(go env GOARCH)
-
     # download kubebuilder
-    curl -sL https://go.kubebuilder.io/dl/2.0.0-alpha.4/${os}/${arch} | tar -xz -C $(MODULE_PATH)/bin
-    mv $(MODULE_PATH)/bin/kubebuilder_2.0.0-alpha.4_${os}_${arch}/bin/* $(MODULE_PATH)/bin/
+    curl -sL https://go.kubebuilder.io/dl/2.2.0/${os}/${arch} | tar -xz -C $(MODULE_PATH)/bin
+    mv $(MODULE_PATH)/bin/kubebuilder_2.2.0_${os}_${arch}/bin/* $(MODULE_PATH)/bin/
     # download kustomize
-    curl -o $(MODULE_PATH)/bin/kustomize -sL https://go.kubebuilder.io/kustomize/${os}/${arch}
+    curl -sL https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv3.4.0/kustomize_v3.4.0_${os}_${arch}.tar.gz | tar -xz -C /tmp/
+    mv /tmp/kustomize $(MODULE_PATH)/bin/kustomize
     # set permission
     chmod a+x $(MODULE_PATH)/bin/*
     # export path
     export PATH=$PATH:$(MODULE_PATH)/bin
+    # Install golangci-linter
+    curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh| sh -s -- -b $(go env GOPATH)/bin v1.21.0
     # install test dependencies
     go mod download
-    go get -u github.com/axw/gocov/gocov
-    go get -u golang.org/x/tools/cmd/cover
-    go get -u github.com/AlekSi/gocov-xml
-    go get -u github.com/matm/gocov-html
+    make install-test-dependency
     # run test
     make test
   continueOnError: 'false'

@@ -4,10 +4,17 @@ IMG ?= controller:latest
 # Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
 CRD_OPTIONS ?= "crd:trivialVersions=true"
 
+# Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
+ifeq (,$(shell go env GOBIN))
+GOBIN=$(shell go env GOPATH)/bin
+else
+GOBIN=$(shell go env GOBIN)
+endif
+
 all: manager
 
 # Run tests
-test: generate fmt vet manifests
+test: generate fmt lint vet manifests
 	rm -rf cover.* cover
 	mkdir -p cover
 
@@ -20,7 +27,7 @@ test: generate fmt vet manifests
 	rm -f cover.out cover.out.tmp cover.json
 
 # Run tests with existing cluster
-test-existing: generate fmt vet manifests
+test-existing: generate fmt lint vet manifests
 	rm -rf cover.* cover
 	mkdir -p cover
 
@@ -33,20 +40,23 @@ test-existing: generate fmt vet manifests
 	rm -f cover.out cover.out.tmp cover.json
 
 # Build manager binary
-manager: generate fmt vet
+manager: generate fmt lint vet
 	go build -o bin/manager main.go
 
 # Run against the configured Kubernetes cluster in ~/.kube/config
-run: generate fmt vet
+run: generate fmt lint vet manifests
 	go run ./main.go
 
 # Install CRDs into a cluster
 install: manifests
-	kubectl apply -f config/crd/bases
+	kustomize build config/crd | kubectl apply -f -
+# Uninstall CRDs from a cluster
+uninstall: manifests
+	kustomize build config/crd | kubectl delete -f -
 
 # Deploy controller in the configured Kubernetes cluster in ~/.kube/config
 deploy: manifests
-	kubectl apply -f config/crd/bases
+	cd config/manager && kustomize edit set image controller=${IMG}
 	kustomize build config/default | kubectl apply -f -
 
 deploy-controller:
@@ -78,18 +88,22 @@ manifests: controller-gen
 
 # Run go fmt against code
 fmt:
-	go fmt ./...
+	find . -name '*.go' | grep -v vendor | xargs gofmt -s -w
 
 # Run go vet against code
 vet:
 	go vet ./...
-
+	
+# Run linting
+lint:
+	GO111MODULE=on golangci-lint run
+	
 # Generate code
 generate: controller-gen
-	$(CONTROLLER_GEN) object:headerFile=./hack/boilerplate.go.txt paths=./api/...
+	$(CONTROLLER_GEN) object:headerFile=./hack/boilerplate.go.txt paths="./..."
 
 # Build the docker image
-docker-build:
+docker-build: test
 	docker build . -t ${IMG} ${ARGS}
 	@echo "updating kustomize image patch file for manager resource"
 	sed -i'' -e 's@image: .*@image: '"${IMG}"'@' ./config/default/manager_image_patch.yaml
@@ -102,12 +116,18 @@ docker-push:
 # download controller-gen if necessary
 controller-gen:
 ifeq (, $(shell which controller-gen))
-	go get sigs.k8s.io/controller-tools/cmd/controller-gen@v0.2.0-beta.4
-CONTROLLER_GEN="$(shell go env GOPATH)/bin/controller-gen"
+	@{ \
+	set -e ;\
+	CONTROLLER_GEN_TMP_DIR=$$(mktemp -d) ;\
+	cd $$CONTROLLER_GEN_TMP_DIR ;\
+	go mod init tmp ;\
+	go get sigs.k8s.io/controller-tools/cmd/controller-gen@v0.2.4 ;\
+	rm -rf $$CONTROLLER_GEN_TMP_DIR ;\
+	}
+CONTROLLER_GEN=$(GOBIN)/controller-gen
 else
-CONTROLLER_GEN="$(shell which controller-gen)"
+CONTROLLER_GEN=$(shell which controller-gen)
 endif
-
 create-kindcluster:
 ifeq (,$(shell kind get clusters))
 	@echo "no kind cluster"
@@ -137,7 +157,6 @@ endif
 	@echo "deploying controller to cluster"
 	make deploy-controller
 
-
 install-kind:
 ifeq (,$(shell which kind))
 	@echo "installing kind"
@@ -150,10 +169,10 @@ install-kubebuilder:
 ifeq (,$(shell which kubebuilder))
 	@echo "installing kubebuilder"
 	# download kubebuilder and extract it to tmp
-	curl -sL https://go.kubebuilder.io/dl/2.0.0-rc.0/$(shell go env GOOS)/$(shell go env GOARCH) | tar -xz -C /tmp/
+	curl -sL https://go.kubebuilder.io/dl/2.2.0/$(shell go env GOOS)/$(shell go env GOARCH) | tar -xz -C /tmp/
 	# move to a long-term location and put it on your path
 	# (you'll need to set the KUBEBUILDER_ASSETS env var if you put it somewhere else)
-	mv /tmp/kubebuilder_2.0.0-rc.0_$(shell go env GOOS)_$(shell go env GOARCH) /usr/local/kubebuilder
+	mv /tmp/kubebuilder_2.2.0_$(shell go env GOOS)_$(shell go env GOARCH) /usr/local/kubebuilder
 	export PATH=$PATH:/usr/local/kubebuilder/bin
 else
 	@echo "kubebuilder has been installed"
@@ -163,7 +182,8 @@ install-kustomize:
 ifeq (,$(shell which kustomize))
 	@echo "installing kustomize"
 	# download kustomize
-	curl -o /usr/local/kubebuilder/bin/kustomize -sL "https://go.kubebuilder.io/kustomize/$(shell go env GOOS)/$(shell go env GOARCH)"
+	curl -sL https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv3.4.0/kustomize_v3.4.0_$(shell go env GOOS)_$(shell go env GOARCH).tar.gz | tar -xz -C /tmp/
+	mv /tmp/kustomize /usr/local/kubebuilder/bin/kustomize
 	# set permission
 	chmod a+x /usr/local/kubebuilder/bin/kustomize
 	$(shell which kustomize)

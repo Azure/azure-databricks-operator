@@ -51,6 +51,7 @@ func randomStringWithCharset(length int, charset string) string {
 	return string(b)
 }
 
+// RandomString generates a random string from a subset of characters
 func RandomString(length int) string {
 	return randomStringWithCharset(length, charset)
 }

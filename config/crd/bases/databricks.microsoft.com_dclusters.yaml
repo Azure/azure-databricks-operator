@@ -3,6 +3,8 @@
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.2.4
   creationTimestamp: null
   name: dclusters.databricks.microsoft.com
 spec:
@@ -16,14 +18,13 @@ spec:
   - JSONPath: .status.cluster_info.state
     name: State
     type: string
-  - JSONPath: .status.cluster_info.num_workers
-    name: NumWorkers
-    type: integer
   group: databricks.microsoft.com
   names:
     kind: Dcluster
+    listKind: DclusterList
     plural: dclusters
-  scope: ""
+    singular: dcluster
+  scope: Namespaced
   subresources: {}
   validation:
     openAPIV3Schema:
@@ -32,12 +33,12 @@ spec:
         apiVersion:
           description: 'APIVersion defines the versioned schema of this representation
             of an object. Servers should convert recognized schemas to the latest
-            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources'
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
           type: string
         kind:
           description: 'Kind is a string value representing the REST resource this
             object represents. Servers may infer this from the endpoint the client
-            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
           type: string
         metadata:
           type: object
@@ -107,6 +108,7 @@ spec:
               type: string
           type: object
         status:
+          description: DclusterStatus represents the status for a Dcluster
           properties:
             cluster_info:
               description: DclusterInfo is similar to dbmodels.ClusterInfo, the reason
@@ -259,6 +261,7 @@ spec:
               type: object
           type: object
       type: object
+  version: v1alpha1
   versions:
   - name: v1alpha1
     served: true

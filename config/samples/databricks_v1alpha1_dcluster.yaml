@@ -7,4 +7,4 @@ spec:
   node_type_id: Standard_D3_v2
   autoscale:
     min_workers: 2
-    max_workers: 5
+    max_workers: 3

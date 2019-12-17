@@ -3,6 +3,8 @@
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.2.4
   creationTimestamp: null
   name: djobs.databricks.microsoft.com
 spec:
@@ -16,8 +18,10 @@ spec:
   group: databricks.microsoft.com
   names:
     kind: Djob
+    listKind: DjobList
     plural: djobs
-  scope: ""
+    singular: djob
+  scope: Namespaced
   subresources: {}
   validation:
     openAPIV3Schema:
@@ -26,16 +30,20 @@ spec:
         apiVersion:
           description: 'APIVersion defines the versioned schema of this representation
             of an object. Servers should convert recognized schemas to the latest
-            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources'
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
           type: string
         kind:
           description: 'Kind is a string value representing the REST resource this
             object represents. Servers may infer this from the endpoint the client
-            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
           type: string
         metadata:
           type: object
         spec:
+          description: JobSettings is similar to dbmodels.JobSettings, the reason
+            it exists is because dbmodels.JobSettings doesn't support ExistingClusterName
+            ExistingClusterName allows discovering databricks clusters by it's kubernetese
+            object name
           properties:
             email_notifications:
               properties:
@@ -55,6 +63,8 @@ spec:
                   type: array
               type: object
             existing_cluster_id:
+              type: string
+            existing_cluster_name:
               type: string
             libraries:
               items:
@@ -218,6 +228,7 @@ spec:
               type: integer
           type: object
         status:
+          description: DjobStatus is the status object for the Djob
           properties:
             job_status:
               properties:
@@ -640,6 +651,7 @@ spec:
               type: array
           type: object
       type: object
+  version: v1alpha1
   versions:
   - name: v1alpha1
     served: true

@@ -40,7 +40,7 @@ var _ = Describe("WorkspaceItem Controller", func() {
 		// Add any teardown steps that needs to be executed after each test
 	})
 
-	// Add Tests for OpenAPI validation (or additonal CRD features) specified in
+	// Add Tests for OpenAPI validation (or additional CRD features) specified in
 	// your API definition.
 	// Avoid adding tests for vanilla CRUD operations because they would
 	// test Kubernetes API server, which isn't the goal here.
@@ -48,7 +48,7 @@ var _ = Describe("WorkspaceItem Controller", func() {
 		It("Should create successfully", func() {
 
 			key := types.NamespacedName{
-				Name:      "block-greater-than-1mb",
+				Name:      "t-workspace-item" + randomStringWithCharset(10, charset),
 				Namespace: "default",
 			}
 
@@ -71,7 +71,7 @@ var _ = Describe("WorkspaceItem Controller", func() {
 			By("Expecting submitted")
 			Eventually(func() bool {
 				f := &databricksv1alpha1.WorkspaceItem{}
-				k8sClient.Get(context.Background(), key, f)
+				_ = k8sClient.Get(context.Background(), key, f)
 				return f.IsSubmitted()
 			}, timeout, interval).Should(BeTrue())
 
@@ -86,7 +86,7 @@ var _ = Describe("WorkspaceItem Controller", func() {
 			By("Expecting to delete successfully")
 			Eventually(func() error {
 				f := &databricksv1alpha1.WorkspaceItem{}
-				k8sClient.Get(context.Background(), key, f)
+				_ = k8sClient.Get(context.Background(), key, f)
 				return k8sClient.Delete(context.Background(), f)
 			}, timeout, interval).Should(Succeed())
 

@@ -19,9 +19,11 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"k8s.io/apimachinery/pkg/runtime"
 
 	"github.com/go-logr/logr"
 	dbazure "github.com/xinsnake/databricks-sdk-golang/azure"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -33,8 +35,8 @@ import (
 // WorkspaceItemReconciler reconciles a WorkspaceItem object
 type WorkspaceItemReconciler struct {
 	client.Client
-	Log logr.Logger
-
+	Log       logr.Logger
+	Scheme    *runtime.Scheme
 	Recorder  record.EventRecorder
 	APIClient dbazure.DBClient
 }
@@ -42,6 +44,7 @@ type WorkspaceItemReconciler struct {
 // +kubebuilder:rbac:groups=databricks.microsoft.com,resources=workspaceitems,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=databricks.microsoft.com,resources=workspaceitems/status,verbs=get;update;patch
 
+// Reconcile implements the reconciliation loop for the operator
 func (r *WorkspaceItemReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	_ = context.Background()
 	_ = r.Log.WithValues("workspaceitem", req.NamespacedName)
@@ -61,33 +64,37 @@ func (r *WorkspaceItemReconciler) Reconcile(req ctrl.Request) (ctrl.Result, erro
 	if instance.IsBeingDeleted() {
 		r.Log.Info(fmt.Sprintf("HandleFinalizer for %v", req.NamespacedName))
 		if err := r.handleFinalizer(instance); err != nil {
+			r.Recorder.Event(instance, corev1.EventTypeWarning, "deleting finalizer", fmt.Sprintf("Failed to delete finalizer: %s", err))
 			return ctrl.Result{}, fmt.Errorf("error when handling finalizer: %v", err)
 		}
-		r.Recorder.Event(instance, "Normal", "Deleted", "Object finalizer is deleted")
+		r.Recorder.Event(instance, corev1.EventTypeNormal, "Deleted finalizer", "Object finalizer is deleted")
 		return ctrl.Result{}, nil
 	}
 
 	if !instance.HasFinalizer(databricksv1alpha1.WorkspaceItemFinalizerName) {
 		r.Log.Info(fmt.Sprintf("AddFinalizer for %v", req.NamespacedName))
 		if err := r.addFinalizer(instance); err != nil {
+			r.Recorder.Event(instance, corev1.EventTypeWarning, "Adding finalizer", fmt.Sprintf("Failed to add finalizer: %s", err))
 			return ctrl.Result{}, fmt.Errorf("error when adding finalizer: %v", err)
 		}
-		r.Recorder.Event(instance, "Normal", "Added", "Object finalizer is added")
+		r.Recorder.Event(instance, corev1.EventTypeNormal, "Added finalizer", "Object finalizer is added")
 		return ctrl.Result{}, nil
 	}
 
 	if !instance.IsSubmitted() || !instance.IsUpToDate() {
 		r.Log.Info(fmt.Sprintf("Submit for %v", req.NamespacedName))
 		if err := r.submit(instance); err != nil {
+			r.Recorder.Event(instance, corev1.EventTypeWarning, "Submitting object", fmt.Sprintf("Failed to submit object: %s", err))
 			return ctrl.Result{}, fmt.Errorf("error when submitting workspace item: %v", err)
 		}
-		r.Recorder.Event(instance, "Normal", "Submitted", "Object is submitted")
+		r.Recorder.Event(instance, corev1.EventTypeNormal, "Submitted", "Object is submitted")
 		return ctrl.Result{}, nil
 	}
 
 	return ctrl.Result{}, nil
 }
 
+// SetupWithManager adds the controller manager
 func (r *WorkspaceItemReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&databricksv1alpha1.WorkspaceItem{}).

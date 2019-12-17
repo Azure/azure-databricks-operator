@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// package v1alpha1 contains API Schema definitions for the databricks v1 API group
+// Package v1alpha1 contains API Schema definitions for the databricks v1 API group
 // +kubebuilder:object:generate=true
 // +groupName=databricks.microsoft.com
 package v1alpha1
