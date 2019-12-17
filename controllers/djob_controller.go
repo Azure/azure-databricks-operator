@@ -92,12 +92,12 @@ func (r *DjobReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	}
 
 	if instance.IsSubmitted() {
-		r.Log.Info(fmt.Sprintf("Refresh for %v", req.NamespacedName))
-		if err := r.refresh(instance); err != nil {
-			r.Recorder.Event(instance, corev1.EventTypeWarning, "Refreshing object", fmt.Sprintf("Failed to refresh object: %s", err))
-			return ctrl.Result{}, fmt.Errorf("error when refreshing job: %v", err)
+		r.Log.Info(fmt.Sprintf("Reset for %v", req.NamespacedName))
+		if err := r.reset(instance); err != nil {
+			r.Recorder.Event(instance, corev1.EventTypeWarning, "Resetting object", fmt.Sprintf("Failed to reset object: %s", err))
+			return ctrl.Result{}, fmt.Errorf("error when resetting job: %v", err)
 		}
-		r.Recorder.Event(instance, corev1.EventTypeNormal, "Refreshed", "Object is refreshed")
+		r.Recorder.Event(instance, corev1.EventTypeNormal, "Reseted", "Object is reseted")
 	}
 
 	return ctrl.Result{RequeueAfter: 30 * time.Second}, nil

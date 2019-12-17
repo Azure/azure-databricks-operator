@@ -19,7 +19,6 @@ package controllers
 import (
 	"context"
 	"fmt"
-	"reflect"
 	"strings"
 
 	databricksv1alpha1 "github.com/microsoft/azure-databricks-operator/api/v1alpha1"
@@ -84,7 +83,8 @@ func (r *DjobReconciler) submit(instance *databricksv1alpha1.Djob) error {
 	return r.Update(context.Background(), instance)
 }
 
-func (r *DjobReconciler) refresh(instance *databricksv1alpha1.Djob) error {
+//nolint:errcheck
+/*func (r *DjobReconciler) refresh(instance *databricksv1alpha1.Djob) error {
 	r.Log.Info(fmt.Sprintf("Refreshing job %s", instance.GetName()))
 
 	jobID := instance.Status.JobStatus.JobID
@@ -120,6 +120,7 @@ func (r *DjobReconciler) refresh(instance *databricksv1alpha1.Djob) error {
 	}
 	return r.Update(context.Background(), instance)
 }
+*/
 
 func (r *DjobReconciler) delete(instance *databricksv1alpha1.Djob) error {
 	r.Log.Info(fmt.Sprintf("Deleting job %s", instance.GetName()))
@@ -156,4 +157,25 @@ func (r *DjobReconciler) createJob(jobSettings dbmodels.JobSettings) (job dbmode
 	job, err = r.APIClient.Jobs().Create(jobSettings)
 	execution.Finish(err)
 	return job, err
+}
+
+func (r *DjobReconciler) reset(instance *databricksv1alpha1.Djob) error {
+	r.Log.Info(fmt.Sprintf("Reset job %s", instance.GetName()))
+	jobSettings := databricksv1alpha1.ToDatabricksJobSettings(instance.Spec)
+
+	if instance.Status == nil || instance.Status.JobStatus == nil {
+		return nil
+	}
+
+	jobID := instance.Status.JobStatus.JobID
+
+	// Check if the job exists before trying to delete it
+	if _, err := r.APIClient.Jobs().Get(jobID); err != nil {
+		if strings.Contains(err.Error(), "does not exist") {
+			return nil
+		}
+		return err
+	}
+
+	return r.APIClient.Jobs().Reset(jobID, jobSettings)
 }
