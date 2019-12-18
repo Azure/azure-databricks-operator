@@ -63,7 +63,7 @@ var _ = Describe("Run Controller", func() {
 				NewCluster: &dbmodels.NewCluster{
 					SparkVersion: "5.3.x-scala2.11",
 					NodeTypeID:   "Standard_D3_v2",
-					NumWorkers:   10,
+					NumWorkers:   3,
 				},
 				Libraries: []dbmodels.Library{
 					{
@@ -159,7 +159,7 @@ var _ = Describe("Run Controller", func() {
 				NewCluster: &dbmodels.NewCluster{
 					SparkVersion: "5.3.x-scala2.11",
 					NodeTypeID:   "Standard_D3_v2",
-					NumWorkers:   10,
+					NumWorkers:   3,
 				},
 				Libraries: []dbmodels.Library{
 					{
