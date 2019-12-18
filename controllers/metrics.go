@@ -17,6 +17,8 @@ limitations under the License.
 package controllers
 
 import (
+	"time"
+
 	"github.com/prometheus/client_golang/prometheus"
 	"sigs.k8s.io/controller-runtime/pkg/metrics"
 )
@@ -29,45 +31,34 @@ const (
 var databricksRequestHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 	Name: "databricks_request_duration_seconds",
 	Help: "Duration of upstream calls to Databricks REST service endpoints",
-}, []string{"object_type", "action"})
-
-var databricksRequestCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
-	Name: "databricks_request_total",
-	Help: "Counter of upstream calls to Databricks REST service endpoints",
 }, []string{"object_type", "action", "outcome"})
 
 func init() {
 	// Register custom metrics with the global prometheus registry
-	metrics.Registry.MustRegister(databricksRequestHistogram, databricksRequestCounter)
+	metrics.Registry.MustRegister(databricksRequestHistogram)
 }
 
 // NewExecution creates an Execution instance and starts the timer
 func NewExecution(objectType string, action string) Execution {
-	labels := prometheus.Labels{"object_type": objectType, "action": action}
-	observer := databricksRequestHistogram.With(labels)
-	timer := prometheus.NewTimer(observer)
-
 	return Execution{
-		timer:  *timer,
-		labels: labels,
+		begin:  time.Now(),
+		labels: prometheus.Labels{"object_type": objectType, "action": action},
 	}
 }
 
 // Execution tracks state for an API execution for emitting metrics
 type Execution struct {
-	timer  prometheus.Timer
+	begin  time.Time
 	labels prometheus.Labels
 }
 
 // Finish is used to log duration and success/failure
 func (e *Execution) Finish(err error) {
-	e.timer.ObserveDuration()
-
 	if err == nil {
 		e.labels["outcome"] = successMetric
 	} else {
 		e.labels["outcome"] = failureMetric
 	}
-
-	databricksRequestCounter.With(e.labels).Inc()
+	duration := time.Since(e.begin)
+	databricksRequestHistogram.With(e.labels).Observe(duration.Seconds())
 }

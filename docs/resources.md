@@ -69,11 +69,4 @@ The `databricks_request_duration_seconds` histogram provides metrics on the dura
 |-|-|
 |`object_type`|The type of object that the call relatest to, e.g. `dcluster`|
 |`action`| The action being performed, e.g. `get`, `create`|
-
-The `databricks_request_total` counter provides the total number of calls via the databricks SDK and can be used in `rate` queries to see the rate of successful/failed calls. The labels for this metric are 
-
-|Name|Description|
-|-|-|
-|`object_type`|The type of object that the call relatest to, e.g. `dcluster`|
-|`action`| The action being performed, e.g. `get`, `create`|
 |`outcome`| `success` or `failure`|
