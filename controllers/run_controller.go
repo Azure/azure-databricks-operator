@@ -77,8 +77,11 @@ func (r *RunReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	}
 
 	if !instance.IsSubmitted() {
-		if err := r.submit(instance); err != nil {
+		if requeue, err := r.submit(instance); err != nil {
 			r.Recorder.Event(instance, corev1.EventTypeWarning, "Submitting object", fmt.Sprintf("Failed to submit object: %s", err))
+			if requeue {
+				return ctrl.Result{RequeueAfter: 30 * time.Second}, fmt.Errorf("error when submitting run: %v", err)
+			}
 			return ctrl.Result{}, fmt.Errorf("error when submitting run: %v", err)
 		}
 		r.Recorder.Event(instance, corev1.EventTypeNormal, "Submitted", "Object is submitted")

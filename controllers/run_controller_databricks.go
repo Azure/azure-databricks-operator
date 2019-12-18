@@ -32,11 +32,12 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
-func (r *RunReconciler) submit(instance *databricksv1alpha1.Run) error {
+func (r *RunReconciler) submit(instance *databricksv1alpha1.Run) (bool, error) {
 	r.Log.Info(fmt.Sprintf("Submitting run %s", instance.GetName()))
 
 	var run *dbmodels.Run
 	var err error
+	var requeue bool
 
 	instance.Spec.RunName = instance.GetName()
 
@@ -44,13 +45,16 @@ func (r *RunReconciler) submit(instance *databricksv1alpha1.Run) error {
 	// otherwise submit it as RunNow under the job, and make the
 	// job the owner of the run
 	if instance.Spec.JobName != "" {
-		run, err = r.runUsingRunNow(instance)
+		run, requeue, err = r.runUsingRunNow(instance)
+		if requeue {
+			return true, err
+		}
 	} else {
 		run, err = r.runUsingRunsSubmit(instance)
 	}
 
 	if err != nil {
-		return err
+		return false, err
 	}
 
 
@@ -73,11 +77,11 @@ func (r *RunReconciler) submit(instance *databricksv1alpha1.Run) error {
 	runOutput, err := r.getRunOutput(run.RunID)
 
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	instance.Status = &runOutput
-	return r.Update(context.Background(), instance)
+	return false, r.Update(context.Background(), instance)
 }
 
 func (r *RunReconciler) refresh(instance *databricksv1alpha1.Run) error {
@@ -137,7 +141,7 @@ func (r *RunReconciler) delete(instance *databricksv1alpha1.Run) error {
 	})
 }
 
-func (r *RunReconciler) runUsingRunNow(instance *databricksv1alpha1.Run) (*dbmodels.Run, error) {
+func (r *RunReconciler) runUsingRunNow(instance *databricksv1alpha1.Run) (*dbmodels.Run, bool, error) {
 	timer := prometheus.NewTimer(runNowDuration)
 	defer timer.ObserveDuration()
 
@@ -152,7 +156,7 @@ func (r *RunReconciler) runUsingRunNow(instance *databricksv1alpha1.Run) (*dbmod
 	k8sJobNamespacedName := types.NamespacedName{Namespace: instance.GetNamespace(), Name: instance.Spec.JobName}
 	var k8sJob databricksv1alpha1.Djob
 	if err := r.Client.Get(context.Background(), k8sJobNamespacedName, &k8sJob); err != nil {
-		return nil, err
+		return nil, false, err
 	}
 
 	instance.ObjectMeta.SetOwnerReferences([]metav1.OwnerReference{
@@ -164,9 +168,13 @@ func (r *RunReconciler) runUsingRunNow(instance *databricksv1alpha1.Run) (*dbmod
 		},
 	})
 
+	if !k8sJob.IsSubmitted() {
+		return nil, true, fmt.Errorf("Run references Djob that is not yet submitted")
+	}
+
 	run, err := r.APIClient.Jobs().RunNow(k8sJob.Status.JobStatus.JobID, runParameters)
 	trackSuccessFailure(err, runCounterVec, "runsnow")
-	return &run, err
+	return &run, false, err
 }
 
 func (r *RunReconciler) runUsingRunsSubmit(instance *databricksv1alpha1.Run) (*dbmodels.Run, error) {
