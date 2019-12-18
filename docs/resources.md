@@ -60,13 +60,20 @@ More info:
 - Open another terminal and curl request the metric endpoint: `curl localhost:8080/metrics`
 
 ### Counter metrics
-Counter metrics take the format `databricks_[x]_total` where:
-- x: Object being maniputlated; example: `dcluster`
 
-Counter metrics have labels that show breakdown by:
-- status (success | failure)
-- method (the action being performed via REST call example: get, create, delete)
+In addition to the standard metrics that kubebuilder provides, the following custom metrics have been added.
 
-Histogram metrics take the format `databricks_[x]_[action]_request_duration_seconds` where:
-- x: Object being maniputlated; example: `dcluster`
-- action: Action being performed; example: `create`
+The `databricks_request_duration_seconds` histogram provides metrics on the duration of calls via the databricks SDK and has the following labels:
+
+|Name|Description|
+|-|-|
+|`object_type`|The type of object that the call relatest to, e.g. `dcluster`|
+|`action`| The action being performed, e.g. `get`, `create`|
+
+The `databricks_request_total` counter provides the total number of calls via the databricks SDK and can be used in `rate` queries to see the rate of successful/failed calls. The labels for this metric are 
+
+|Name|Description|
+|-|-|
+|`object_type`|The type of object that the call relatest to, e.g. `dcluster`|
+|`action`| The action being performed, e.g. `get`, `create`|
+|`outcome`| `success` or `failure`|
