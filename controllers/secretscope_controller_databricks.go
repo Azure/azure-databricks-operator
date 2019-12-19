@@ -29,7 +29,9 @@ import (
 )
 
 func (r *SecretScopeReconciler) get(scope string) (*dbmodels.SecretScope, error) {
+	execution := NewExecution("secretscopes", "list_secret_scops")
 	scopes, err := r.APIClient.Secrets().ListSecretScopes()
+	execution.Finish(err)
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +53,9 @@ func (r *SecretScopeReconciler) get(scope string) (*dbmodels.SecretScope, error)
 func (r *SecretScopeReconciler) submitSecrets(instance *databricksv1alpha1.SecretScope) error {
 	scope := instance.ObjectMeta.Name
 	namespace := instance.Namespace
+	execution := NewExecution("secretscopes", "list_secrets")
 	scopeSecrets, err := r.APIClient.Secrets().ListSecrets(scope)
+	execution.Finish(err)
 	if err != nil {
 		return err
 	}
@@ -60,7 +64,9 @@ func (r *SecretScopeReconciler) submitSecrets(instance *databricksv1alpha1.Secre
 	// therefore, we delete all then create all
 	if len(scopeSecrets) > 0 {
 		for _, existingSecret := range scopeSecrets {
+			execution := NewExecution("secretscopes", "delete_secret")
 			err = r.APIClient.Secrets().DeleteSecret(scope, existingSecret.Key)
+			execution.Finish(err)
 			if err != nil {
 				return err
 			}
@@ -69,7 +75,9 @@ func (r *SecretScopeReconciler) submitSecrets(instance *databricksv1alpha1.Secre
 
 	for _, secret := range instance.Spec.SecretScopeSecrets {
 		if secret.StringValue != "" {
+			execution := NewExecution("secretscopes", "put_secret_string")
 			err = r.APIClient.Secrets().PutSecretString(secret.StringValue, scope, secret.Key)
+			execution.Finish(err)
 			if err != nil {
 				return err
 			}
@@ -78,7 +86,9 @@ func (r *SecretScopeReconciler) submitSecrets(instance *databricksv1alpha1.Secre
 			if err != nil {
 				return err
 			}
+			execution := NewExecution("secretscopes", "put_secret")
 			err = r.APIClient.Secrets().PutSecret(v, scope, secret.Key)
+			execution.Finish(err)
 			if err != nil {
 				return err
 			}
@@ -88,7 +98,9 @@ func (r *SecretScopeReconciler) submitSecrets(instance *databricksv1alpha1.Secre
 				return err
 			}
 
+			execution := NewExecution("secretscopes", "put_secret_string")
 			err = r.APIClient.Secrets().PutSecretString(value, scope, secret.Key)
+			execution.Finish(err)
 			if err != nil {
 				return err
 			}
@@ -116,14 +128,18 @@ func (r *SecretScopeReconciler) getSecretValueFrom(namespace string, scopeSecret
 
 func (r *SecretScopeReconciler) submitACLs(instance *databricksv1alpha1.SecretScope) error {
 	scope := instance.ObjectMeta.Name
+	execution := NewExecution("secretscopes", "list_secret_acls")
 	scopeSecretACLs, err := r.APIClient.Secrets().ListSecretACLs(scope)
+	execution.Finish(err)
 	if err != nil {
 		return err
 	}
 
 	if len(scopeSecretACLs) > 0 {
 		for _, existingACL := range scopeSecretACLs {
+			execution := NewExecution("secretscopes", "delete_secret_acl")
 			err = r.APIClient.Secrets().DeleteSecretACL(scope, existingACL.Principal)
+			execution.Finish(err)
 			if err != nil {
 				return err
 			}
@@ -146,7 +162,9 @@ func (r *SecretScopeReconciler) submitACLs(instance *databricksv1alpha1.SecretSc
 			return err
 		}
 
+		execution := NewExecution("secretscopes", "put_secret_acl")
 		err = r.APIClient.Secrets().PutSecretACL(scope, acl.Principal, permission)
+		execution.Finish(err)
 	}
 
 	return nil
@@ -173,7 +191,9 @@ func (r *SecretScopeReconciler) submit(instance *databricksv1alpha1.SecretScope)
 	scope := instance.ObjectMeta.Name
 	initialManagePrincipal := instance.Spec.InitialManagePrincipal
 
+	execution := NewExecution("secretscopes", "create_secret_scope")
 	err = r.APIClient.Secrets().CreateSecretScope(scope, initialManagePrincipal)
+	execution.Finish(err)
 	if err != nil {
 		return
 	}
@@ -205,7 +225,9 @@ func (r *SecretScopeReconciler) delete(instance *databricksv1alpha1.SecretScope)
 
 	if instance.Status.SecretScope != nil {
 		scope := instance.Status.SecretScope.Name
+		execution := NewExecution("secretscopes", "delete_secret_scope")
 		err := r.APIClient.Secrets().DeleteSecretScope(scope)
+		execution.Finish(err)
 		if err != nil && !strings.Contains(err.Error(), "does not exist") {
 			return err
 		}
