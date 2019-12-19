@@ -70,12 +70,7 @@ func (r *RunReconciler) submit(instance *databricksv1alpha1.Run) (bool, error) {
 		return false, err
 	}
 
-	runOutput, err := r.APIClient.Jobs().RunsGetOutput(run.RunID)
-	if err != nil {
-		return false, err
-	}
-
-	runOutput, err = r.getRunOutput(run.RunID)
+	runOutput, err := r.getRunOutput(run.RunID)
 
 	if err != nil {
 		return false, err
