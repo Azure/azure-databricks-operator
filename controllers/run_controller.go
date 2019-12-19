@@ -59,12 +59,18 @@ func (r *RunReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	}
 
 	if instance.IsBeingDeleted() {
-		if err := r.handleFinalizer(instance); err != nil {
+		completed, err := r.handleFinalizer(instance)
+		if err != nil {
 			r.Recorder.Event(instance, corev1.EventTypeWarning, "deleting finalizer", fmt.Sprintf("Failed to delete finalizer: %s", err))
 			return ctrl.Result{}, fmt.Errorf("error when handling finalizer: %v", err)
 		}
-		r.Recorder.Event(instance, corev1.EventTypeNormal, "Deleted", "Object finalizer is deleted")
-		return ctrl.Result{}, nil
+		if completed {
+			r.Recorder.Event(instance, corev1.EventTypeNormal, "Deleted", "Object finalizer is deleted")
+			return ctrl.Result{}, nil
+		}
+		// no error but not completed removing the finalizer - requeue
+		r.Recorder.Event(instance, corev1.EventTypeNormal, "Deleting", "Pending deletion")
+		return ctrl.Result{RequeueAfter: 5 * time.Second}, nil
 	}
 
 	if !instance.HasFinalizer(databricksv1alpha1.RunFinalizerName) {
