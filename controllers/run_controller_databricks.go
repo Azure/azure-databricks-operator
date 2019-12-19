@@ -56,7 +56,6 @@ func (r *RunReconciler) submit(instance *databricksv1alpha1.Run) (bool, error) {
 		return false, err
 	}
 
-
 	// update the run state now, in case the RunsGetOutput call below fails
 	var pendingState dbmodels.RunLifeCycleState = dbmodels.RunLifeCycleStatePending
 	run.State = &dbmodels.RunState{
