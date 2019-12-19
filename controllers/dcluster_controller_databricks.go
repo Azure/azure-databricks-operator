@@ -22,6 +22,7 @@ import (
 	"reflect"
 
 	databricksv1alpha1 "github.com/microsoft/azure-databricks-operator/api/v1alpha1"
+	dbmodels "github.com/xinsnake/databricks-sdk-golang/azure/models"
 )
 
 func (r *DclusterReconciler) submit(instance *databricksv1alpha1.Dcluster) error {
@@ -36,7 +37,7 @@ func (r *DclusterReconciler) submit(instance *databricksv1alpha1.Dcluster) error
 		}
 	}
 
-	clusterInfo, err := r.APIClient.Clusters().Create(*instance.Spec)
+	clusterInfo, err := r.createCluster(instance)
 	if err != nil {
 		return err
 	}
@@ -55,7 +56,7 @@ func (r *DclusterReconciler) refresh(instance *databricksv1alpha1.Dcluster) erro
 		return nil
 	}
 
-	clusterInfo, err := r.APIClient.Clusters().Get(instance.Status.ClusterInfo.ClusterID)
+	clusterInfo, err := r.getCluster(instance.Status.ClusterInfo.ClusterID)
 	if err != nil {
 		return err
 	}
@@ -78,5 +79,22 @@ func (r *DclusterReconciler) delete(instance *databricksv1alpha1.Dcluster) error
 		return nil
 	}
 
-	return r.APIClient.Clusters().PermanentDelete(instance.Status.ClusterInfo.ClusterID)
+	execution := NewExecution("dclusters", "delete")
+	err := r.APIClient.Clusters().PermanentDelete(instance.Status.ClusterInfo.ClusterID)
+	execution.Finish(err)
+	return err
+}
+
+func (r *DclusterReconciler) getCluster(clusterID string) (cluster dbmodels.ClusterInfo, err error) {
+	execution := NewExecution("dclusters", "get")
+	cluster, err = r.APIClient.Clusters().Get(clusterID)
+	execution.Finish(err)
+	return cluster, err
+}
+
+func (r *DclusterReconciler) createCluster(instance *databricksv1alpha1.Dcluster) (cluster dbmodels.ClusterInfo, err error) {
+	execution := NewExecution("dclusters", "create")
+	cluster, err = r.APIClient.Clusters().Create(*instance.Spec)
+	execution.Finish(err)
+	return cluster, err
 }

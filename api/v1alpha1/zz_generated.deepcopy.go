@@ -65,7 +65,7 @@ func (in *DbfsBlock) DeepCopyObject() runtime.Object {
 func (in *DbfsBlockList) DeepCopyInto(out *DbfsBlockList) {
 	*out = *in
 	out.TypeMeta = in.TypeMeta
-	out.ListMeta = in.ListMeta
+	in.ListMeta.DeepCopyInto(&out.ListMeta)
 	if in.Items != nil {
 		in, out := &in.Items, &out.Items
 		*out = make([]DbfsBlock, len(*in))
@@ -243,7 +243,7 @@ func (in *DclusterInfo) DeepCopy() *DclusterInfo {
 func (in *DclusterList) DeepCopyInto(out *DclusterList) {
 	*out = *in
 	out.TypeMeta = in.TypeMeta
-	out.ListMeta = in.ListMeta
+	in.ListMeta.DeepCopyInto(&out.ListMeta)
 	if in.Items != nil {
 		in, out := &in.Items, &out.Items
 		*out = make([]Dcluster, len(*in))
@@ -330,7 +330,7 @@ func (in *Djob) DeepCopyObject() runtime.Object {
 func (in *DjobList) DeepCopyInto(out *DjobList) {
 	*out = *in
 	out.TypeMeta = in.TypeMeta
-	out.ListMeta = in.ListMeta
+	in.ListMeta.DeepCopyInto(&out.ListMeta)
 	if in.Items != nil {
 		in, out := &in.Items, &out.Items
 		*out = make([]Djob, len(*in))
@@ -481,7 +481,7 @@ func (in *Run) DeepCopyObject() runtime.Object {
 func (in *RunList) DeepCopyInto(out *RunList) {
 	*out = *in
 	out.TypeMeta = in.TypeMeta
-	out.ListMeta = in.ListMeta
+	in.ListMeta.DeepCopyInto(&out.ListMeta)
 	if in.Items != nil {
 		in, out := &in.Items, &out.Items
 		*out = make([]Run, len(*in))
@@ -600,7 +600,7 @@ func (in *SecretScopeKeyRef) DeepCopy() *SecretScopeKeyRef {
 func (in *SecretScopeList) DeepCopyInto(out *SecretScopeList) {
 	*out = *in
 	out.TypeMeta = in.TypeMeta
-	out.ListMeta = in.ListMeta
+	in.ListMeta.DeepCopyInto(&out.ListMeta)
 	if in.Items != nil {
 		in, out := &in.Items, &out.Items
 		*out = make([]SecretScope, len(*in))
@@ -750,7 +750,7 @@ func (in *WorkspaceItem) DeepCopyObject() runtime.Object {
 func (in *WorkspaceItemList) DeepCopyInto(out *WorkspaceItemList) {
 	*out = *in
 	out.TypeMeta = in.TypeMeta
-	out.ListMeta = in.ListMeta
+	in.ListMeta.DeepCopyInto(&out.ListMeta)
 	if in.Items != nil {
 		in, out := &in.Items, &out.Items
 		*out = make([]WorkspaceItem, len(*in))

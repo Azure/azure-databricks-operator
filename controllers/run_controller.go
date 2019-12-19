@@ -25,6 +25,7 @@ import (
 	dbazure "github.com/xinsnake/databricks-sdk-golang/azure"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -35,8 +36,8 @@ import (
 // RunReconciler reconciles a Run object
 type RunReconciler struct {
 	client.Client
-	Log logr.Logger
-
+	Log       logr.Logger
+	Scheme    *runtime.Scheme
 	Recorder  record.EventRecorder
 	APIClient dbazure.DBClient
 }
@@ -76,8 +77,11 @@ func (r *RunReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	}
 
 	if !instance.IsSubmitted() {
-		if err := r.submit(instance); err != nil {
+		if requeue, err := r.submit(instance); err != nil {
 			r.Recorder.Event(instance, corev1.EventTypeWarning, "Submitting object", fmt.Sprintf("Failed to submit object: %s", err))
+			if requeue {
+				return ctrl.Result{RequeueAfter: 30 * time.Second}, fmt.Errorf("error when submitting run: %v", err)
+			}
 			return ctrl.Result{}, fmt.Errorf("error when submitting run: %v", err)
 		}
 		r.Recorder.Event(instance, corev1.EventTypeNormal, "Submitted", "Object is submitted")

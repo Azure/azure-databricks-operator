@@ -36,7 +36,9 @@ func (r *WorkspaceItemReconciler) submit(instance *databricksv1alpha1.WorkspaceI
 		return err
 	}
 
+	execution := NewExecution("workspaceitems", "import")
 	err = r.APIClient.Workspace().Import(instance.Spec.Path, instance.Spec.Format, instance.Spec.Language, data, true)
+	execution.Finish(err)
 	if err != nil {
 		return err
 	}
@@ -44,7 +46,9 @@ func (r *WorkspaceItemReconciler) submit(instance *databricksv1alpha1.WorkspaceI
 	time.Sleep(1 * time.Second)
 
 	// Refresh info
+	execution = NewExecution("workspaceitems", "get_status")
 	objectInfo, err := r.APIClient.Workspace().GetStatus(instance.Spec.Path)
+	execution.Finish(err)
 	if err != nil {
 		return err
 	}
@@ -66,5 +70,8 @@ func (r *WorkspaceItemReconciler) delete(instance *databricksv1alpha1.WorkspaceI
 
 	path := instance.Status.ObjectInfo.Path
 
-	return r.APIClient.Workspace().Delete(path, true)
+	execution := NewExecution("workspaceitems", "import")
+	err := r.APIClient.Workspace().Delete(path, true)
+	execution.Finish(err)
+	return err
 }

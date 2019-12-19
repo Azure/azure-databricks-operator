@@ -34,7 +34,10 @@ func (r *DbfsBlockReconciler) submit(instance *databricksv1alpha1.DbfsBlock) err
 	}
 
 	// Open handler
+	execution := NewExecution("dbfsblocks", "create")
 	createResponse, err := r.APIClient.Dbfs().Create(instance.Spec.Path, true)
+	execution.Finish(err)
+
 	if err != nil {
 		return err
 	}
@@ -42,18 +45,26 @@ func (r *DbfsBlockReconciler) submit(instance *databricksv1alpha1.DbfsBlock) err
 	// DataBricks limits the AddBlock size to be 1024KB
 	var g = 1000
 	for i := 0; i < len(data); i += g {
+		execution = NewExecution("dbfsblocks", "add_block")
+
 		if i+g <= len(data) {
 			err = r.APIClient.Dbfs().AddBlock(createResponse.Handle, data[i:i+g])
 		} else {
 			err = r.APIClient.Dbfs().AddBlock(createResponse.Handle, data[i:])
 		}
+
+		execution.Finish(err)
+
 		if err != nil {
 			return err
 		}
 	}
 
 	// Close handler
+	execution = NewExecution("dbfsblocks", "close")
 	err = r.APIClient.Dbfs().Close(createResponse.Handle)
+	execution.Finish(err)
+
 	if err != nil {
 		return err
 	}
@@ -61,7 +72,10 @@ func (r *DbfsBlockReconciler) submit(instance *databricksv1alpha1.DbfsBlock) err
 	time.Sleep(1 * time.Second)
 
 	// Refresh info
+	execution = NewExecution("dbfsblocks", "get_status")
 	fileInfo, err := r.APIClient.Dbfs().GetStatus(instance.Spec.Path)
+	execution.Finish(err)
+
 	if err != nil {
 		return err
 	}
@@ -83,5 +97,8 @@ func (r *DbfsBlockReconciler) delete(instance *databricksv1alpha1.DbfsBlock) err
 
 	path := instance.Status.FileInfo.Path
 
-	return r.APIClient.Dbfs().Delete(path, true)
+	execution := NewExecution("dbfsblocks", "delete")
+	err := r.APIClient.Dbfs().Delete(path, true)
+	execution.Finish(err)
+	return err
 }

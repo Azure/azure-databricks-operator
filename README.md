@@ -1,8 +1,7 @@
-
-[![Build Status](https://dev.azure.com/ms/azure-databricks-operator/_apis/build/status/microsoft.azure-databricks-operator?branchName=master)](https://dev.azure.com/ms/azure-databricks-operator/_build/latest?definitionId=254&branchName=master)
-
 # Azure Databricks operator (for Kubernetes)
-
+[![Build Status](https://dev.azure.com/ms/azure-databricks-operator/_apis/build/status/microsoft.azure-databricks-operator?branchName=master)](https://dev.azure.com/ms/azure-databricks-operator/_build/latest?definitionId=254&branchName=master)
+[![Go Report Card](https://goreportcard.com/badge/github.com/microsoft/azure-databricks-operator)](https://goreportcard.com/report/github.com/microsoft/azure-databricks-operator)
+[![License: MIT](https://img.shields.io/github/license/microsoft/azure-databricks-operator)](https://github.com/microsoft/azure-databricks-operator/blob/master/LICENSE)
 > This project is experimental. Expect the API to change. It is not recommended for production environments.
 
 
@@ -40,6 +39,7 @@ Few topics are discussed in the [resources.md](https://github.com/microsoft/azur
 - Kubernetes on WSL
 - Build pipelines
 - Dev container
+- Operator metrics
 
 ## Contributing
 

@@ -35,8 +35,8 @@ import (
 // DclusterReconciler reconciles a Dcluster object
 type DclusterReconciler struct {
 	client.Client
-	Log logr.Logger
-
+	Log       logr.Logger
+	Scheme    *runtime.Scheme
 	Recorder  record.EventRecorder
 	APIClient dbazure.DBClient
 }

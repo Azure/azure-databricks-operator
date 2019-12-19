@@ -8,9 +8,10 @@ resources:
 - bases/databricks.microsoft.com_dclusters.yaml
 - bases/databricks.microsoft.com_dbfsblocks.yaml
 - bases/databricks.microsoft.com_workspaceitems.yaml
+
 # +kubebuilder:scaffold:crdkustomizeresource
 
-patches:
+patchesStrategicMerge:
 # [WEBHOOK] patches here are for enabling the conversion webhook for each CRD
 #- patches/webhook_in_secretscopes.yaml
 #- patches/webhook_in_djobs.yaml

@@ -51,6 +51,22 @@ If you are using Visual Studio Code with [Remote - Containers](https://marketpla
 	```
 7. Once your kind cluster has been created, you can now start testing your Azure Databicks Operator within your own local kubernetes environment!
 
+## Advanced: DevContainer Cache
+
+To speedup start times for the `devcontainer` and reduce the requirement for internet connectivity when starting we cache the `.vscodeserver` and `/go/pkg` folder to docker volumes. The [VSCode docs cover this topic here](https://code.visualstudio.com/docs/remote/containers-advanced#_avoiding-extension-reinstalls-on-container-rebuild).
+
+The downside is that changes to the `extension` list in `devcontainer.json` won't automatically be picked up. To clear the cache run `docker volume rm dboperator-vscodecache -f`. 
+
+You'll need to remove existing instance of the `devcontainer` before clearing the cache. Use `docker ps -a` and then locating the container with a name `vsc-azure-databricks-operator-*` and using `docker rm -f CONTAINER-NAME-HERE` to remove it. 
+
+In `bash` the following will automate the process: 
+
+```
+ docker ps -a | grep vsc-azure-databricks | awk '{print $1}' | xargs docker rm -f
+ docker volume rm dboperator-vscodecache -f
+ docker volume rm dboperator-gomodcache -f
+```
+
 # Building and Running the operator
 
 ## Basics
@@ -58,8 +74,7 @@ The scaffolding for the project is generated using `Kubebuilder`. It is a good i
 
 See `Makefile` at the root directory of the project. By default, executing `make` will build the project and produce an executable at `./bin/manager`
 
-For example, to quick start 
->this assumes dependencies have been downloaded and existing CRDs have been installed. See next section
+For example, to quick start this assumes dependencies have been downloaded and existing CRDs have been installed. See next section
 ```
 $ git clone https://github.com/microsoft/azure-databricks-operator.git
 $ cd azure-databricks-operator

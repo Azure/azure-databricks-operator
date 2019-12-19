@@ -18,7 +18,6 @@ package controllers
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"reflect"
 	"strings"
@@ -32,11 +31,12 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
-func (r *RunReconciler) submit(instance *databricksv1alpha1.Run) error {
+func (r *RunReconciler) submit(instance *databricksv1alpha1.Run) (bool, error) {
 	r.Log.Info(fmt.Sprintf("Submitting run %s", instance.GetName()))
 
-	var run dbmodels.Run
+	var run *dbmodels.Run
 	var err error
+	var requeue bool
 
 	instance.Spec.RunName = instance.GetName()
 
@@ -44,48 +44,18 @@ func (r *RunReconciler) submit(instance *databricksv1alpha1.Run) error {
 	// otherwise submit it as RunNow under the job, and make the
 	// job the owner of the run
 	if instance.Spec.JobName != "" {
-		runParameters := dbmodels.RunParameters{
-			JarParams:         instance.Spec.JarParams,
-			NotebookParams:    instance.Spec.NotebookParams,
-			PythonParams:      instance.Spec.PythonParams,
-			SparkSubmitParams: instance.Spec.SparkSubmitParams,
+		run, requeue, err = r.runUsingRunNow(instance)
+		if requeue {
+			return true, err
 		}
-
-		// Here we set the owner attribute
-		k8sJobNamespacedName := types.NamespacedName{Namespace: instance.GetNamespace(), Name: instance.Spec.JobName}
-		var k8sJob databricksv1alpha1.Djob
-		if err = r.Client.Get(context.Background(), k8sJobNamespacedName, &k8sJob); err != nil {
-			return err
-		}
-		instance.ObjectMeta.SetOwnerReferences([]metav1.OwnerReference{
-			{
-				APIVersion: "v1alpha1", // TODO should this be a referenced value?
-				Kind:       "Djob",     // TODO should this be a referenced value?
-				Name:       k8sJob.GetName(),
-				UID:        k8sJob.GetUID(),
-			},
-		})
-
-		run, err = r.APIClient.Jobs().RunNow(k8sJob.Status.JobStatus.JobID, runParameters)
 	} else {
-		clusterSpec := dbmodels.ClusterSpec{
-			NewCluster:        instance.Spec.NewCluster,
-			ExistingClusterID: instance.Spec.ExistingClusterID,
-			Libraries:         instance.Spec.Libraries,
-		}
-		jobTask := dbmodels.JobTask{
-			NotebookTask:    instance.Spec.NotebookTask,
-			SparkJarTask:    instance.Spec.SparkJarTask,
-			SparkPythonTask: instance.Spec.SparkPythonTask,
-			SparkSubmitTask: instance.Spec.SparkSubmitTask,
-		}
-		run, err = r.APIClient.Jobs().
-			RunsSubmit(instance.Spec.RunName, clusterSpec, jobTask, instance.Spec.TimeoutSeconds)
+		run, err = r.runUsingRunsSubmit(instance)
 	}
 
 	if err != nil {
-		return err
+		return false, err
 	}
+
 
 	// update the run state now, in case the RunsGetOutput call below fails
 	var pendingState dbmodels.RunLifeCycleState = dbmodels.RunLifeCycleStatePending
@@ -93,21 +63,27 @@ func (r *RunReconciler) submit(instance *databricksv1alpha1.Run) error {
 		LifeCycleState: &pendingState,
 	}
 	instance.Status = &azure.JobsRunsGetOutputResponse{
-		Metadata: run,
+		Metadata: *run,
 	}
 
 	err = r.Update(context.Background(), instance)
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	runOutput, err := r.APIClient.Jobs().RunsGetOutput(run.RunID)
 	if err != nil {
-		return err
+		return false, err
+	}
+
+	runOutput, err = r.getRunOutput(run.RunID)
+
+	if err != nil {
+		return false, err
 	}
 
 	instance.Status = &runOutput
-	return r.Update(context.Background(), instance)
+	return false, r.Update(context.Background(), instance)
 }
 
 func (r *RunReconciler) refresh(instance *databricksv1alpha1.Run) error {
@@ -115,12 +91,9 @@ func (r *RunReconciler) refresh(instance *databricksv1alpha1.Run) error {
 
 	runID := instance.Status.Metadata.RunID
 
-	runOutput, err := r.APIClient.Jobs().RunsGetOutput(runID)
+	runOutput, err := r.getRunOutput(runID)
 	if err != nil {
 		return err
-	}
-	if len(runOutput.Error) > 0 {
-		return errors.New(runOutput.Error)
 	}
 
 	err = r.Get(context.Background(), types.NamespacedName{
@@ -149,7 +122,7 @@ func (r *RunReconciler) delete(instance *databricksv1alpha1.Run) error {
 	runID := instance.Status.Metadata.RunID
 
 	// Check if the run exists before trying to delete it
-	if _, err := r.APIClient.Jobs().RunsGet(runID); err != nil {
+	if _, err := r.getRun(runID); err != nil {
 		if strings.Contains(err.Error(), "does not exist") {
 			return nil
 		}
@@ -158,10 +131,85 @@ func (r *RunReconciler) delete(instance *databricksv1alpha1.Run) error {
 
 	// We will not check for error when cancelling a job,
 	// if it fails just let it be
-	r.APIClient.Jobs().RunsCancel(runID) //nolint:errcheck
+	execution := NewExecution("runs", "cancel")
+	err := r.APIClient.Jobs().RunsCancel(runID)
+	execution.Finish(err)
 
 	// It takes time for DataBricks to cancel a run
 	time.Sleep(15 * time.Second)
 
-	return r.APIClient.Jobs().RunsDelete(runID)
+	execution = NewExecution("runs", "delete")
+	err = r.APIClient.Jobs().RunsDelete(runID)
+	execution.Finish(err)
+	return err
+}
+
+func (r *RunReconciler) runUsingRunNow(instance *databricksv1alpha1.Run) (*dbmodels.Run, bool, error) {
+
+	runParameters := dbmodels.RunParameters{
+		JarParams:         instance.Spec.JarParams,
+		NotebookParams:    instance.Spec.NotebookParams,
+		PythonParams:      instance.Spec.PythonParams,
+		SparkSubmitParams: instance.Spec.SparkSubmitParams,
+	}
+
+	// Here we set the owner attribute
+	k8sJobNamespacedName := types.NamespacedName{Namespace: instance.GetNamespace(), Name: instance.Spec.JobName}
+	var k8sJob databricksv1alpha1.Djob
+	if err := r.Client.Get(context.Background(), k8sJobNamespacedName, &k8sJob); err != nil {
+		return nil, false, err
+	}
+
+	instance.ObjectMeta.SetOwnerReferences([]metav1.OwnerReference{
+		{
+			APIVersion: "v1alpha1", // TODO should this be a referenced value?
+			Kind:       "Djob",     // TODO should this be a referenced value?
+			Name:       k8sJob.GetName(),
+			UID:        k8sJob.GetUID(),
+		},
+	})
+
+	if !k8sJob.IsSubmitted() {
+		return nil, true, fmt.Errorf("Run references Djob that is not yet submitted")
+	}
+
+	execution := NewExecution("runs", "run_now")
+	run, err := r.APIClient.Jobs().RunNow(k8sJob.Status.JobStatus.JobID, runParameters)
+	execution.Finish(err)
+	return &run, false, err
+}
+
+func (r *RunReconciler) runUsingRunsSubmit(instance *databricksv1alpha1.Run) (*dbmodels.Run, error) {
+	clusterSpec := dbmodels.ClusterSpec{
+		NewCluster:        instance.Spec.NewCluster,
+		ExistingClusterID: instance.Spec.ExistingClusterID,
+		Libraries:         instance.Spec.Libraries,
+	}
+	jobTask := dbmodels.JobTask{
+		NotebookTask:    instance.Spec.NotebookTask,
+		SparkJarTask:    instance.Spec.SparkJarTask,
+		SparkPythonTask: instance.Spec.SparkPythonTask,
+		SparkSubmitTask: instance.Spec.SparkSubmitTask,
+	}
+
+	execution := NewExecution("runs", "run_submit")
+	run, err := r.APIClient.Jobs().RunsSubmit(instance.Spec.RunName, clusterSpec, jobTask, instance.Spec.TimeoutSeconds)
+	execution.Finish(err)
+	return &run, err
+}
+
+func (r *RunReconciler) getRun(runID int64) (dbmodels.Run, error) {
+	execution := NewExecution("runs", "get")
+	runOutput, err := r.APIClient.Jobs().RunsGet(runID)
+	execution.Finish(err)
+
+	return runOutput, err
+}
+
+func (r *RunReconciler) getRunOutput(runID int64) (azure.JobsRunsGetOutputResponse, error) {
+	execution := NewExecution("runs", "run_get_output")
+	runOutput, err := r.APIClient.Jobs().RunsGetOutput(runID)
+	execution.Finish(err)
+
+	return runOutput, err
 }

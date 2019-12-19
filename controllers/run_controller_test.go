@@ -63,7 +63,7 @@ var _ = Describe("Run Controller", func() {
 				NewCluster: &dbmodels.NewCluster{
 					SparkVersion: "5.3.x-scala2.11",
 					NodeTypeID:   "Standard_D3_v2",
-					NumWorkers:   10,
+					NumWorkers:   3,
 				},
 				Libraries: []dbmodels.Library{
 					{
@@ -143,6 +143,78 @@ var _ = Describe("Run Controller", func() {
 				f := &databricksv1alpha1.Run{}
 				return k8sClient.Get(context.Background(), runKey, f)
 			}, timeout, interval).ShouldNot(Succeed())
+		})
+	})
+
+	Context("Simultaneous submit of job and run", func() {
+		It("Should handle gracefully when job is not yet submitted", func() {
+			By("Not crashing and reporting error")
+
+			jobKey := types.NamespacedName{
+				Name:      "t-job-for-run" + "-" + randomStringWithCharset(10, charset),
+				Namespace: "default",
+			}
+
+			jobSpec := &databricksv1alpha1.JobSettings{
+				NewCluster: &dbmodels.NewCluster{
+					SparkVersion: "5.3.x-scala2.11",
+					NodeTypeID:   "Standard_D3_v2",
+					NumWorkers:   3,
+				},
+				Libraries: []dbmodels.Library{
+					{
+						Jar: "dbfs:/my-jar.jar",
+					},
+					{
+						Maven: &dbmodels.MavenLibrary{
+							Coordinates: "org.jsoup:jsoup:1.7.2",
+						},
+					},
+				},
+				TimeoutSeconds: 3600,
+				MaxRetries:     1,
+				SparkJarTask: &dbmodels.SparkJarTask{
+					MainClassName: "com.databricks.ComputeModels",
+				},
+			}
+
+			job := &databricksv1alpha1.Djob{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      jobKey.Name,
+					Namespace: jobKey.Namespace,
+				},
+				Spec: jobSpec,
+			}
+
+			// create then immediately continue to create run
+			Expect(k8sClient.Create(context.Background(), job)).Should(Succeed())
+
+			defer func() {
+				Expect(k8sClient.Delete(context.Background(), job)).Should(Succeed())
+				time.Sleep(time.Second * 30)
+			}()
+
+			runKey := types.NamespacedName{
+				Name:      "t-job-for-run-run" + "-" + randomStringWithCharset(10, charset),
+				Namespace: "default",
+			}
+
+			runSpec := &databricksv1alpha1.RunSpec{
+				JobName: jobKey.Name,
+				RunParameters: &dbmodels.RunParameters{
+					JarParams: []string{"test"},
+				},
+			}
+
+			run := &databricksv1alpha1.Run{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      runKey.Name,
+					Namespace: runKey.Namespace,
+				},
+				Spec: runSpec,
+			}
+
+			Expect(k8sClient.Create(context.Background(), run)).Should(Succeed())
 		})
 	})
 })
