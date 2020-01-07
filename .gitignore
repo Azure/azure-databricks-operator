@@ -21,3 +21,4 @@ cmd/manager/__debug_bin
 .env
 __debug_bin
 settings.json
+operatorsetup.yaml
