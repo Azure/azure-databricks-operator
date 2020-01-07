@@ -27,14 +27,20 @@ func (r *RunReconciler) addFinalizer(instance *databricksv1alpha1.Run) error {
 	return r.Update(context.Background(), instance)
 }
 
-func (r *RunReconciler) handleFinalizer(instance *databricksv1alpha1.Run) error {
+// handleFinalizer returns a bool and an error. If error is set then the attempt failed, otherwise boolean indicates whether it completed
+func (r *RunReconciler) handleFinalizer(instance *databricksv1alpha1.Run) (bool, error) {
 	if !instance.HasFinalizer(databricksv1alpha1.RunFinalizerName) {
-		return nil
+		return true, nil
 	}
 
-	if err := r.delete(instance); err != nil {
-		return err
+	completed, err := r.delete(instance)
+	if err != nil {
+		return false, err
 	}
-	instance.RemoveFinalizer(databricksv1alpha1.RunFinalizerName)
-	return r.Update(context.Background(), instance)
+	if completed {
+		instance.RemoveFinalizer(databricksv1alpha1.RunFinalizerName)
+		err := r.Update(context.Background(), instance)
+		return err != nil, err
+	}
+	return false, nil // no error, but indicate not completed to trigger a requeue to delete once cancelled
 }

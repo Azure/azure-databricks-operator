@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
-	"time"
 
 	databricksv1alpha1 "github.com/microsoft/azure-databricks-operator/api/v1alpha1"
 	"github.com/xinsnake/databricks-sdk-golang/azure"
@@ -106,36 +105,42 @@ func (r *RunReconciler) refresh(instance *databricksv1alpha1.Run) error {
 	return r.Update(context.Background(), instance)
 }
 
-func (r *RunReconciler) delete(instance *databricksv1alpha1.Run) error {
+// delete attempts to cancel and delete a run. Returns bool indicating if complete (safe to retry if not and no error) and an error
+func (r *RunReconciler) delete(instance *databricksv1alpha1.Run) (bool, error) {
 	r.Log.Info(fmt.Sprintf("Deleting run %s", instance.GetName()))
 
 	if instance.Status == nil {
-		return nil
+		return true, nil
 	}
 
 	runID := instance.Status.Metadata.RunID
 
 	// Check if the run exists before trying to delete it
-	if _, err := r.getRun(runID); err != nil {
+	run, err := r.getRun(runID)
+	if err != nil {
 		if strings.Contains(err.Error(), "does not exist") {
-			return nil
+			return true, nil
 		}
-		return err
+		return false, err
 	}
 
-	// We will not check for error when cancelling a job,
-	// if it fails just let it be
-	execution := NewExecution("runs", "cancel")
-	err := r.APIClient.Jobs().RunsCancel(runID)
-	execution.Finish(err)
-
-	// It takes time for DataBricks to cancel a run
-	time.Sleep(15 * time.Second)
-
-	execution = NewExecution("runs", "delete")
+	if run.State.ResultState == nil {
+		// We will not check for error when cancelling a job,
+		// if it fails just let it be
+		execution := NewExecution("runs", "cancel")
+		err := r.APIClient.Jobs().RunsCancel(runID)
+		execution.Finish(err)
+		return false, nil // no error, but indicate not completed to trigger a requeue to delete once cancelled
+	}
+	// job has reached a terminated state
+	execution := NewExecution("runs", "delete")
 	err = r.APIClient.Jobs().RunsDelete(runID)
 	execution.Finish(err)
-	return err
+
+	if err != nil {
+		return false, err
+	}
+	return true, nil
 }
 
 func (r *RunReconciler) runUsingRunNow(instance *databricksv1alpha1.Run) (*dbmodels.Run, bool, error) {
