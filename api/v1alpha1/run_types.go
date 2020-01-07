@@ -31,10 +31,10 @@ type RunSpec struct {
 	JobName                 string `json:"job_name,omitempty"`
 	*dbmodels.RunParameters `json:",inline"`
 	// dedicated for direct run
-	RunName               string `json:"run_name,omitempty"`
-	*dbmodels.ClusterSpec `json:",inline"`
-	*dbmodels.JobTask     `json:",inline"`
-	TimeoutSeconds        int32 `json:"timeout_seconds,omitempty"`
+	RunName           string `json:"run_name,omitempty"`
+	ClusterSpec       `json:",inline"`
+	*dbmodels.JobTask `json:",inline"`
+	TimeoutSeconds    int32 `json:"timeout_seconds,omitempty"`
 }
 
 // +kubebuilder:object:root=true

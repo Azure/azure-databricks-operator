@@ -27,8 +27,8 @@ import (
 	"github.com/xinsnake/databricks-sdk-golang/azure"
 	dbmodels "github.com/xinsnake/databricks-sdk-golang/azure/models"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 func (r *RunReconciler) submit(instance *databricksv1alpha1.Run) (bool, error) {
@@ -174,6 +174,47 @@ func (r *RunReconciler) runUsingRunNow(instance *databricksv1alpha1.Run) (*dbmod
 }
 
 func (r *RunReconciler) runUsingRunsSubmit(instance *databricksv1alpha1.Run) (*dbmodels.Run, error) {
+
+	//Check if dbricks run is set to run on exisiting dbricks cluster
+	//Get exisiting dbricks cluster by cluster name and set ExistingClusterID or
+	//Get exisiting dbricks cluster by cluster id
+	var ownerInstance databricksv1alpha1.Dcluster
+	if len(instance.Spec.ClusterSpec.ExistingClusterName) > 0 {
+		dClusterNamespacedName := types.NamespacedName{Name: instance.Spec.ClusterSpec.ExistingClusterName, Namespace: instance.Namespace}
+		err := r.Get(context.Background(), dClusterNamespacedName, &ownerInstance)
+		if err != nil {
+			return nil, err
+		}
+		if (ownerInstance.Status != nil) && (ownerInstance.Status.ClusterInfo != nil) && len(ownerInstance.Status.ClusterInfo.ClusterID) > 0 {
+			instance.Spec.ClusterSpec.ExistingClusterID = ownerInstance.Status.ClusterInfo.ClusterID
+		} else {
+			return nil, fmt.Errorf("failed to get ClusterID of %v", instance.Spec.ExistingClusterName)
+		}
+	} else if len(instance.Spec.ClusterSpec.ExistingClusterID) > 0 {
+		var dclusters databricksv1alpha1.DclusterList
+		err := r.List(context.Background(), &dclusters, client.InNamespace(instance.Namespace), client.MatchingFields{dclusterIndexKey: instance.Spec.ClusterSpec.ExistingClusterID})
+		if err != nil {
+			return nil, err
+		}
+		if len(dclusters.Items) == 1 {
+			ownerInstance = dclusters.Items[0]
+		} else {
+			return nil, fmt.Errorf("failed to get ClusterID of %v", instance.Spec.ExistingClusterID)
+		}
+	}
+	//Set Exisiting cluster as Owner of Run
+	if &ownerInstance != nil && len(ownerInstance.APIVersion) > 0 && len(ownerInstance.Kind) > 0 && len(ownerInstance.GetName()) > 0 {
+		references := []metav1.OwnerReference{
+			{
+				APIVersion: ownerInstance.APIVersion,
+				Kind:       ownerInstance.Kind,
+				Name:       ownerInstance.GetName(),
+				UID:        ownerInstance.GetUID(),
+			},
+		}
+		instance.ObjectMeta.SetOwnerReferences(references)
+	}
+
 	clusterSpec := dbmodels.ClusterSpec{
 		NewCluster:        instance.Spec.NewCluster,
 		ExistingClusterID: instance.Spec.ExistingClusterID,

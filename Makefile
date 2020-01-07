@@ -13,10 +13,12 @@ else
 GOBIN=$(shell go env GOBIN)
 endif
 
+timestamp := $(shell /bin/date "+%Y%m%d-%H%M%S")
+
 all: manager
 
 # Run tests
-test: generate fmt lint vet manifests
+test: generate fmt vet manifests lint
 	rm -rf cover.* cover
 	mkdir -p cover
 
@@ -29,7 +31,7 @@ test: generate fmt lint vet manifests
 	rm -f cover.out cover.out.tmp cover.json
 
 # Run tests with existing cluster
-test-existing: generate fmt lint vet manifests
+test-existing: generate fmt vet manifests lint
 	rm -rf cover.* cover
 	mkdir -p cover
 
@@ -69,20 +71,26 @@ deploy-controller:
 		--from-literal=DatabricksToken="${DATABRICKS_TOKEN}"
 
 	#create image and load it into cluster
-	IMG="docker.io/controllertest:1" make docker-build
-	kind load docker-image docker.io/controllertest:1 --loglevel "trace"
+	$(eval image := "docker.io/controllertest:$(timestamp)")
+	make docker-build IMG="$(image)"
+	kind load docker-image $(image) --loglevel "trace"
 	make install
 	make deploy
-	sed -i'' -e 's@image: .*@image: '"IMAGE_URL"'@' ./config/default/manager_image_patch.yaml
+	#change image name back to orignal image name
+	cd config/manager && kustomize edit set image controller="IMAGE_URL"
 
-timestamp := $(shell /bin/date "+%Y%m%d-%H%M%S")
 
+
+	
+	
 update-deployed-controller:
-	IMG="docker.io/controllertest:$(timestamp)" make ARGS="${ARGS}" docker-build
-	kind load docker-image docker.io/controllertest:$(timestamp) --loglevel "trace"
+	$(eval image := "docker.io/controllertest:$(timestamp)")
+	make docker-build IMG="$(image)" ARGS="${ARGS}"
+	kind load docker-image $(image) --loglevel "trace"
 	make install
 	make deploy
-	sed -i'' -e 's@image: .*@image: '"IMAGE_URL"'@' ./config/default/manager_image_patch.yaml
+	cd config/manager && kustomize edit set image controller="IMAGE_URL"
+
 
 # Generate manifests e.g. CRD, RBAC etc.
 manifests: controller-gen
@@ -108,7 +116,7 @@ generate: controller-gen
 docker-build: test
 	docker build . -t ${IMG} ${ARGS}
 	@echo "updating kustomize image patch file for manager resource"
-	sed -i'' -e 's@image: .*@image: '"${IMG}"'@' ./config/default/manager_image_patch.yaml
+	cd config/manager && kustomize edit set image controller=${IMG}
 
 # Push the docker image
 docker-push:
