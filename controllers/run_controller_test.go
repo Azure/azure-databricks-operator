@@ -41,16 +41,6 @@ var _ = Describe("Run Controller", func() {
 		// Add any teardown steps that needs to be executed after each test
 	})
 
-	// Add Tests for OpenAPI validation (or additional CRD features) specified in
-	// your API definition.
-	// Avoid adding tests for vanilla CRUD operations because they would
-	// test Kubernetes API server, which isn't the goal here.
-	Context("Run directly without existing job", func() {
-		It("Should create successfully", func() {
-			Expect(1).To(Equal(1))
-		})
-	})
-
 	Context("Run existing job", func() {
 		It("Should create successfully", func() {
 			By("Create job for run")
@@ -186,7 +176,7 @@ var _ = Describe("Run Controller", func() {
 				Spec: jobSpec,
 			}
 
-			// create then immediately continue to create run
+			// Create then immediately continue to create run
 			Expect(k8sClient.Create(context.Background(), job)).Should(Succeed())
 
 			defer func() {
@@ -217,4 +207,186 @@ var _ = Describe("Run Controller", func() {
 			Expect(k8sClient.Create(context.Background(), run)).Should(Succeed())
 		})
 	})
+
+	Context("Run directly without existing job on existing cluster", func() {
+
+		var testDclusterKey types.NamespacedName
+
+		BeforeEach(func() {
+			// Steps that needs to be executed before each test
+			testDclusterKey = types.NamespacedName{
+				Name:      "t-cluster" + "-" + randomStringWithCharset(10, charset),
+				Namespace: "default",
+			}
+
+			dcluster := &databricksv1alpha1.Dcluster{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      testDclusterKey.Name,
+					Namespace: testDclusterKey.Namespace,
+				},
+				Spec: &dbmodels.NewCluster{
+					Autoscale: &dbmodels.AutoScale{
+						MinWorkers: 2,
+						MaxWorkers: 3,
+					},
+					AutoterminationMinutes: 10,
+					NodeTypeID:             "Standard_D3_v2",
+					SparkVersion:           "5.3.x-scala2.11",
+				},
+			}
+
+			// Create testDcluster
+			_ = k8sClient.Create(context.Background(), dcluster)
+			testK8sDcluster := &databricksv1alpha1.Dcluster{}
+			Eventually(func() error {
+				return k8sClient.Get(context.Background(), testDclusterKey, testK8sDcluster)
+			}, timeout, interval).Should(Succeed())
+
+		})
+
+		AfterEach(func() {
+			// Teardown steps that needs to be executed after each test
+			// Delete test Dcluster
+			f := &databricksv1alpha1.Dcluster{}
+			_ = k8sClient.Get(context.Background(), testDclusterKey, f)
+			_ = k8sClient.Delete(context.Background(), f)
+		})
+		It("Should create run successfully on Exsisting Cluster by name", func() {
+
+			testK8sDcluster := &databricksv1alpha1.Dcluster{}
+			By("Expecting Dcluster submitted")
+			Eventually(func() bool {
+				_ = k8sClient.Get(context.Background(), testDclusterKey, testK8sDcluster)
+				return testK8sDcluster.IsSubmitted()
+			}, timeout, interval).Should(BeTrue())
+
+			Expect(testK8sDcluster.Status).ShouldNot(BeNil())
+			Expect(testK8sDcluster.Status.ClusterInfo).ShouldNot(BeNil())
+
+			key := types.NamespacedName{
+				Name:      "t-run" + "-" + randomStringWithCharset(10, charset),
+				Namespace: "default",
+			}
+
+			spec := databricksv1alpha1.RunSpec{
+				ClusterSpec: databricksv1alpha1.ClusterSpec{
+					ExistingClusterName: testK8sDcluster.GetName(),
+					Libraries: []dbmodels.Library{
+						{
+							Maven: &dbmodels.MavenLibrary{
+								Coordinates: "org.jsoup:jsoup:1.7.2",
+							},
+						},
+					},
+				},
+				JobTask: &dbmodels.JobTask{
+					SparkJarTask: &dbmodels.SparkJarTask{
+						MainClassName: "com.databricks.ComputeModels",
+					},
+				},
+			}
+
+			created := &databricksv1alpha1.Run{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      key.Name,
+					Namespace: key.Namespace,
+				},
+				Spec: &spec,
+			}
+
+			// Create
+			Expect(k8sClient.Create(context.Background(), created)).Should(Succeed())
+
+			By("Expecting submitted")
+			Eventually(func() bool {
+				f := &databricksv1alpha1.Run{}
+				_ = k8sClient.Get(context.Background(), key, f)
+				return f.IsSubmitted()
+			}, timeout, interval).Should(BeTrue())
+
+			// Delete
+			By("Expecting to delete successfully")
+			Eventually(func() error {
+				f := &databricksv1alpha1.Run{}
+				_ = k8sClient.Get(context.Background(), key, f)
+				return k8sClient.Delete(context.Background(), f)
+			}, timeout, interval).Should(Succeed())
+
+			By("Expecting to delete finish")
+			Eventually(func() error {
+				f := &databricksv1alpha1.Djob{}
+				return k8sClient.Get(context.Background(), key, f)
+			}, timeout, interval).ShouldNot(Succeed())
+
+		})
+		It("Should create run successfully on Exsisting Cluster by Id", func() {
+
+			testK8sDcluster := &databricksv1alpha1.Dcluster{}
+			By("Expecting Dcluster submitted")
+			Eventually(func() bool {
+				_ = k8sClient.Get(context.Background(), testDclusterKey, testK8sDcluster)
+				return testK8sDcluster.IsSubmitted()
+			}, timeout, interval).Should(BeTrue())
+
+			Expect(testK8sDcluster.Status).ShouldNot(BeNil())
+			Expect(testK8sDcluster.Status.ClusterInfo).ShouldNot(BeNil())
+
+			key := types.NamespacedName{
+				Name:      "t-run" + "-" + randomStringWithCharset(10, charset),
+				Namespace: "default",
+			}
+
+			spec := databricksv1alpha1.RunSpec{
+				ClusterSpec: databricksv1alpha1.ClusterSpec{
+					ExistingClusterID: testK8sDcluster.Status.ClusterInfo.ClusterID,
+					Libraries: []dbmodels.Library{
+						{
+							Maven: &dbmodels.MavenLibrary{
+								Coordinates: "org.jsoup:jsoup:1.7.2",
+							},
+						},
+					},
+				},
+				JobTask: &dbmodels.JobTask{
+					SparkJarTask: &dbmodels.SparkJarTask{
+						MainClassName: "com.databricks.ComputeModels",
+					},
+				},
+			}
+
+			created := &databricksv1alpha1.Run{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      key.Name,
+					Namespace: key.Namespace,
+				},
+				Spec: &spec,
+			}
+
+			// Create
+			Expect(k8sClient.Create(context.Background(), created)).Should(Succeed())
+
+			By("Expecting submitted")
+			Eventually(func() bool {
+				f := &databricksv1alpha1.Run{}
+				_ = k8sClient.Get(context.Background(), key, f)
+				return f.IsSubmitted()
+			}, timeout, interval).Should(BeTrue())
+
+			// Delete
+			By("Expecting to delete successfully")
+			Eventually(func() error {
+				f := &databricksv1alpha1.Run{}
+				_ = k8sClient.Get(context.Background(), key, f)
+				return k8sClient.Delete(context.Background(), f)
+			}, timeout, interval).Should(Succeed())
+
+			By("Expecting to delete finish")
+			Eventually(func() error {
+				f := &databricksv1alpha1.Djob{}
+				return k8sClient.Get(context.Background(), key, f)
+			}, timeout, interval).ShouldNot(Succeed())
+
+		})
+	})
+
 })
