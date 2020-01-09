@@ -1,8 +1,9 @@
-
 # Image URL to use all building/pushing image targets
 IMG ?= controller:latest
+
 # Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
 CRD_OPTIONS ?= "crd:trivialVersions=true"
+
 # Prometheus helm installation name
 PROMETHEUS_NAME ?= "prom-azure-databricks-operator"
 
@@ -13,10 +14,11 @@ else
 GOBIN=$(shell go env GOBIN)
 endif
 
+timestamp := $(shell /bin/date "+%Y%m%d-%H%M%S")
 all: manager
 
 # Run tests
-test: generate fmt lint vet manifests
+test: generate fmt vet manifests lint
 	rm -rf cover.* cover
 	mkdir -p cover
 
@@ -29,7 +31,7 @@ test: generate fmt lint vet manifests
 	rm -f cover.out cover.out.tmp cover.json
 
 # Run tests with existing cluster
-test-existing: generate fmt lint vet manifests
+test-existing: generate fmt vet manifests lint
 	rm -rf cover.* cover
 	mkdir -p cover
 
@@ -52,37 +54,35 @@ run: generate fmt lint vet manifests
 # Install CRDs into a cluster
 install: manifests
 	kustomize build config/crd | kubectl apply -f -
+
 # Uninstall CRDs from a cluster
 uninstall: manifests
 	kustomize build config/crd | kubectl delete -f -
 
 # Deploy controller in the configured Kubernetes cluster in ~/.kube/config
 deploy: manifests
-	cd config/manager && kustomize edit set image controller=${IMG}
-	kustomize build config/default | kubectl apply -f -
-
-deploy-controller:
+ifeq (,$(shell kubectl get namespace azure-databricks-operator-system))
+	@echo "creating azure-databricks-operator-system namespace"
 	kubectl create namespace azure-databricks-operator-system
-	kubectl --namespace azure-databricks-operator-system \
+else
+	@echo "azure-databricks-operator-system namespace exists"
+endif
+ifeq (,$(shell kubectl get secret dbrickssettings --namespace azure-databricks-operator-system))
+	@echo "creating dbrickssettings secret"
+		kubectl --namespace azure-databricks-operator-system \
 		create secret generic dbrickssettings \
 		--from-literal=DatabricksHost="${DATABRICKS_HOST}" \
 		--from-literal=DatabricksToken="${DATABRICKS_TOKEN}"
+else
+	@echo "dbrickssettings secret exists"
+endif
+	cd config/manager && kustomize edit set image controller=${IMG}
+	kustomize build config/default | kubectl apply -f -
+	kustomize build config/default > operatorsetup.yaml
+	
 
-	#create image and load it into cluster
-	IMG="docker.io/controllertest:1" make docker-build
-	kind load docker-image docker.io/controllertest:1 --loglevel "trace"
-	make install
-	make deploy
-	sed -i'' -e 's@image: .*@image: '"IMAGE_URL"'@' ./config/default/manager_image_patch.yaml
 
-timestamp := $(shell /bin/date "+%Y%m%d-%H%M%S")
 
-update-deployed-controller:
-	IMG="docker.io/controllertest:$(timestamp)" make ARGS="${ARGS}" docker-build
-	kind load docker-image docker.io/controllertest:$(timestamp) --loglevel "trace"
-	make install
-	make deploy
-	sed -i'' -e 's@image: .*@image: '"IMAGE_URL"'@' ./config/default/manager_image_patch.yaml
 
 # Generate manifests e.g. CRD, RBAC etc.
 manifests: controller-gen
@@ -105,11 +105,10 @@ generate: controller-gen
 	$(CONTROLLER_GEN) object:headerFile=./hack/boilerplate.go.txt paths="./..."
 
 # Build the docker image
-docker-build: test
+docker-build: 
 	docker build . -t ${IMG} ${ARGS}
 	@echo "updating kustomize image patch file for manager resource"
-	sed -i'' -e 's@image: .*@image: '"${IMG}"'@' ./config/default/manager_image_patch.yaml
-
+	cd config/manager && kustomize edit set image controller=${IMG}
 # Push the docker image
 docker-push:
 	docker push ${IMG}
@@ -130,6 +129,7 @@ CONTROLLER_GEN=$(GOBIN)/controller-gen
 else
 CONTROLLER_GEN=$(shell which controller-gen)
 endif
+
 create-kindcluster:
 ifeq (,$(shell kind get clusters))
 	@echo "no kind cluster"
@@ -156,10 +156,22 @@ endif
 	
 	kubectl cluster-info
 
-	make install-prometheus
-	
 	@echo "deploying controller to cluster"
-	make deploy-controller
+	make deploy-kindcluster
+	make install
+	make install-prometheus
+
+# Deploy controller
+deploy-kindcluster:
+	#create image and load it into cluster
+	$(eval newimage := "docker.io/controllertest:$(timestamp)")
+	IMG=$(newimage) make docker-build
+	kind load docker-image $(newimage) --loglevel "debug"
+
+	#deploy operator
+	IMG=$(newimage) make deploy
+	#change image name back to orignal image name
+	cd config/manager && kustomize edit set image controller="IMAGE_URL"
 
 install-kind:
 ifeq (,$(shell which kind))
