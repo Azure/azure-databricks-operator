@@ -86,7 +86,7 @@ func (r *DjobReconciler) submit(instance *databricksv1alpha1.Djob) error {
 }
 
 //nolint:errcheck
-/*func (r *DjobReconciler) refresh(instance *databricksv1alpha1.Djob) error {
+func (r *DjobReconciler) refresh(instance *databricksv1alpha1.Djob) error {
 	r.Log.Info(fmt.Sprintf("Refreshing job %s", instance.GetName()))
 
 	jobID := instance.Status.JobStatus.JobID
@@ -122,7 +122,6 @@ func (r *DjobReconciler) submit(instance *databricksv1alpha1.Djob) error {
 	}
 	return r.Update(context.Background(), instance)
 }
-*/
 
 /*
 IsDJobUpdated  is a method to check if the cluster has the latest version of a certain Djob
