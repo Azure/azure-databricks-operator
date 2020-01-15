@@ -18,6 +18,7 @@ package controllers
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -25,7 +26,7 @@ import (
 	dbmodels "github.com/xinsnake/databricks-sdk-golang/azure/models"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	//"reflect"
+	"reflect"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -122,6 +123,89 @@ func (r *DjobReconciler) submit(instance *databricksv1alpha1.Djob) error {
 	return r.Update(context.Background(), instance)
 }
 */
+
+/*
+IsDJobUpdated  is a method to check if the cluster has the latest version of a certain Djob
+*/
+func (r *DjobReconciler) IsDJobUpdated(instance *databricksv1alpha1.Djob) bool {
+	//	func (r *DjobReconciler) checkIdentity(oldDJob, newDJob *[]byte) bool {
+	jobID := instance.Status.JobStatus.JobID
+	jobExisting, err := r.APIClient.Jobs().Get(jobID)
+	if err != nil {
+		if strings.Contains(err.Error(), "does not exist") {
+			return true
+		}
+		return true
+	}
+	newDJob := []interface{}{}
+	ExistingDJob := []interface{}{}
+
+	if instance.Spec.NotebookTask != nil {
+		v, _ := json.Marshal(instance.Spec.NotebookTask)
+		newDJob = append(newDJob, v)
+	}
+	if instance.Spec.SparkJarTask != nil {
+		v, _ := json.Marshal(instance.Spec.SparkJarTask)
+		newDJob = append(newDJob, v)
+	}
+
+	if instance.Spec.SparkPythonTask != nil {
+		v, _ := json.Marshal(instance.Spec.SparkPythonTask)
+		newDJob = append(newDJob, v)
+	}
+
+	if instance.Spec.SparkSubmitTask != nil {
+		v, _ := json.Marshal(instance.Spec.SparkSubmitTask)
+		newDJob = append(newDJob, v)
+	}
+
+	if instance.Spec.NewCluster != nil {
+		v, _ := json.Marshal(instance.Spec.NewCluster)
+		newDJob = append(newDJob, v)
+	}
+
+	if instance.Spec.Schedule != nil {
+		v, _ := json.Marshal(instance.Spec.Schedule)
+		newDJob = append(newDJob, v)
+	}
+	newDJob = append(newDJob, instance.Spec.TimeoutSeconds)
+	newDJob = append(newDJob, instance.Spec.MaxRetries)
+
+	////////////////////////////////////////////////
+
+	if jobExisting.Settings.NotebookTask != nil {
+		v, _ := json.Marshal(jobExisting.Settings.NotebookTask)
+		ExistingDJob = append(ExistingDJob, v)
+	}
+	if jobExisting.Settings.SparkJarTask != nil {
+		v, _ := json.Marshal(jobExisting.Settings.SparkJarTask)
+		ExistingDJob = append(ExistingDJob, v)
+	}
+
+	if jobExisting.Settings.SparkPythonTask != nil {
+		v, _ := json.Marshal(jobExisting.Settings.SparkPythonTask)
+		ExistingDJob = append(ExistingDJob, v)
+	}
+
+	if jobExisting.Settings.SparkSubmitTask != nil {
+		v, _ := json.Marshal(jobExisting.Settings.SparkSubmitTask)
+		ExistingDJob = append(ExistingDJob, v)
+	}
+
+	if jobExisting.Settings.NewCluster != nil {
+		v, _ := json.Marshal(jobExisting.Settings.NewCluster)
+		ExistingDJob = append(ExistingDJob, v)
+	}
+
+	if jobExisting.Settings.Schedule != nil {
+		v, _ := json.Marshal(jobExisting.Settings.Schedule)
+		ExistingDJob = append(ExistingDJob, v)
+	}
+
+	ExistingDJob = append(ExistingDJob, jobExisting.Settings.TimeoutSeconds)
+	ExistingDJob = append(ExistingDJob, jobExisting.Settings.MaxRetries)
+	return reflect.DeepEqual(ExistingDJob, newDJob)
+}
 
 func (r *DjobReconciler) delete(instance *databricksv1alpha1.Djob) error {
 	r.Log.Info(fmt.Sprintf("Deleting job %s", instance.GetName()))

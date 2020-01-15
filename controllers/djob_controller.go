@@ -19,9 +19,8 @@ package controllers
 import (
 	"context"
 	"fmt"
-	"time"
-
 	"github.com/go-logr/logr"
+	databricksv1alpha1 "github.com/microsoft/azure-databricks-operator/api/v1alpha1"
 	dbazure "github.com/xinsnake/databricks-sdk-golang/azure"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -29,8 +28,7 @@ import (
 	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-
-	databricksv1alpha1 "github.com/microsoft/azure-databricks-operator/api/v1alpha1"
+	"time"
 )
 
 // DjobReconciler reconciles a Djob object
@@ -91,13 +89,13 @@ func (r *DjobReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		r.Recorder.Event(instance, corev1.EventTypeNormal, "Submitted", "Object is submitted")
 	}
 
-	if instance.IsSubmitted() {
+	if instance.IsSubmitted() && !r.IsDJobUpdated(instance) {
 		r.Log.Info(fmt.Sprintf("Reset for %v", req.NamespacedName))
 		if err := r.reset(instance); err != nil {
 			r.Recorder.Event(instance, corev1.EventTypeWarning, "Resetting object", fmt.Sprintf("Failed to reset object: %s", err))
 			return ctrl.Result{}, fmt.Errorf("error when resetting job: %v", err)
 		}
-		r.Recorder.Event(instance, corev1.EventTypeNormal, "Reseted", "Object is reseted")
+		r.Recorder.Event(instance, corev1.EventTypeNormal, "Reset", "Object is reset")
 	}
 
 	return ctrl.Result{RequeueAfter: 30 * time.Second}, nil
