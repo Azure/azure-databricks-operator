@@ -11,5 +11,9 @@ spec:
   endpoints:
     - path: /metrics
       port: https
+      scheme: https
+      bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+      tlsConfig:
+        insecureSkipVerify: true # Configure certs here if set up for auth_proxy (uses self-signed currently)
   selector:
     control-plane: controller-manager

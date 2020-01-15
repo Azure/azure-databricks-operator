@@ -1,0 +1,18 @@
+---
+apiVersion: databricks.microsoft.com/v1alpha1
+kind: Dcluster
+metadata:
+  name: dcluster-interactive2
+spec:
+  spark_version: latest-stable-scala2.11
+  node_type_id: Standard_D3_v2
+  autoscale:
+    min_workers: 1
+    max_workers: 2
+  driver_node_type_id: Standard_D3_v2
+  custom_tags:
+  - key: a
+    value: CustomTag1
+  spark_env_vars:
+    PYSPARK_PYTHON: /databricks/python3/bin/python3
+  enable_elastic_disk: true
