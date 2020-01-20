@@ -64,6 +64,18 @@ func (run *Run) IsSubmitted() bool {
 	return run.Status.Metadata.JobID > 0
 }
 
+// IsTerminated return true if item is in terminal state
+func (run *Run) IsTerminated() bool {
+	if run.Status == nil || run.Status.Metadata.State == nil || run.Status.Metadata.State.LifeCycleState == nil {
+		return false
+	}
+	switch *run.Status.Metadata.State.LifeCycleState {
+	case dbmodels.RunLifeCycleStateTerminated, dbmodels.RunLifeCycleStateSkipped, dbmodels.RunLifeCycleStateInternalError:
+		return true
+	}
+	return false
+}
+
 // RunFinalizerName is the name of the run finalizer
 const RunFinalizerName = "run.finalizers.databricks.microsoft.com"
 
