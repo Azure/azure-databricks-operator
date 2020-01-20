@@ -100,7 +100,9 @@ func (r *RunReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		}
 		r.Recorder.Event(instance, corev1.EventTypeNormal, "Refreshed", "Object is refreshed")
 	}
-
+	if instance.IsTerminated() {
+		return ctrl.Result{}, nil
+	}
 	return ctrl.Result{RequeueAfter: 30 * time.Second}, nil
 }
 
