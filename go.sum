@@ -281,6 +281,8 @@ github.com/ugorji/go/codec v0.0.0-20181204163529-d75b2dcb6bc8/go.mod h1:VFNgLljT
 github.com/xiang90/probing v0.0.0-20160813154853-07dd2e8dfe18/go.mod h1:UETIi67q53MR2AWcXfiuqkDkRtnGDLqkBTpCHuJHxtU=
 github.com/xinsnake/databricks-sdk-golang v0.1.2 h1:G0tv1WRHL/XeZj8wYSJoPsqvF5EYUysOL1jRYQUR3ro=
 github.com/xinsnake/databricks-sdk-golang v0.1.2/go.mod h1:7/wZh5NJnaT7Cr9C0zMN11pWyZxuA3zml4yl7bDJrZo=
+github.com/xinsnake/databricks-sdk-golang v0.1.3 h1:H4IeTc9FQq/o8R1/Yx4hMEDKunt+/6CS2iBYnHqypsg=
+github.com/xinsnake/databricks-sdk-golang v0.1.3/go.mod h1:7/wZh5NJnaT7Cr9C0zMN11pWyZxuA3zml4yl7bDJrZo=
 github.com/xordataexchange/crypt v0.0.3-0.20170626215501-b2862e3d0a77/go.mod h1:aYKd//L2LvnjZzWKhF00oedf4jCCReLcmhLdhm1A27Q=
 go.opencensus.io v0.21.0/go.mod h1:mSImk1erAIZhrmZN+AvHh14ztQfjbGwt4TtuofqLduU=
 go.uber.org/atomic v0.0.0-20181018215023-8dc6146f7569/go.mod h1:gD2HeocX3+yG+ygLZcrzQJaqmWj9AIm7n08wl/qW/PE=
