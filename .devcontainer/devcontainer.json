@@ -3,7 +3,6 @@
 	"name": "Go",
 	"dockerFile": "./Dockerfile",
 	"workspaceFolder": "/workspace",
-	"context": "..",
 	"workspaceMount": "src=${localWorkspaceFolder},dst=/workspace,type=bind",
     "runArgs": [
 		// Mount the env file
