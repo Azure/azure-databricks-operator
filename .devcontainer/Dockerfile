@@ -82,7 +82,7 @@ ENV DATABRICKS_HOST ""
 ENV DATABRICKS_TOKEN ""
 ENV KUBECONFIG="/root/.kube/kind-config-kind"
 
-COPY Makefile ./
+COPY ../Makefile ./
 RUN make install-kind
 RUN make install-kubebuilder
 RUN make install-kustomize
