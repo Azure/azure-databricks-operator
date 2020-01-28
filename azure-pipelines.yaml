@@ -7,103 +7,66 @@ pool:
   vmImage: 'Ubuntu 16.04'
 
 variables:
-  GOROOT: '/usr/local/go1.12' # Go installation path
-  GOPATH: '$(System.DefaultWorkingDirectory)/gopath' # Go workspace path
-  GOBIN:  '$(GOPATH)/bin' # Go binaries path
-  MODULE_PATH: '$(GOPATH)/src/$(Build.Repository.Name)' # Path to the module's code
   IMAGE_NAME: 'candidate/k8s/azure-databricks/operator:$(Build.SourceVersion)'
   # ACR_NAME:           - set this value in Azure Devops variables
   # AZURE_SUBSCRIPTION: - set this value in Azure Devops variables
   # DATABRICKS_HOST:    - set this value in Azure Devops variables
   # DATABRICKS_TOKEN:   - set this value in Azure Devops variables
 
-steps:
+jobs:
+- job: Build
+  steps:
+  # Cache the docker image file
+  - task: CacheBeta@0
+    inputs:
+      key: go-cache | go.sum
+      path: ".gocache"
+      restoreKeys: go-cache 
+    displayName: Cache go mod cache
 
-- checkout: self  # self represents the repo where the initial Pipelines YAML file was found
-  lfs: "true"
+  # Cache the docker image file
+  - task: CacheBeta@0
+    inputs:
+      key: docker-image | .devcontainer/**
+      path: ".dockercache"
+      restoreKeys: docker-image
+      cacheHitVar: DOCKER_CACHE_HIT
+    displayName: Cache docker layers
 
-- script: |
-    set -x
-    ls -l /usr/local/go*
-    mkdir -p '$(GOBIN)'
-    mkdir -p '$(GOPATH)/pkg'
-    mkdir -p '$(MODULE_PATH)'
-    shopt -s extglob
-    mv !(gopath) '$(MODULE_PATH)'
-    echo '##vso[task.prependpath]$(GOBIN)'
-    echo '##vso[task.prependpath]$(GOROOT)/bin'
-    go version
-    go env
-  displayName: 'Set up the Go workspace'
-  env:
-    GO111MODULE: on
+  - script: |
+      bash -f ./ci.sh
+    displayName: 'Run CI'
 
-- script: |
-    set -x
-    mkdir -p '$(MODULE_PATH)/bin'
-    os=$(go env GOOS)
-    arch=$(go env GOARCH)
-    # download kubebuilder
-    curl -sL https://go.kubebuilder.io/dl/2.2.0/${os}/${arch} | tar -xz -C $(MODULE_PATH)/bin
-    mv $(MODULE_PATH)/bin/kubebuilder_2.2.0_${os}_${arch}/bin/* $(MODULE_PATH)/bin/
-    # download kustomize
-    curl -sL https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv3.4.0/kustomize_v3.4.0_${os}_${arch}.tar.gz | tar -xz -C /tmp/
-    mv /tmp/kustomize $(MODULE_PATH)/bin/kustomize
-    # set permission
-    chmod a+x $(MODULE_PATH)/bin/*
-    # export path
-    export PATH=$PATH:$(MODULE_PATH)/bin
-    # Install golangci-linter
-    curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh| sh -s -- -b $(go env GOPATH)/bin v1.21.0
-    # install test dependencies
-    go mod download
-    make install-test-dependency
-    # run test
-    make test
-  continueOnError: 'false'
-  displayName: 'Install kubebuilder, kustomize and Run unit tests'
-  env:
-    GO111MODULE: on
-    KUBEBUILDER_ASSETS: $(MODULE_PATH)/bin
-    DATABRICKS_HOST: $(DATABRICKS_HOST)
-    DATABRICKS_TOKEN: $(DATABRICKS_TOKEN)
-  workingDirectory: '$(MODULE_PATH)'
+  - task: PublishCodeCoverageResults@1
+    inputs:
+      codeCoverageTool: Cobertura 
+      summaryFileLocation: $(System.DefaultWorkingDirectory)/**/cover.xml
+      reportDirectory: $(System.DefaultWorkingDirectory)/**/cover
 
-  
-- task: PublishCodeCoverageResults@1
-  inputs:
-    codeCoverageTool: Cobertura 
-    summaryFileLocation: $(System.DefaultWorkingDirectory)/**/cover.xml
-    reportDirectory: $(System.DefaultWorkingDirectory)/**/cover
+  - script: docker build -t $(IMAGE_NAME) .  # add options to this command to meet your needs
+    condition: and(succeeded(), ne(variables['Build.SourceBranch'], 'refs/heads/master'))
+    displayName: 'Docker build'
 
+  - task: AzureCLI@1
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+    displayName: Push to Azure Container Registry
+    inputs:
+      azureSubscription: $(AZURE_SUBSCRIPTION)
+      scriptLocation: inlineScript
+      failOnStandardError: false
+      inlineScript: az acr build --registry $(ACR_NAME) --image $(IMAGE_NAME) .
 
-- script: docker build -t $(IMAGE_NAME) .  # add options to this command to meet your needs
-  condition: and(succeeded(), ne(variables['Build.SourceBranch'], 'refs/heads/master'))
-  displayName: 'Docker build'
-  workingDirectory: '$(MODULE_PATH)'
+  - script: |
+      ./bin/kustomize build config/default > $(Build.ArtifactStagingDirectory)/setup.yaml
+      set -x
+      echo $(IMAGE_NAME) > $(Build.ArtifactStagingDirectory)/azure-databricks-operator.txt
+      ls $(Build.ArtifactStagingDirectory)
+    continueOnError: 'false'
+    displayName: 'Prepare manifests for publish'
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master')) 
 
-- task: AzureCLI@1
-  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
-  displayName: Push to Azure Container Registry
-  inputs:
-    azureSubscription: $(AZURE_SUBSCRIPTION)
-    scriptLocation: inlineScript
-    failOnStandardError: false
-    workingDirectory: '$(MODULE_PATH)'
-    inlineScript: az acr build --registry $(ACR_NAME) --image $(IMAGE_NAME) .
-
-- script: |
-    ./bin/kustomize build config/default > $(Build.ArtifactStagingDirectory)/setup.yaml
-    set -x
-    echo $(IMAGE_NAME) > $(Build.ArtifactStagingDirectory)/azure-databricks-operator.txt
-    ls $(Build.ArtifactStagingDirectory)
-  continueOnError: 'false'
-  displayName: 'Prepare manifests for publish'
-  workingDirectory: '$(MODULE_PATH)'
-  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master')) 
-
-- task: PublishBuildArtifacts@1
-  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
-  inputs:
-    pathtoPublish: $(Build.ArtifactStagingDirectory)
-    artifactName: drop
+  - task: PublishBuildArtifacts@1
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+    inputs:
+      pathtoPublish: $(Build.ArtifactStagingDirectory)
+      artifactName: drop
