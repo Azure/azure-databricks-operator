@@ -36,6 +36,10 @@ jobs:
   - script: |
       bash -f ./ci.sh
     displayName: 'Run CI'
+    env:	
+      GO111MODULE: on	
+      DATABRICKS_HOST: $(DATABRICKS_HOST)	
+      DATABRICKS_TOKEN: $(DATABRICKS_TOKEN)
 
   - task: PublishCodeCoverageResults@1
     inputs:
