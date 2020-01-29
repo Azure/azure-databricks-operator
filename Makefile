@@ -86,7 +86,7 @@ manifests: controller-gen
 
 # Run go fmt against code
 fmt:
-	find . -name '*.go' | grep -v 'vendor|.gocache' | xargs gofmt -s -w
+	find . -name '*.go' | grep -v -E 'vendor|.gocache' | xargs gofmt -s -w
 
 # Run go vet against code
 vet:
