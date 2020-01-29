@@ -28,7 +28,7 @@ mkdir -p ${PWD}/.gocache
 
 echo "-------> Building code and running tests"
 # Run `make` to build and test the code
-time docker run -v ${PWD}/.gocache:/go/pkg/ -v /var/run/docker.sock:/var/run/docker.sock -v ${PWD}:/src --workdir /src --entrypoint /bin/bash --network="host" --env DATABRICKS_HOST=${DATABRICKS_HOST} --env DATABRICKS_TOKEN=${DATABRICKS_TOKEN} devcontainer -c "make test" 
+time docker run -v ${PWD}/.gocache:/go/pkg/ -v /var/run/docker.sock:/var/run/docker.sock -v ${PWD}:/src --workdir /src --entrypoint /bin/bash --network="host" --env DATABRICKS_HOST=$(DATABRICKS_HOST) --env DATABRICKS_TOKEN=$(DATABRICKS_TOKEN) devcontainer -c "make test" 
 
 # Ensure .gocache permmissions correct for build to save cache
 sudo chown -R $USER ${PWD}
