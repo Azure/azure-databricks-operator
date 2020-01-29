@@ -79,10 +79,6 @@ endif
 	cd config/manager && kustomize edit set image controller=${IMG}
 	kustomize build config/default | kubectl apply -f -
 	kustomize build config/default > operatorsetup.yaml
-	
-
-
-
 
 # Generate manifests e.g. CRD, RBAC etc.
 manifests: controller-gen
@@ -90,7 +86,7 @@ manifests: controller-gen
 
 # Run go fmt against code
 fmt:
-	find . -name '*.go' | grep -v vendor | xargs gofmt -s -w
+	find . -name '*.go' | grep -v 'vendor|.gocache' | xargs gofmt -s -w
 
 # Run go vet against code
 vet:
