@@ -19,6 +19,8 @@ wget https://github.com/microsoft/azure-databricks-operator/releases/latest/down
 unzip release.zip
 ```
 
+> (optional) [Configure maximum number of run reconcilers](##configure-maximum-number-of-run-reconcilers)
+
 2. Create the `azure-databricks-operator-system` namespace:
 
 ```sh
@@ -38,6 +40,14 @@ kubectl --namespace azure-databricks-operator-system \
 
 ```sh
 kubectl apply -f release/config
+```
+
+## Configure maximum number of run reconcilers
+
+1. Append the below enviroment variable to `config/default/manager_image_patch.yaml` under the `env` section with the desired number of reconcilers
+```yaml
+          - name: MAX_CONCURRENT_RUN_RECONCILES
+            value: "1"
 ```
 
 ## Use kustomize to customise your deployment

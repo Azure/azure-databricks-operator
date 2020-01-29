@@ -36,7 +36,7 @@ import (
 	ctrl_controller "sigs.k8s.io/controller-runtime/pkg/controller"
 )
 
-const maxConcurrentReconcilesEnvName = "MAX_CONCURRENT_RUN_RECONCILERS"
+const maxConcurrentReconcilesEnvName = "MAX_CONCURRENT_RUN_RECONCILES"
 
 // RunReconciler reconciles a Run object
 type RunReconciler struct {
