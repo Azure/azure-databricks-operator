@@ -16,6 +16,9 @@ then
     time docker load -i .dockercache/devcontainer.tar
 fi
 
+# Copy the makefile into the container folder
+cp ./Makefile ./.dockercache/Makefile
+
 echo "-------> Building devcontainer"
 # Use the devcontainer to run the build as it has all the environment setup that we need
 time docker build --cache-from devcontainer:latest -t devcontainer -f ./.devcontainer/Dockerfile ./.devcontainer
