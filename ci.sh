@@ -17,7 +17,7 @@ then
 fi
 
 # Copy the makefile into the container folder
-cp ./Makefile ./.dockercache/Makefile
+cp ./Makefile ./.devcontainer/Makefile
 
 echo "-------> Building devcontainer"
 # Use the devcontainer to run the build as it has all the environment setup that we need
