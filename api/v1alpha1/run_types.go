@@ -31,10 +31,10 @@ type RunSpec struct {
 	JobName                 string `json:"job_name,omitempty"`
 	*dbmodels.RunParameters `json:",inline"`
 	// dedicated for direct run
-	RunName               string `json:"run_name,omitempty"`
-	*dbmodels.ClusterSpec `json:",inline"`
-	*dbmodels.JobTask     `json:",inline"`
-	TimeoutSeconds        int32 `json:"timeout_seconds,omitempty"`
+	RunName           string `json:"run_name,omitempty"`
+	ClusterSpec       `json:",inline"`
+	*dbmodels.JobTask `json:",inline"`
+	TimeoutSeconds    int32 `json:"timeout_seconds,omitempty"`
 }
 
 // +kubebuilder:object:root=true
@@ -62,6 +62,18 @@ func (run *Run) IsSubmitted() bool {
 		return false
 	}
 	return run.Status.Metadata.JobID > 0
+}
+
+// IsTerminated return true if item is in terminal state
+func (run *Run) IsTerminated() bool {
+	if run.Status == nil || run.Status.Metadata.State == nil || run.Status.Metadata.State.LifeCycleState == nil {
+		return false
+	}
+	switch *run.Status.Metadata.State.LifeCycleState {
+	case dbmodels.RunLifeCycleStateTerminated, dbmodels.RunLifeCycleStateSkipped, dbmodels.RunLifeCycleStateInternalError:
+		return true
+	}
+	return false
 }
 
 // RunFinalizerName is the name of the run finalizer

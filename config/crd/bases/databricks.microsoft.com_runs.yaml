@@ -47,6 +47,8 @@ spec:
           properties:
             existing_cluster_id:
               type: string
+            existing_cluster_name:
+              type: string
             jar_params:
               items:
                 type: string

@@ -4,7 +4,7 @@ metadata:
   name: drun-twitteringest1
 spec:
   # create a run directly without a job
-  existing_cluster_id: 1021-013622-bused793
+  existing_cluster_name: dcluster-interactive2
   libraries:
     - pypi:
         package: "tweepy"
