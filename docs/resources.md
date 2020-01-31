@@ -60,8 +60,17 @@ More info:
 - Open another terminal and curl request the metric endpoint: `curl localhost:8080/metrics`
 
 ### How to access metrics via Grafana
-- A Grafana dashboard compatible `configmap` is provided for use via `config/prometheus/grafana-dashboard-configmap.yaml`
-- If Prometheus-Operator is being used ensure the configmap is modified to be deployed in the same namespace
+- Have the operator installed and running locally. See [deploy.md](https://github.com/microsoft/azure-databricks-operator/blob/master/docs/deploy.md)
+- Determine the name of Grafana service running in your cluster (by default this will be prom-azure-databricks-operator-grafana)
+- Port forward localhost:8080 to your service: `kubectl port-forward service/prom-azure-databricks-operator-grafana 8080:80`
+    - If using VSCode and Dev Container, you may need to expose the internal port out to your host machine (Command Pallete > Remote Containers Forward Port From Container) 
+- Using a browser navigate to `http://localhost:8080` to view the Prometheus dashboard
+- If you are using the default helm installation of the Prometheus-Operator (as provided) then you can find the [default login details here](https://github.com/helm/charts/tree/master/stable/grafana#configuration)
+
+This repo also includes a Grafana dashboard that can be installed:
+- If Prometheus-Operator is being used ensure then by default a sidecar is available to automatically install dashboards via `configmap`:
+    - Update `config/prometheus/grafana-dashboard-configmap.yaml` to have a namespace matching your Grafana service
+    - Apply `configmap` into the same namespace as your Grafana service running the sidecar `kubectl apply -f ./config/prometheus/grafana-dashboard-configmap.yaml`
 - If you are not using Grafana/Prometheus-Operator, then the json can be extracted and imported manually
 - The dashboard provides you general metrics regarding the health of your operator (upstream databricks call success/failure rates and general health of the operator)
 
