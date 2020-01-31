@@ -44,10 +44,6 @@ More info:
     - *NOTE:* If you don't have the Prometheus-Operator installed, the ServiceMonitor CRD will not be available to you
 - Custom metrics exposed by the Operator can be found by searching for `databricks_` inside the Prometheus web ui
 - Metrics follow the naming guidlines recommended by Prometheus
-- A Grafana dashboard compatible `configmap` is provided for use via `config/prometheus/grafana-dashboard-configmap.yaml`
-    - The dashboard provides you metrics regarding the health of your operator (upstream databricks call success/failure rates and general health of the operator)
-    - If Prometheus-Operator is being used ensure the configmap is modified to be deployed in the same namespace
-    - If you are not using Grafana/Prometheus-Operator, then the json can be extracted and imported manually
 
 ### How to access the Prometheus instance
 - Have the operator installed and running locally. See [deploy.md](https://github.com/microsoft/azure-databricks-operator/blob/master/docs/deploy.md)
@@ -62,6 +58,12 @@ More info:
 - Determine the name of the pod running your operator: `kubectl get pods -n azure-databricks-operator-system`
 - Port forward localhost:8080 to your pod: `kubectl port-forward -n azure-databricks-operator-system pod/azure-databricks-operator-controller-manager-<id> 8080:8080`
 - Open another terminal and curl request the metric endpoint: `curl localhost:8080/metrics`
+
+### How to access metrics via Grafana
+- A Grafana dashboard compatible `configmap` is provided for use via `config/prometheus/grafana-dashboard-configmap.yaml`
+- If Prometheus-Operator is being used ensure the configmap is modified to be deployed in the same namespace
+- If you are not using Grafana/Prometheus-Operator, then the json can be extracted and imported manually
+- The dashboard provides you general metrics regarding the health of your operator (upstream databricks call success/failure rates and general health of the operator)
 
 ### Counter metrics
 
