@@ -43,7 +43,11 @@ More info:
     - If you don't want Prometheus-Operator configuration generated, it can be disabled by commenting out the line indicated in `config/default/kustomization.yaml`
     - *NOTE:* If you don't have the Prometheus-Operator installed, the ServiceMonitor CRD will not be available to you
 - Custom metrics exposed by the Operator can be found by searching for `databricks_` inside the Prometheus web ui
-- Metrics follow the naming guidlines recommended by Prometheus 
+- Metrics follow the naming guidlines recommended by Prometheus
+- A Grafana dashboard compatible `configmap` is provided for use via `config/prometheus/grafana-dashboard-configmap.yaml`
+    - The dashboard provides you metrics regarding the health of your operator (upstream databricks call success/failure rates and general health of the operator)
+    - If Prometheus-Operator is being used ensure the configmap is modified to be deployed in the same namespace
+    - If you are not using Grafana/Prometheus-Operator, then the json can be extracted and imported manually
 
 ### How to access the Prometheus instance
 - Have the operator installed and running locally. See [deploy.md](https://github.com/microsoft/azure-databricks-operator/blob/master/docs/deploy.md)
