@@ -86,7 +86,16 @@ func (r *RunReconciler) refresh(instance *databricksv1alpha1.Run) error {
 
 	runOutput, err := r.getRunOutput(runID)
 	if err != nil {
-		return err
+		// Databricks API 2.0/jobs/runs/get-output returns error 500 if the Run has already been
+		// deleted from Databricks. Set k8s Run to a terminal state
+		if strings.Contains(err.Error(), "Response from server (500)") {
+			r.Log.Info(fmt.Sprintf("Run %s couldn't be found in Databricks", instance.GetName()))
+			runOutput = *instance.Status
+			*runOutput.Metadata.State.LifeCycleState = dbmodels.RunLifeCycleStateInternalError
+			runOutput.Error = "Run couldn't be found in Databricks"
+		} else {
+			return err
+		}
 	}
 
 	err = r.Get(context.Background(), types.NamespacedName{
