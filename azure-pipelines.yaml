@@ -17,7 +17,7 @@ jobs:
 - job: Build
   steps:
   # Cache the docker image file
-  - task: CacheBeta@0
+  - task: Cache@2
     inputs:
       key: go-cache | go.sum
       path: ".gocache"
@@ -25,7 +25,7 @@ jobs:
     displayName: Cache go mod cache
 
   # Cache the docker image file
-  - task: CacheBeta@0
+  - task: Cache@2
     inputs:
       key: docker-image | .devcontainer/**
       path: ".dockercache"
@@ -34,12 +34,26 @@ jobs:
     displayName: Cache docker layers
 
   - script: |
-      bash -f ./ci.sh
-    displayName: 'Run CI'
-    env:	
-      GO111MODULE: on	
-      DATABRICKS_HOST: $(DATABRICKS_HOST)	
-      DATABRICKS_TOKEN: $(DATABRICKS_TOKEN)
+    docker info
+    docker load -i ./dockercache/devcontainer.tar
+
+  - script: |
+    # Copy the makefile into the container folder
+    cp ./Makefile ./.devcontainer/Makefile
+
+    echo "-------> Building devcontainer"
+    time docker build --cache-from devcontainer:latest -t devcontainer -f ./.devcontainer/Dockerfile ./.devcontainer
+    # Create a directory for go mod cache
+    mkdir -p $(System.DefaultWorkingDirectory)/.gocache
+
+    echo "-------> Building code and running tests"
+    # Run `make` to build and test the code
+    time docker run -v $(System.DefaultWorkingDirectory)/.gocache:/go/pkg/ -v /var/run/docker.sock:/var/run/docker.sock -v $(System.DefaultWorkingDirectory):/src --workdir /src --entrypoint /bin/bash --network="host" --env DATABRICKS_HOST=$(DATABRICKS_HOST) --env DATABRICKS_TOKEN=$(DATABRICKS_TOKEN) devcontainer -c "make test" 
+
+  - script: 
+      echo "-------> Saving docker image"
+      time docker image save -o ./.dockercache/devcontainer.tar devcontainer
+    condition: ne(variables.DOCKER_CACHE_HIT, 'true')
 
   - task: PublishCodeCoverageResults@1
     inputs:

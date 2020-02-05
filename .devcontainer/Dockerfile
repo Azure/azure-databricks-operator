@@ -87,6 +87,9 @@ RUN make install-kind
 RUN make install-kubebuilder
 RUN make install-kustomize
 RUN make install-test-dependency
+# tidy up go packages
+RUN rm -rf /go/src/ && rm -rf /go/pkg
+
 ENV SHELL /bin/bash
 
 # Save command line history 
