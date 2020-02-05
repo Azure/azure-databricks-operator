@@ -21,3 +21,5 @@ spec:
               secretKeyRef:
                 name: dbrickssettings
                 key: DatabricksToken
+          - name: MAX_CONCURRENT_RUN_RECONCILES
+            value: "1"

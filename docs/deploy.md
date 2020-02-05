@@ -44,7 +44,7 @@ kubectl apply -f release/config
 
 ## Configure maximum number of run reconcilers
 
-1. Append the below enviroment variable to `config/default/manager_image_patch.yaml` under the `env` section with the desired number of reconcilers
+1. Change the `MAX_CONCURRENT_RUN_RECONCILES` value to `config/default/manager_image_patch.yaml` under the `env` section with the desired number of reconcilers
 ```yaml
           - name: MAX_CONCURRENT_RUN_RECONCILES
             value: "1"
