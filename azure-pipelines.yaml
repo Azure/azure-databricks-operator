@@ -36,6 +36,8 @@ jobs:
   - script: |
       docker info
       docker load -i ./dockercache/devcontainer.tar
+    condition: eq(variables.DOCKER_CACHE_HIT, 'true')
+    displayName: Load cached devcontainer image
 
   - script: |
       # Copy the makefile into the container folder
@@ -49,11 +51,13 @@ jobs:
       echo "-------> Building code and running tests"
       # Run `make` to build and test the code
       time docker run -v $(System.DefaultWorkingDirectory)/.gocache:/go/pkg/ -v /var/run/docker.sock:/var/run/docker.sock -v $(System.DefaultWorkingDirectory):/src --workdir /src --entrypoint /bin/bash --network="host" --env DATABRICKS_HOST=$(DATABRICKS_HOST) --env DATABRICKS_TOKEN=$(DATABRICKS_TOKEN) devcontainer -c "make test" 
+    displayName: Build and Test
 
   - script: |
       echo "-------> Saving docker image"
       time docker image save -o ./.dockercache/devcontainer.tar devcontainer
     condition: ne(variables.DOCKER_CACHE_HIT, 'true')
+    displayName: Save devcontainer image
 
   - task: PublishCodeCoverageResults@1
     inputs:
