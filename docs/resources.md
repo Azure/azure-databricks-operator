@@ -43,7 +43,7 @@ More info:
     - If you don't want Prometheus-Operator configuration generated, it can be disabled by commenting out the line indicated in `config/default/kustomization.yaml`
     - *NOTE:* If you don't have the Prometheus-Operator installed, the ServiceMonitor CRD will not be available to you
 - Custom metrics exposed by the Operator can be found by searching for `databricks_` inside the Prometheus web ui
-- Metrics follow the naming guidlines recommended by Prometheus 
+- Metrics follow the naming guidlines recommended by Prometheus
 
 ### How to access the Prometheus instance
 - Have the operator installed and running locally. See [deploy.md](https://github.com/microsoft/azure-databricks-operator/blob/master/docs/deploy.md)
@@ -58,6 +58,21 @@ More info:
 - Determine the name of the pod running your operator: `kubectl get pods -n azure-databricks-operator-system`
 - Port forward localhost:8080 to your pod: `kubectl port-forward -n azure-databricks-operator-system pod/azure-databricks-operator-controller-manager-<id> 8080:8080`
 - Open another terminal and curl request the metric endpoint: `curl localhost:8080/metrics`
+
+### How to access metrics via Grafana
+- Have the operator installed and running locally. See [deploy.md](https://github.com/microsoft/azure-databricks-operator/blob/master/docs/deploy.md)
+- Determine the name of Grafana service running in your cluster (by default this will be prom-azure-databricks-operator-grafana)
+- Port forward localhost:8080 to your service: `kubectl port-forward service/prom-azure-databricks-operator-grafana 8080:80`
+    - If using VSCode and Dev Container, you may need to expose the internal port out to your host machine (Command Pallete > Remote Containers Forward Port From Container) 
+- Using a browser navigate to `http://localhost:8080` to view the Prometheus dashboard
+- If you are using the default helm installation of the Prometheus-Operator (as provided) then you can find the [default login details here](https://github.com/helm/charts/tree/master/stable/grafana#configuration)
+
+This repo also includes a Grafana dashboard that can be installed:
+- If Prometheus-Operator is being used ensure then by default a sidecar is available to automatically install dashboards via `configmap`:
+    - Update `config/prometheus/grafana-dashboard-configmap.yaml` to have a namespace matching your Grafana service
+    - Apply `configmap` into the same namespace as your Grafana service running the sidecar `kubectl apply -f ./config/prometheus/grafana-dashboard-configmap.yaml`
+- If you are not using Grafana/Prometheus-Operator, then the json can be extracted and imported manually
+- The dashboard provides you general metrics regarding the health of your operator (upstream databricks call success/failure rates and general health of the operator)
 
 ### Counter metrics
 
