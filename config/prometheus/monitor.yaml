@@ -16,4 +16,5 @@ spec:
       tlsConfig:
         insecureSkipVerify: true # Configure certs here if set up for auth_proxy (uses self-signed currently)
   selector:
-    control-plane: controller-manager
+    matchLabels:
+      control-plane: controller-manager
