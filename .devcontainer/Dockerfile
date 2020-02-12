@@ -6,7 +6,7 @@
 FROM golang:1.12.5-stretch
 
 ARG KubectlVersion=v1.16.2
-ARG HelmVersion=release-3.0
+ARG HelmVersion=v3.0.3
 
 # Avoid warnings by switching to noninteractive
 ENV DEBIAN_FRONTEND=noninteractive
@@ -34,7 +34,7 @@ RUN apt-get update \
     && curl -sSL -o /usr/local/bin/kubectl https://storage.googleapis.com/kubernetes-release/release/$KubectlVersion/bin/linux/amd64/kubectl \
     && chmod +x /usr/local/bin/kubectl \
     # Install Helm
-    && DESIRED_VERSION=$HelmVersion curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash \
+    && curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | DESIRED_VERSION=$HelmVersion bash \
     && helm repo add stable https://kubernetes-charts.storage.googleapis.com/ 
 
 
