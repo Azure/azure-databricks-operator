@@ -96,9 +96,12 @@ func (r *DjobReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 				r.Recorder.Event(instance, corev1.EventTypeWarning, "Resetting object", fmt.Sprintf("Failed to reset object: %s", err))
 				return ctrl.Result{}, fmt.Errorf("error when resetting job: %v", err)
 			}
+			if err := r.UpdateHash(instance); err != nil {
+				return ctrl.Result{}, fmt.Errorf("Failed to update the hash key: %v", err)
+			}
 			r.Recorder.Event(instance, corev1.EventTypeNormal, "Reset", "Object is reset")
 		} else {
-			r.Log.Info(fmt.Sprintf("Refreshesss for %v", req.NamespacedName))
+			r.Log.Info(fmt.Sprintf("Refresh for %v", req.NamespacedName))
 			if err := r.refresh(instance); err != nil {
 				r.Recorder.Event(instance, corev1.EventTypeWarning, "Refreshing object", fmt.Sprintf("Failed to refresh object: %s", err))
 				return ctrl.Result{}, fmt.Errorf("error when refreshing job: %v", err)
