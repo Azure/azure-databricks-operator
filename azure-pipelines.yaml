@@ -40,6 +40,9 @@ jobs:
     displayName: Load cached devcontainer image
 
   - script: |
+      # Create dockercache directory
+      mkdir -p ./.dockercache/
+
       # Copy the makefile into the container folder
       cp ./Makefile ./.devcontainer/Makefile
 
