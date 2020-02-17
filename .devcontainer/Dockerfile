@@ -80,7 +80,6 @@ ENV GO111MODULE=on
 # Set the default shell to bash instead of sh
 ENV DATABRICKS_HOST ""
 ENV DATABRICKS_TOKEN ""
-ENV KUBECONFIG="/root/.kube/kind-config-kind"
 
 COPY ./Makefile ./
 RUN make install-kind
