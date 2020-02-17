@@ -27,6 +27,8 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"os"
+	"strconv"
 	"time"
 
 	"github.com/go-logr/logr"
@@ -39,7 +41,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	databricksv1alpha1 "github.com/microsoft/azure-databricks-operator/api/v1alpha1"
+	ctrl_controller "sigs.k8s.io/controller-runtime/pkg/controller"
 )
+
+const maxConcurrentReconcilesEnvName = "MAX_CONCURRENT_RUN_RECONCILES"
 
 // RunReconciler reconciles a Run object
 type RunReconciler struct {
@@ -118,5 +123,18 @@ func (r *RunReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 func (r *RunReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&databricksv1alpha1.Run{}).
+		WithOptions(ctrl_controller.Options{
+			MaxConcurrentReconciles: getMaxConcurrentReconciles(),
+		}).
 		Complete(r)
+}
+
+func getMaxConcurrentReconciles() int {
+	concurrentReconciles, err := strconv.Atoi(os.Getenv(maxConcurrentReconcilesEnvName))
+
+	if err != nil || concurrentReconciles < 1 {
+		return 1
+	}
+
+	return concurrentReconciles
 }
