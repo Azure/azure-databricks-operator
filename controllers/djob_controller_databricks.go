@@ -19,15 +19,16 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"reflect"
+	"strconv"
+	"strings"
+
 	databricksv1alpha1 "github.com/microsoft/azure-databricks-operator/api/v1alpha1"
 	"github.com/mitchellh/hashstructure"
 	dbmodels "github.com/xinsnake/databricks-sdk-golang/azure/models"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"reflect"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"strconv"
-	"strings"
 )
 
 func (r *DjobReconciler) submit(instance *databricksv1alpha1.Djob) error {
@@ -142,23 +143,6 @@ func (r *DjobReconciler) IsDJobUpdated(instance *databricksv1alpha1.Djob) bool {
 	} else {
 		updatedHash = returnUpdatedHash
 	}
-
-	// jobID := instance.Status.JobStatus.JobID
-	// jobExisting, err := r.APIClient.Jobs().Get(jobID)
-	// if err != nil {
-	// 	if strings.Contains(err.Error(), "does not exist") {
-	// 		return true
-	// 	}
-	// 	return true
-	// }
-
-	// hash2, err2 := hashstructure.Hash(jobExisting.Settings, nil)
-	// if err2 != nil {
-	// 	panic(err2)
-	// }
-	// r.Log.Info(fmt.Sprintf("Hashs %v", hash2))
-
-	// r.Log.Info(fmt.Sprintf("2 object old %v and new %v", jobExisting.Settings, instance.Spec))
 
 	return currentAnnotation == strconv.FormatUint(updatedHash, 10)
 }
