@@ -174,7 +174,7 @@ deploy-kindcluster:
 install-kind:
 ifeq (,$(shell which kind))
 	@echo "installing kind"
-	curl -Lo ./kind "https://github.com/kubernetes-sigs/kind/releases/download/v0.7.0/kind-$(uname)-amd64" 
+	curl -Lo ./kind "https://github.com/kubernetes-sigs/kind/releases/download/v0.7.0/kind-$(shell uname)-amd64" 
 	chmod +x ./kind 
 	mv ./kind /usr/local/bin/kind
 else
