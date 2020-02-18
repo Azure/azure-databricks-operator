@@ -84,10 +84,6 @@ endif
 	cd config/manager && kustomize edit set image controller=${IMG}
 	kustomize build config/default | kubectl apply -f -
 	kustomize build config/default > operatorsetup.yaml
-	
-
-
-
 
 create-dbrickssettings-secret:
 	kubectl --namespace ${OPERATOR_NAMESPACE} \
@@ -101,7 +97,7 @@ manifests: controller-gen
 
 # Run go fmt against code
 fmt:
-	find . -name '*.go' | grep -v vendor | xargs gofmt -s -w
+	find . -name '*.go' | grep -v -E 'vendor|.gocache' | xargs gofmt -s -w
 
 # Run go vet against code
 vet:
