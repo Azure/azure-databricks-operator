@@ -94,7 +94,22 @@ func (r *RunReconciler) refresh(instance *databricksv1alpha1.Run) error {
 
 	runOutput, err := r.getRunOutput(runID)
 	if err != nil {
-		return err
+		if strings.Contains(err.Error(), "Response from server (500)") {
+			// Databricks API 2.0/jobs/runs/get-output returns error 500 if the Run has already been
+			// deleted from Databricks. Is that the actual reason why the API failed?
+			_, err := r.getRun(runID)
+			if err != nil && strings.Contains(err.Error(), "does not exist") {
+				// So the Run has been deleted from Databricks. Then set k8s Run to a terminal state.
+				r.Log.Info(fmt.Sprintf("Run %s couldn't be found in Databricks", instance.GetName()))
+				runOutput = *instance.Status
+				*runOutput.Metadata.State.LifeCycleState = dbmodels.RunLifeCycleStateInternalError
+				runOutput.Error = "Run couldn't be found in Databricks"
+			} else {
+				return err
+			}
+		} else {
+			return err
+		}
 	}
 
 	err = r.Get(context.Background(), types.NamespacedName{
