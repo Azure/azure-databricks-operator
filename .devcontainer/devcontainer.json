@@ -25,8 +25,10 @@
 		// Optionally mount k8s auth to existing cluster
 		// "-v", "${env:HOME}${env:USERPROFILE}/.kube:/home/vscode/.kube",
 	],
+	"forwardPorts": [8085],
 	"extensions": [
 		"ms-azuretools.vscode-docker",
+		"humao.rest-client",
 		"ms-vscode.go"
 	],
 	"settings": {
@@ -60,4 +62,5 @@
 			"ms-azuretools.vscode-docker": "workspace"
 		}
 	}
+	
 }

@@ -1,0 +1,54 @@
+@baseURL=http://localhost:8080/api/
+# Get list of empty runs
+# @name getRunList
+GET {{baseURL}}2.0/jobs/runs/list
+
+###
+
+# Submit a run and return a run ID
+# @name submitRun
+POST {{baseURL}}2.0/jobs/runs/submit
+
+< ./../api/integration_tests/test_data/run/run_submit.json
+
+###
+
+# Get created run by ID
+# @name getCreatedRun
+@runID={{submitRun.response.body.$.run_id}}
+
+GET {{baseURL}}2.0/jobs/runs/get?run_id={{runID}}
+
+###
+
+# Cancel the run by ID
+# @name cancelRun
+@runID={{submitRun.response.body.$.run_id}}
+POST {{baseURL}}2.0/jobs/runs/cancel
+
+{
+ "run_id" : {{runID}}
+}
+
+###
+
+# Delete the run by ID
+# @name deleteRun
+@runID={{submitRun.response.body.$.run_id}}
+POST {{baseURL}}2.0/jobs/runs/delete
+
+{
+ "run_id" : {{runID}}
+}
+
+###
+
+# Get submitted run output by ID
+# @name getCreatedRun
+@runID={{submitRun.response.body.$.run_id}}
+
+GET {{baseURL}}2.0/jobs/runs/get-output?run_id={{runID}}
+###
+
+# Run shows in the list of runs
+GET {{baseURL}}2.0/jobs/runs/list

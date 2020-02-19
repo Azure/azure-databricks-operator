@@ -1,0 +1,40 @@
+@baseURL=http://localhost:8080/api/
+# Get list of empty jobs
+# @name getJobList
+GET {{baseURL}}api/2.0/jobs/list
+
+###
+
+# Create a job and return a job ID
+# @name createJob
+POST {{baseURL}}2.0/jobs/create
+
+< ./../api/integration_tests/test_data/job/job_create.json
+
+###
+
+# Get created job
+# @name getCreatedJob
+@jobID={{createJob.response.body.$.job_id}}
+GET {{baseURL}}2.0/jobs/get?job_id={{jobID}}
+
+###
+
+# Job shows in the list of jobs
+GET {{baseURL}}2.0/jobs/list
+
+###
+
+# Delete the job
+# @name deleteJob
+@jobID={{createJob.response.body.$.job_id}}
+POST {{baseURL}}2.0/jobs/delete
+
+{
+ "job_id" : {{jobID}}
+}
+
+###
+
+# Gone from the list
+GET {{baseURL}}2.0/jobs/list

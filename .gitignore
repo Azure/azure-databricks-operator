@@ -15,6 +15,7 @@
 .env
 
 !/bin
+bin/mock-databricks-api
 /bin/manager
 cmd/manager/__debug_bin
 

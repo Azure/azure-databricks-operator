@@ -1,5 +1,10 @@
+timestamp := $(shell /bin/date "+%Y%m%d-%H%M%S")
+
 # Image URL to use all building/pushing image targets
 IMG ?= controller:latest
+
+# MockAPI image URL to use all building/pushing image targets
+MOCKAPI_IMG ?= mockapi:${timestamp}
 
 # Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
 CRD_OPTIONS ?= "crd:trivialVersions=true"
@@ -20,7 +25,6 @@ else
 GOBIN=$(shell go env GOBIN)
 endif
 
-timestamp := $(shell /bin/date "+%Y%m%d-%H%M%S")
 all: manager
 
 # Run tests
@@ -215,3 +219,19 @@ install-test-dependency:
 	&& go get github.com/onsi/ginkgo/ginkgo \
 	&& go get golang.org/x/tools/cmd/cover \
 	&& go get -u github.com/matm/gocov-html
+
+build-mock-api:
+	go build -o bin/mock-databricks-api ./mockapi
+
+run-mock-api:
+	go run ./mockapi
+
+test-mock-api: lint
+	go test ./mockapi/...
+
+kind-deploy-mock-api: create-kindcluster install-prometheus
+	docker build -t ${MOCKAPI_IMG} -f mockapi/Dockerfile .
+	@echo "Loading mockAPI image into kind"	
+	kind load docker-image ${MOCKAPI_IMG} --name ${KIND_CLUSTER_NAME} -v 1
+	cat ./mockapi/manifests/deployment.yaml | sed "s|mockapi:latest|${MOCKAPI_IMG}|" | kubectl apply -f -
+	kubectl apply -f ./mockapi/manifests/service.yaml
