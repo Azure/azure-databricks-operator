@@ -1,17 +1,25 @@
 /*
-Copyright 2019 microsoft.
+The MIT License (MIT)
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Copyright (c) 2019  Microsoft
 
-    http://www.apache.org/licenses/LICENSE-2.0
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 */
 
 package controllers
@@ -19,6 +27,8 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"os"
+	"strconv"
 	"time"
 
 	"github.com/go-logr/logr"
@@ -31,7 +41,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	databricksv1alpha1 "github.com/microsoft/azure-databricks-operator/api/v1alpha1"
+	ctrl_controller "sigs.k8s.io/controller-runtime/pkg/controller"
 )
+
+const maxConcurrentReconcilesEnvName = "MAX_CONCURRENT_RUN_RECONCILES"
 
 // RunReconciler reconciles a Run object
 type RunReconciler struct {
@@ -110,5 +123,18 @@ func (r *RunReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 func (r *RunReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&databricksv1alpha1.Run{}).
+		WithOptions(ctrl_controller.Options{
+			MaxConcurrentReconciles: getMaxConcurrentReconciles(),
+		}).
 		Complete(r)
+}
+
+func getMaxConcurrentReconciles() int {
+	concurrentReconciles, err := strconv.Atoi(os.Getenv(maxConcurrentReconcilesEnvName))
+
+	if err != nil || concurrentReconciles < 1 {
+		return 1
+	}
+
+	return concurrentReconciles
 }

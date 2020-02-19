@@ -7,6 +7,12 @@ CRD_OPTIONS ?= "crd:trivialVersions=true"
 # Prometheus helm installation name
 PROMETHEUS_NAME ?= "prom-azure-databricks-operator"
 
+# Default kind cluster name
+KIND_CLUSTER_NAME ?= "azure-databricks-operator"
+
+# Default namespace for the installation
+OPERATOR_NAMESPACE ?= "azure-databricks-operator-system"
+
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))
 GOBIN=$(shell go env GOPATH)/bin
@@ -61,28 +67,29 @@ uninstall: manifests
 
 # Deploy controller in the configured Kubernetes cluster in ~/.kube/config
 deploy: manifests
-ifeq (,$(shell kubectl get namespace azure-databricks-operator-system))
-	@echo "creating azure-databricks-operator-system namespace"
-	kubectl create namespace azure-databricks-operator-system
+ifeq (0, $(shell kubectl get namespaces 2>&1 | grep ${OPERATOR_NAMESPACE} | wc -l))
+	@echo "creating ${OPERATOR_NAMESPACE} namespace"
+	kubectl create namespace ${OPERATOR_NAMESPACE}
+	make create-dbrickssettings-secret
 else
-	@echo "azure-databricks-operator-system namespace exists"
-endif
-ifeq (,$(shell kubectl get secret dbrickssettings --namespace azure-databricks-operator-system))
+	@echo "${OPERATOR_NAMESPACE} namespace exists"
+ifeq (0, $(shell kubectl get secrets --namespace ${OPERATOR_NAMESPACE} | grep dbrickssettings | wc -l))
 	@echo "creating dbrickssettings secret"
-		kubectl --namespace azure-databricks-operator-system \
-		create secret generic dbrickssettings \
-		--from-literal=DatabricksHost="${DATABRICKS_HOST}" \
-		--from-literal=DatabricksToken="${DATABRICKS_TOKEN}"
+	create-dbrickssettings-secret
 else
 	@echo "dbrickssettings secret exists"
 endif
+endif
+
 	cd config/manager && kustomize edit set image controller=${IMG}
 	kustomize build config/default | kubectl apply -f -
 	kustomize build config/default > operatorsetup.yaml
-	
 
-
-
+create-dbrickssettings-secret:
+	kubectl --namespace ${OPERATOR_NAMESPACE} \
+		create secret generic dbrickssettings \
+		--from-literal=DatabricksHost="${DATABRICKS_HOST}" \
+		--from-literal=DatabricksToken="${DATABRICKS_TOKEN}"
 
 # Generate manifests e.g. CRD, RBAC etc.
 manifests: controller-gen
@@ -90,7 +97,7 @@ manifests: controller-gen
 
 # Run go fmt against code
 fmt:
-	find . -name '*.go' | grep -v vendor | xargs gofmt -s -w
+	find . -name '*.go' | grep -v -E 'vendor|.gocache' | xargs gofmt -s -w
 
 # Run go vet against code
 vet:
@@ -131,31 +138,18 @@ CONTROLLER_GEN=$(shell which controller-gen)
 endif
 
 create-kindcluster:
-ifeq (,$(shell kind get clusters))
+ifeq (0, $(shell kind get clusters | grep ${KIND_CLUSTER_NAME} | wc -l))
 	@echo "no kind cluster"
 else
 	@echo "kind cluster is running, deleting the current cluster"
-	kind delete cluster 
+	kind delete cluster --name ${KIND_CLUSTER_NAME}
 endif
 	@echo "creating kind cluster"
-	kind create cluster
+	kind create cluster --name ${KIND_CLUSTER_NAME}
 
 set-kindcluster: install-kind
-ifeq (${shell kind get kubeconfig-path --name="kind"},${KUBECONFIG})
-	@echo "kubeconfig-path points to kind path"
-else
-	@echo "please run below command in your shell and then re-run make set-kindcluster"
-	@echo  "\e[31mexport KUBECONFIG=$(shell kind get kubeconfig-path --name="kind")\e[0m"
-	@exit 111
-endif
 	make create-kindcluster
-	
-	@echo "getting value of KUBECONFIG"
-	@echo ${KUBECONFIG}
-	@echo "getting value of kind kubeconfig-path"
-	
 	kubectl cluster-info
-
 	@echo "deploying controller to cluster"
 	make deploy-kindcluster
 	make install
@@ -166,7 +160,7 @@ deploy-kindcluster:
 	#create image and load it into cluster
 	$(eval newimage := "docker.io/controllertest:$(timestamp)")
 	IMG=$(newimage) make docker-build
-	kind load docker-image $(newimage) --loglevel "debug"
+	kind load docker-image $(newimage) --loglevel "debug" --name ${KIND_CLUSTER_NAME}
 
 	#deploy operator
 	IMG=$(newimage) make deploy
@@ -176,11 +170,12 @@ deploy-kindcluster:
 install-kind:
 ifeq (,$(shell which kind))
 	@echo "installing kind"
-	GO111MODULE="on" go get sigs.k8s.io/kind@v0.4.0
+	curl -Lo ./kind "https://github.com/kubernetes-sigs/kind/releases/download/v0.7.0/kind-$(shell uname)-amd64" 
+	chmod +x ./kind 
+	mv ./kind /usr/local/bin/kind
 else
 	@echo "kind has been installed"
 endif
-
 install-kubebuilder:
 ifeq (,$(shell which kubebuilder))
 	@echo "installing kubebuilder"

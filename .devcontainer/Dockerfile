@@ -38,7 +38,7 @@ RUN apt-get update \
         github.com/cweill/gotests/... \
         golang.org/x/tools/cmd/goimports \
         golang.org/x/lint/golint \
-        golang.org/x/tools/cmd/gopls \
+        golang.org/x/tools/gopls \
         github.com/alecthomas/gometalinter \
         honnef.co/go/tools/... \
         github.com/golangci/golangci-lint/cmd/golangci-lint \
@@ -80,13 +80,15 @@ ENV GO111MODULE=on
 # Set the default shell to bash instead of sh
 ENV DATABRICKS_HOST ""
 ENV DATABRICKS_TOKEN ""
-ENV KUBECONFIG="/root/.kube/kind-config-kind"
 
 COPY ./Makefile ./
 RUN make install-kind
 RUN make install-kubebuilder
 RUN make install-kustomize
 RUN make install-test-dependency
+# tidy up go packages
+RUN rm -rf /go/src/ && rm -rf /go/pkg
+
 ENV SHELL /bin/bash
 
 # Save command line history 
