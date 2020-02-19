@@ -90,7 +90,7 @@ Ensure your KUBECONFIG is set to point to the cluster you want to deploy to.
 
 Deploy to AKS with
 ```bash
-IMG=your-container-registry.azurecr.io/databricks-mock-api:vsomething make aks-deploy
+IMG=your-container-registry.azurecr.io/databricks-mock-api:vsomething make aks-deploy-mock-api
 ```
 
 To test, run `kubectl port-forward svc/databricks-mock-api 8085:8080` and make a request to http://localhost:8085 to verify that the API is running

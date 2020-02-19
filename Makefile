@@ -229,9 +229,19 @@ run-mock-api:
 test-mock-api: lint
 	go test ./mockapi/...
 
-kind-deploy-mock-api: create-kindcluster install-prometheus
+docker-build-mock-api: 
 	docker build -t ${MOCKAPI_IMG} -f mockapi/Dockerfile .
-	@echo "Loading mockAPI image into kind"	
-	kind load docker-image ${MOCKAPI_IMG} --name ${KIND_CLUSTER_NAME} -v 1
+
+docker-push-mock-api: docker-build
+	docker push ${IMG}
+
+apply-manifests-mock-api:
 	cat ./mockapi/manifests/deployment.yaml | sed "s|mockapi:latest|${MOCKAPI_IMG}|" | kubectl apply -f -
 	kubectl apply -f ./mockapi/manifests/service.yaml
+
+kind-load-image-mock-api: create-kindcluster  docker-build-mock-api install-prometheus 
+	kind load docker-image ${MOCKAPI_IMG} --name ${KIND_CLUSTER_NAME} -v 1
+
+kind-deploy-mock-api: kind-load-image-mock-api apply-manifests-mock-api
+
+aks-deploy-mock-api: docker-push-mock-api install-prometheus apply-manifests-mock-api
