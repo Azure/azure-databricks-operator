@@ -7,6 +7,7 @@ require (
 	github.com/go-logr/logr v0.1.0
 	github.com/jstemmer/go-junit-report v0.9.1 // indirect
 	github.com/matm/gocov-html v0.0.0-20191111163307-9ee104d84c82 // indirect
+	github.com/mitchellh/hashstructure v1.0.0
 	github.com/onsi/ginkgo v1.10.3
 	github.com/onsi/gomega v1.7.0
 	github.com/prometheus/client_golang v0.9.2

@@ -1,10 +1,9 @@
 apiVersion: databricks.microsoft.com/v1alpha1
 kind: Run
 metadata:
-  name: run-sample
+  name: run-sample1
 spec:
   # run an existing job with job id
-  job_name: djob-sample
-  jar_params:
-    - "test"
-    - "test_param2"
+  job_name: djob-sample-1
+  notebook_params:
+    "name": "xyz"

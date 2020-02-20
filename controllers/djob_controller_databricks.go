@@ -28,9 +28,11 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"strconv"
 	"strings"
 
 	databricksv1alpha1 "github.com/microsoft/azure-databricks-operator/api/v1alpha1"
+	"github.com/mitchellh/hashstructure"
 	dbmodels "github.com/xinsnake/databricks-sdk-golang/azure/models"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -78,6 +80,13 @@ func (r *DjobReconciler) submit(instance *databricksv1alpha1.Djob) error {
 		}
 		instance.ObjectMeta.SetOwnerReferences(references)
 	}
+
+	if hash, err := hashstructure.Hash(instance.Spec, nil); err == nil {
+		instance.ObjectMeta.SetAnnotations(map[string]string{instance.GetName(): strconv.FormatUint(hash, 10)})
+	} else {
+		r.Log.Info(fmt.Sprintf("Failed to hash the Spec for job %s", instance.GetName()))
+	}
+
 	jobSettings := databricksv1alpha1.ToDatabricksJobSettings(instance.Spec)
 	job, err := r.createJob(jobSettings)
 
@@ -92,6 +101,7 @@ func (r *DjobReconciler) submit(instance *databricksv1alpha1.Djob) error {
 	return r.Update(context.Background(), instance)
 }
 
+//nolint:errcheck
 func (r *DjobReconciler) refresh(instance *databricksv1alpha1.Djob) error {
 	r.Log.Info(fmt.Sprintf("Refreshing job %s", instance.GetName()))
 
@@ -129,6 +139,22 @@ func (r *DjobReconciler) refresh(instance *databricksv1alpha1.Djob) error {
 	return r.Update(context.Background(), instance)
 }
 
+/*
+IsDJobUpdated checks if the cluster has the latest version of a certain Djob
+*/
+func (r *DjobReconciler) IsDJobUpdated(instance *databricksv1alpha1.Djob) bool {
+
+	currentAnnotation := instance.ObjectMeta.GetAnnotations()[instance.GetName()]
+	var updatedHash uint64
+	if returnUpdatedHash, err := hashstructure.Hash(instance.Spec, nil); err != nil {
+		r.Log.Info(fmt.Sprintf("Deleting job %s", instance.GetName()))
+	} else {
+		updatedHash = returnUpdatedHash
+	}
+
+	return currentAnnotation == strconv.FormatUint(updatedHash, 10)
+}
+
 func (r *DjobReconciler) delete(instance *databricksv1alpha1.Djob) error {
 	r.Log.Info(fmt.Sprintf("Deleting job %s", instance.GetName()))
 
@@ -164,4 +190,38 @@ func (r *DjobReconciler) createJob(jobSettings dbmodels.JobSettings) (job dbmode
 	job, err = r.APIClient.Jobs().Create(jobSettings)
 	execution.Finish(err)
 	return job, err
+}
+
+// UpdateHash updates the current job with a new annotation key
+func (r *DjobReconciler) UpdateHash(instance *databricksv1alpha1.Djob) error {
+	hash, err := hashstructure.Hash(instance.Spec, nil)
+	if err != nil {
+		return err
+	}
+
+	delete(instance.GetAnnotations(), instance.GetName())
+	instance.ObjectMeta.SetAnnotations(map[string]string{instance.GetName(): strconv.FormatUint(hash, 10)})
+
+	return r.Update(context.Background(), instance)
+}
+
+func (r *DjobReconciler) reset(instance *databricksv1alpha1.Djob) error {
+	r.Log.Info(fmt.Sprintf("Reset job %s", instance.GetName()))
+	jobSettings := databricksv1alpha1.ToDatabricksJobSettings(instance.Spec)
+
+	if instance.Status == nil || instance.Status.JobStatus == nil {
+		return nil
+	}
+
+	jobID := instance.Status.JobStatus.JobID
+
+	// Check if the job exists before trying to delete it
+	if _, err := r.APIClient.Jobs().Get(jobID); err != nil {
+		if strings.Contains(err.Error(), "does not exist") {
+			return nil
+		}
+		return err
+	}
+
+	return r.APIClient.Jobs().Reset(jobID, jobSettings)
 }
