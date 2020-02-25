@@ -1,6 +1,6 @@
 # Mock Databricks API
 
-The API found under `/mockapi` is a Databricks mock API for following success scenarios:
+The API found under `/mockapi` is a mock Databricks API for following success scenarios:
 
 - [Jobs/](https://docs.databricks.com/dev-tools/api/latest/jobs.html):
   - Create
@@ -55,13 +55,13 @@ To allow rate-limiting requests to match Databricks API behaviour, a rate limit 
 
 ### Configurable Errors
 
-To configure a percentage of responses that return a status code 500 response in the mock-api you can set `DATABRICKS_MOCK_API_ERROR_500_PROBABILITY`.
+To configure a percentage of responses that return a status code 500 response in the mockAPI you can set `DATABRICKS_MOCK_API_ERROR_500_PROBABILITY`.
 
 E.g. setting `DATABRICKS_MOCK_API_ERROR_500_PROBABILITY` to `20` will return a status code 500 response for roughly 20% of responses.
 
 To configure a percentage of calls that should sink-hole, i.e. return no response and keep the connection open for 10 minutes, you can set `DATABRICKS_MOCK_API_ERROR_SINKHOLE_PROBABILITY`. Probabilities are as for `DATABRICKS_MOCK_API_ERROR_500_PROBABILITY`.
 
-To configure a percentage of calls that should respond xml response with status code 200 response in the mock-api you can set`DATABRICKS_MOCK_API_ERROR_XML_RESPONSE_PROBABILITY`.Probabilities are as for `DATABRICKS_MOCK_API_ERROR_500_PROBABILITY`.
+To configure a percentage of calls that should respond xml response with status code 200 response in the mockAPI you can set`DATABRICKS_MOCK_API_ERROR_XML_RESPONSE_PROBABILITY`.Probabilities are as for `DATABRICKS_MOCK_API_ERROR_500_PROBABILITY`.
 
 > NB: The combined probabilities must be <=100
 
@@ -85,9 +85,13 @@ Once the devcontainer has built and started, use `make run-mock-api` to run the 
 
 ## Running in Kind
 
-To run the mock api in Kind run `make kind-deploy-mock-api`. This will ensure a Kind cluster is created, deploy promethous with helm, build and load a docker image for the mock api into the Kind cluster and then create a Deployment and Service.
+1. Create kind cluster, deploy promethous with helm, build and load a docker image for the mockAPI into the cluster and then create a deployment and service.
 
-To test, run `kubectl port-forward svc/databricks-mock-api 8085:8080 -n databricks-mock-api` and make a request to <http://localhost:8085> to verify that the API is running
+   ```bash
+   make kind-deploy-mock-api
+   ```
+
+2. Run `kubectl port-forward svc/databricks-mock-api 8085:8080 -n databricks-mock-api` and make a request to <http://localhost:8085> to verify that the API is running
 
 ## Running in a separate cluster
 

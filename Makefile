@@ -157,18 +157,20 @@ else
 	kind delete cluster --name ${KIND_CLUSTER_NAME}
 endif
 	@echo "creating kind cluster"
-	kind create cluster --name ${KIND_CLUSTER_NAME}
+	kind create cluster --name ${KIND_CLUSTER_NAME} --config ./kind-cluster.yaml
 
 set-kindcluster: install-kind
 	make create-kindcluster
 	kubectl cluster-info
-	@echo "deploying controller to cluster"
 	make deploy-kindcluster
 	make install
 	make install-prometheus
+	make deploy-mock-api
+	make deploy-locust
 
 # Deploy controller
 deploy-kindcluster:
+	@echo "deploying controller to cluster"
 	#create image and load it into cluster
 	$(eval newimage := "docker.io/controllertest:$(timestamp)")
 	IMG=$(newimage) make docker-build
@@ -188,6 +190,7 @@ ifeq (,$(shell which kind))
 else
 	@echo "kind has been installed"
 endif
+
 install-kubebuilder:
 ifeq (,$(shell which kubebuilder))
 	@echo "installing kubebuilder"
@@ -247,15 +250,19 @@ apply-manifests-mock-api:
 	cat ./mockapi/manifests/deployment.yaml | sed "s|mockapi:latest|${MOCKAPI_IMG}|" | kubectl apply -f -
 	kubectl apply -f ./mockapi/manifests/service.yaml
 
-kind-load-image-mock-api: create-kindcluster  docker-build-mock-api install-prometheus 
+kind-load-image-mock-api: docker-build-mock-api 
 	kind load docker-image ${MOCKAPI_IMG} --name ${KIND_CLUSTER_NAME} -v 1
 
-kind-deploy-mock-api: kind-load-image-mock-api apply-manifests-mock-api
+deploy-mock-api:kind-load-image-mock-api apply-manifests-mock-api
 
-kind-deploy-locust: create-kindcluster install-prometheus
+kind-deploy-mock-api: create-kindcluster install-prometheus deploy-mock-api
+
+deploy-locust:
 	docker build -t ${LOCUST_IMG} -f locust/Dockerfile .
 	kind load docker-image ${LOCUST_IMG} --name ${KIND_CLUSTER_NAME} -v 1
 	cat ./locust/manifests/deployment.yaml | sed "s|locust:latest|${LOCUST_IMG}|" | sed "s|behaviours/scenario1_run_submit_delete.py|${LOCUST_FILE}|" | kubectl apply -f -
+
+kind-deploy-locust: create-kindcluster install-prometheus deploy-locust	
 
 format-locust:
 	black .
@@ -263,3 +270,6 @@ format-locust:
 test-locust: 
 	pip install -e ./locust -q
 	pytest
+
+port-forward:
+	./portforwards.sh
