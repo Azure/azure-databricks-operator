@@ -11,8 +11,9 @@ The load testing project for the [azure-databricks-operator](https://github.com/
       - [Set error conditions](#set-error-conditions)
   - [Contribute](#contribute)
     - [Extending the supported Databricks functionality](#extending-the-supported-databricks-functionality)
-    - [How do I update a dashboard](#how-do-i-update-a-dashboard)
+    - [Add load test scenarios](#add-load-test-scenarios)
     - [Adding unit tests](#adding-unit-tests)
+    - [How do I update a dashboard](#how-do-i-update-a-dashboard)
   - [Prometheus Endpoint](#prometheus-endpoint)
   - [Known issues](#known-issues)
 
@@ -74,9 +75,9 @@ Tests are written using `pytest`. More information [is available here](https://d
     make port-forward  
     ```
 
-3. Visit `http://localhost:8089` to start the load test from the locust web UI.
+3. Navigate to http://localhost:8089 to start the load test from the locust web UI
 
-4. View the dashboards for the test on http://localhost:8080
+4. Navigate to http://localhost:8080 with the below credentials to view the Grafana dashboards
 
     ```text
     Username: admin
@@ -84,6 +85,14 @@ Tests are written using `pytest`. More information [is available here](https://d
     ```
 
 > Note: If one of these port-forwards stops working use `ps aux | grep kubectl` and look for the process id of the one thats broken then use `kill 21283` (your id in there) to stop it. Then rerun the port-forward command
+
+Good to know:
+
+- Change the load test scenario file after deploying with:
+
+    ```bash
+    locust -f behaviours/<my_locust_file>.py
+    ```
 
 #### Set error conditions
 
@@ -109,9 +118,6 @@ For some of the load test scenarios we want to trigger error behaviour in the mo
 
 ## Contribute
 
-- Test files are added to the `/behaviours` directory
-- These files take the recommended format described by the Locust documentation representing the behvaiour of a single (or set of) users
-
 ### Extending the supported Databricks functionality
 
 - `/locust_files/db_locust` contains all files related to how Locust can interact with Databricks using K8s via the [azure-databricks-operator](https://github.com/microsoft/azure-databricks-operator/)
@@ -121,9 +127,10 @@ For some of the load test scenarios we want to trigger error behaviour in the mo
     - More clients to be added - ***this is where the majority of contributions will be made***
   - `db_decorator.py`: A simple decorator for Databricks operations that gives basic metric logging and error handling
 
-### How do I update a dashboard
+### Add load test scenarios
 
-Best way I've found is to import the JSON for the board into the grafana instance, edit it using the UI then export it back to JSON and update the file in the repo.
+- Load test scenario files are added to the `/behaviours` directory
+- These files take the recommended format described by the Locust documentation representing the behvaiour of a single (or set of) users
 
 ### Adding unit tests
 
@@ -132,12 +139,15 @@ The project is setup to automatically discover any tests under the `locust/test`
 - your test `.py` file follows the naming convention `<something>_test.py`
 - within your test file your methods follow the naming convention `def test_<what you want to test>()`
 
+### How do I update a dashboard
+
+Best way I've found is to import the JSON for the board into the Grafana instance, edit it using the UI then export it back to JSON and update the file in the repo.
+
 ## Prometheus Endpoint
 
 This suite of Locust tests exposes stats to Prometheus via a web endpoint.
 
 The endpoint is exposed at `/export/prometheus`. When running the tests with the web endpoints enabled, you can visit <http://localhost:8089/export/prometheus> to see the exported stats.
-
 
 ## Known issues
 
