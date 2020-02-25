@@ -1,3 +1,4 @@
+# Timestamp for image tags
 timestamp := $(shell /bin/date "+%Y%m%d-%H%M%S")
 
 # Image URL to use all building/pushing image targets
@@ -5,6 +6,12 @@ IMG ?= controller:latest
 
 # MockAPI image URL to use all building/pushing image targets
 MOCKAPI_IMG ?= mockapi:${timestamp}
+
+# MockAPI image URL to use all building/pushing image targets
+LOCUST_IMG ?= locust:${timestamp}
+
+# Default namespace for the installation
+LOCUST_FILE ?= "behaviours/scenario1_run_submit_delete.py"
 
 # Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
 CRD_OPTIONS ?= "crd:trivialVersions=true"
@@ -17,6 +24,7 @@ KIND_CLUSTER_NAME ?= "azure-databricks-operator"
 
 # Default namespace for the installation
 OPERATOR_NAMESPACE ?= "azure-databricks-operator-system"
+
 
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))
@@ -244,4 +252,14 @@ kind-load-image-mock-api: create-kindcluster  docker-build-mock-api install-prom
 
 kind-deploy-mock-api: kind-load-image-mock-api apply-manifests-mock-api
 
-aks-deploy-mock-api: docker-push-mock-api install-prometheus apply-manifests-mock-api
+kind-deploy-locust: create-kindcluster install-prometheus
+	docker build -t ${LOCUST_IMG} -f locust/Dockerfile .
+	kind load docker-image ${LOCUST_IMG} --name ${KIND_CLUSTER_NAME} -v 1
+	cat ./locust/manifests/deployment.yaml | sed "s|locust:latest|${LOCUST_IMG}|" | sed "s|behaviours/scenario1_run_submit_delete.py|${LOCUST_FILE}|" | kubectl apply -f -
+
+format-locust:
+	black .
+
+test-locust: 
+	pip install -e ./locust -q
+	pytest

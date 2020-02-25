@@ -3,7 +3,7 @@
 # Licensed under the MIT License. See https://go.microsoft.com/fwlink/?linkid=2090316 for license information.
 #-------------------------------------------------------------------------------------------------------------
 
-FROM golang:1.12.5-stretch
+FROM golang:1.12-buster
 
 ARG KubectlVersion=v1.16.2
 ARG HelmVersion=v3.0.3
@@ -16,6 +16,10 @@ RUN apt-get update \
     && apt-get -y install --no-install-recommends apt-utils 2>&1 \
     # Verify git, process tools, lsb-release (common in install instructions for CLIs) installed
     && apt-get -y install git procps lsb-release \
+    # Install python
+    && apt-get -y install --no-install-recommends git openssl build-essential ca-certificates nano curl python python3-dev python3-pip python3-venv python3-setuptools python3-wheel\
+    # Install pylint
+    && pip3 --disable-pip-version-check --no-cache-dir install pylint \
     # Install Editor
     && apt-get install vim -y \
     # Clean up
@@ -105,3 +109,8 @@ RUN git clone https://github.com/magicmonty/bash-git-prompt.git ~/.bash-git-prom
     && echo "if [ -f \"$HOME/.bash-git-prompt/gitprompt.sh\" ]; then GIT_PROMPT_ONLY_IN_REPO=1 && source $HOME/.bash-git-prompt/gitprompt.sh; fi" >> "/root/.bashrc"
 
 ENV PATH="/root/.kubectx:${PATH}"
+
+COPY ./locust/requirements.* ./
+COPY ./.devcontainer/scripts/python_venv.sh ./
+
+RUN   bash -f ./python_venv.sh
