@@ -13,7 +13,7 @@ The load testing project for the [azure-databricks-operator](https://github.com/
     - [Extending the supported Databricks functionality](#extending-the-supported-databricks-functionality)
     - [Add load test scenarios](#add-load-test-scenarios)
     - [Adding unit tests](#adding-unit-tests)
-    - [How do I update a dashboard](#how-do-i-update-a-dashboard)
+    - [Updating a dashboard](#updating-a-dashboard)
   - [Prometheus Endpoint](#prometheus-endpoint)
   - [Known issues](#known-issues)
 
@@ -25,7 +25,7 @@ To run the project without the dev container you need:
 
 - Python 3
 - Pip
-- Set up your python environment
+- Python environment set up with:
 
     ```bash
     python -m venv venv
@@ -66,7 +66,7 @@ Tests are written using `pytest`. More information [is available here](https://d
 1. Deploy locust to local KIND instance. Set `LOCUST_FILE` to the  the locust scenario you'd like to run from  `locust/behaviours`.
 
     ```bash
-    make set-kindcluster LOCUST_FILE="behaviours/scenario1_run_submit_delete.py"
+    make run-load-testing LOCUST_FILE="behaviours/scenario1_run_submit_delete.py" LOCUST_ARGS=
     ```
 
 2. Once all services are up, port-forward them for access
@@ -139,7 +139,7 @@ The project is setup to automatically discover any tests under the `locust/test`
 - your test `.py` file follows the naming convention `<something>_test.py`
 - within your test file your methods follow the naming convention `def test_<what you want to test>()`
 
-### How do I update a dashboard
+### Updating a dashboard
 
 Best way I've found is to import the JSON for the board into the Grafana instance, edit it using the UI then export it back to JSON and update the file in the repo.
 

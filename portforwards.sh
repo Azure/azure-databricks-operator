@@ -1,6 +1,7 @@
 #!/bin/bash
 
-ps aux | grep [k]ubectl | awk '{print $2}' | xargs kill
+# Find all already running kubectl port-forwards and kill them
+ps aux | grep [k]ubectl | awk '{print $2}' | xargs kill > /dev/null 2>&1
 
 echo "-------> Open port-forwards"
 kubectl port-forward service/prom-azure-databricks-operator-grafana -n default 8080:80 &

@@ -2,7 +2,7 @@
 timestamp := $(shell /bin/date "+%Y%m%d-%H%M%S")
 
 # Image URL to use all building/pushing image targets
-IMG ?= controller:latest
+IMG ?= controller:${timestamp}
 
 # MockAPI image URL to use all building/pushing image targets
 MOCKAPI_IMG ?= mockapi:${timestamp}
@@ -24,7 +24,6 @@ KIND_CLUSTER_NAME ?= "azure-databricks-operator"
 
 # Default namespace for the installation
 OPERATOR_NAMESPACE ?= "azure-databricks-operator-system"
-
 
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))
@@ -77,31 +76,30 @@ install: manifests
 uninstall: manifests
 	kustomize build config/crd | kubectl delete -f -
 
-# Deploy controller in the configured Kubernetes cluster in ~/.kube/config
-deploy: manifests
-ifeq (0, $(shell kubectl get namespaces 2>&1 | grep ${OPERATOR_NAMESPACE} | wc -l))
-	@echo "creating ${OPERATOR_NAMESPACE} namespace"
-	kubectl create namespace ${OPERATOR_NAMESPACE}
-	make create-dbrickssettings-secret
-else
-	@echo "${OPERATOR_NAMESPACE} namespace exists"
-ifeq (0, $(shell kubectl get secrets --namespace ${OPERATOR_NAMESPACE} | grep dbrickssettings | wc -l))
-	@echo "creating dbrickssettings secret"
-	create-dbrickssettings-secret
-else
-	@echo "dbrickssettings secret exists"
-endif
-endif
+create-namespace:
+	@echo "$(shell tput setaf 10)$(shell tput bold)Creating ${OPERATOR_NAMESPACE} namespace if doesn't exist $(shell tput sgr0)"
+	-kubectl create namespace ${OPERATOR_NAMESPACE}
 
-	cd config/manager && kustomize edit set image controller=${IMG}
-	kustomize build config/default | kubectl apply -f -
-	kustomize build config/default > operatorsetup.yaml
+	# Verify namespace was successfully created
+	kubectl get namespace azure-databricks-operator-system
+
 
 create-dbrickssettings-secret:
-	kubectl --namespace ${OPERATOR_NAMESPACE} \
+	@echo "$(shell tput setaf 10)$(shell tput bold)Creating dbrickssettings secret if doesn't exist $(shell tput sgr0)"
+	-kubectl --namespace ${OPERATOR_NAMESPACE} \
 		create secret generic dbrickssettings \
 		--from-literal=DatabricksHost="${DATABRICKS_HOST}" \
 		--from-literal=DatabricksToken="${DATABRICKS_TOKEN}"
+
+	# Verify secret was created
+	kubectl get secret dbrickssettings -n azure-databricks-operator-system
+
+# Deploy controller in the configured Kubernetes cluster in ~/.kube/config
+deploy: create-namespace create-dbrickssettings-secret manifests
+	@echo "$(shell tput setaf 10)$(shell tput bold)Deploying the operator $(shell tput sgr0)" 
+	cd config/manager && kustomize edit set image controller=${IMG}
+	kustomize build config/default | kubectl apply -f -
+	kustomize build config/default > operatorsetup.yaml
 
 # Generate manifests e.g. CRD, RBAC etc.
 manifests: controller-gen
@@ -125,6 +123,7 @@ generate: controller-gen
 
 # Build the docker image
 docker-build: 
+	@echo "$(shell tput setaf 10)$(shell tput bold)Building docker image for the operator $(shell tput sgr0)" 
 	docker build . -t ${IMG} ${ARGS}
 	@echo "updating kustomize image patch file for manager resource"
 	cd config/manager && kustomize edit set image controller=${IMG}
@@ -150,13 +149,10 @@ CONTROLLER_GEN=$(shell which controller-gen)
 endif
 
 create-kindcluster:
-ifeq (0, $(shell kind get clusters | grep ${KIND_CLUSTER_NAME} | wc -l))
-	@echo "no kind cluster"
-else
-	@echo "kind cluster is running, deleting the current cluster"
-	kind delete cluster --name ${KIND_CLUSTER_NAME}
-endif
-	@echo "creating kind cluster"
+	@echo "$(shell tput setaf 1)$(shell tput bold)Deleting kind cluster if running $(shell tput sgr0)"
+	-kind delete cluster --name ${KIND_CLUSTER_NAME}
+
+	@echo "$(shell tput setaf 10)$(shell tput bold)Creating kind cluster $(shell tput sgr0)"
 	kind create cluster --name ${KIND_CLUSTER_NAME} --config ./kind-cluster.yaml
 
 set-kindcluster: install-kind
@@ -165,21 +161,13 @@ set-kindcluster: install-kind
 	make deploy-kindcluster
 	make install
 	make install-prometheus
-	make deploy-mock-api
-	make deploy-locust
+
+deploy-image-to-kind:
+	@echo "$(shell tput setaf 10)$(shell tput bold)Load operator image into kind $(shell tput sgr0)" 
+	kind load docker-image $(IMG) --loglevel "debug" --name ${KIND_CLUSTER_NAME}
 
 # Deploy controller
-deploy-kindcluster:
-	@echo "deploying controller to cluster"
-	#create image and load it into cluster
-	$(eval newimage := "docker.io/controllertest:$(timestamp)")
-	IMG=$(newimage) make docker-build
-	kind load docker-image $(newimage) --loglevel "debug" --name ${KIND_CLUSTER_NAME}
-
-	#deploy operator
-	IMG=$(newimage) make deploy
-	#change image name back to orignal image name
-	cd config/manager && kustomize edit set image controller="IMAGE_URL"
+deploy-kindcluster: docker-build deploy-image-to-kind deploy
 
 install-kind:
 ifeq (,$(shell which kind))
@@ -218,7 +206,7 @@ else
 endif
 
 install-prometheus:
-	@echo "installing prometheus"
+	@echo "$(shell tput setaf 10)$(shell tput bold)Installing Prometheus in cluster $(shell tput sgr0)" 
 	# install prometheus (and set to monitor all namespaces in our kind cluster)
 	helm install ${PROMETHEUS_NAME} stable/prometheus-operator --set prometheus.prometheusSpec.serviceMonitorSelectorNilUsesHelmValues=false 
 	@echo "prometheus has been installed"
@@ -241,26 +229,41 @@ test-mock-api: lint
 	go test ./mockapi/...
 
 docker-build-mock-api: 
+	@echo "$(shell tput setaf 10)$(shell tput bold)Building mockapi docker image $(shell tput sgr0)" 
+
 	docker build -t ${MOCKAPI_IMG} -f mockapi/Dockerfile .
 
 docker-push-mock-api: docker-build
 	docker push ${IMG}
 
 apply-manifests-mock-api:
+	@echo "$(shell tput setaf 10)$(shell tput bold)Deploying mockapi $(shell tput sgr0)" 
+
 	cat ./mockapi/manifests/deployment.yaml | sed "s|mockapi:latest|${MOCKAPI_IMG}|" | kubectl apply -f -
 	kubectl apply -f ./mockapi/manifests/service.yaml
 
 kind-load-image-mock-api: docker-build-mock-api 
+	@echo "$(shell tput setaf 10)$(shell tput bold)Loading mockapi image into kind $(shell tput sgr0)" 
+
 	kind load docker-image ${MOCKAPI_IMG} --name ${KIND_CLUSTER_NAME} -v 1
 
 deploy-mock-api:kind-load-image-mock-api apply-manifests-mock-api
 
 kind-deploy-mock-api: create-kindcluster install-prometheus deploy-mock-api
 
+# Args passed to locust must be in CSV format as passed in "command" section of yaml doc
+LOCUST_ARGS?=,'--no-web', '-c', '25', '-r', '0.08'
 deploy-locust:
+	@echo "$(shell tput setaf 10)$(shell tput bold)Deploying Locust $(shell tput sgr0)" 
+
+	# Delete locust pod if already running
+	-kubectl delete job locust-loadtest
+
 	docker build -t ${LOCUST_IMG} -f locust/Dockerfile .
 	kind load docker-image ${LOCUST_IMG} --name ${KIND_CLUSTER_NAME} -v 1
-	cat ./locust/manifests/deployment.yaml | sed "s|locust:latest|${LOCUST_IMG}|" | sed "s|behaviours/scenario1_run_submit_delete.py|${LOCUST_FILE}|" | kubectl apply -f -
+
+	# do some magic
+	cat ./locust/manifests/deployment.yaml | sed "s|locust:latest|${LOCUST_IMG}|" | sed "s|behaviours/scenario1_run_submit_delete.py'|${LOCUST_FILE}' ${LOCUST_ARGS}|" | kubectl apply -f -
 
 kind-deploy-locust: create-kindcluster install-prometheus deploy-locust	
 
@@ -273,3 +276,52 @@ test-locust:
 
 port-forward:
 	./portforwards.sh
+
+create-db-mock-secret: create-namespace
+	@echo "$(shell tput setaf 10)$(shell tput bold)Creating mock api databricks secret $(shell tput sgr0)" 
+
+	kubectl --namespace ${OPERATOR_NAMESPACE} \
+			create secret generic dbrickssettings \
+			--from-literal=DatabricksHost="http://databricks-mock-api.databricks-mock-api:8080" \
+			--from-literal=DatabricksToken="dummy"
+
+deploy-cluster-for-load-testing: create-kindcluster install-prometheus create-db-mock-secret deploy-kindcluster deploy-mock-api 
+	@echo "$(shell tput setaf 10)$(shell tput bold)Deploying grafana dashboards $(shell tput sgr0)" 
+
+	# deploy service monitor
+	cat ./config/prometheus/monitor.yaml | sed "s/namespace: system/namespace: ${OPERATOR_NAMESPACE}/g" | kubectl apply -f -
+
+	# deploy graphs
+	kubectl apply -f ./config/prometheus/grafana-dashboard-configmap.yaml
+	kubectl apply -f ./config/prometheus/grafana-dashboard-load-test-configmap.yaml
+	kubectl apply -f ./config/prometheus/grafana-dashboard-mockapi-configmap.yaml
+
+run-load-testing: deploy-cluster-for-load-testing deploy-locust port-forward
+
+	##
+	# python3 ./test.py
+
+	sleep 45
+	curl localhost:9090 > promstats-locust.txt
+
+
+	go get -u github.com/ryotarai/prometheus-query
+	
+	prometheus-query -server http://localhost:9091 -query locust_user_count -start "now" -end "now" | jq .[0].values[0].value	
+	
+	# LOCUST_ARGS?="'--noweb', '-c', '25', '-r', '0.03'"
+
+	# python3 ./test.py ./promstats-lucust.txt
+	
+	# Check stats
+	# while "curl localhost:9090" prom metics "locust_user_count" < 25... wait
+
+	# get prommetrics and extract stats
+	# check against thresholds 
+
+	# pass or fail!
+
+	# prometheus-query -server http://localhost:9091 -query locust_user_count -start "now" -end "now" | jq .[0].values[0].value
+	# # LOCUST_ARGS?=,'--no-web', '-c', '25', '-r', '0.08
+
+
