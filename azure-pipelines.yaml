@@ -56,6 +56,10 @@ jobs:
       sudo chown -R $USER $(System.DefaultWorkingDirectory)
     displayName: Build and Test
 
+  - script: docker run -v $(System.DefaultWorkingDirectory)/.gocache:/go/pkg/ -v /var/run/docker.sock:/var/run/docker.sock -v $(System.DefaultWorkingDirectory):/src --workdir /src --entrypoint /bin/bash --network="host" devcontainer -c "make run-load-testing" 
+    condition: and(succeeded(), ne(variables['Build.SourceBranch'], 'refs/heads/master'))
+    displayName: 'Run load tests'
+
   - script: |
       echo "-------> Saving docker image"
       docker image save -o ./.dockercache/devcontainer.tar devcontainer
@@ -81,9 +85,6 @@ jobs:
       failOnStandardError: false
       inlineScript: az acr build --registry $(ACR_NAME) --image $(IMAGE_NAME) .
 
-  - script: make run-load-testing
-    condition: and(succeeded(), ne(variables['Build.SourceBranch'], 'refs/heads/master'))
-    displayName: 'Run load tests'
 
   - script: |
       ./bin/kustomize build config/default > $(Build.ArtifactStagingDirectory)/setup.yaml
