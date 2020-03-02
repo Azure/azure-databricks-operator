@@ -41,30 +41,44 @@ jobs:
 
   - script: |
       set -e
+      # TESTING --- space check
+      df -h
+
       # Create dockercache directory
       mkdir -p ./.dockercache/
 
       echo "-------> Building devcontainer"
       docker build --cache-from devcontainer:latest -t devcontainer -f ./.devcontainer/Dockerfile .
+    displayName: Build devcontainer image
+ 
+  - script: |
+      # TESTING --- space check
+      df -h
+      echo "-------> Saving docker image"
+      docker image save -o ./.dockercache/devcontainer.tar devcontainer
+    condition: and(succeeded(), ne(variables.DOCKER_CACHE_HIT, 'true'))
+    displayName: Save devcontainer image
+
+  - script: |
+      set -e
+      # TESTING --- space check
+      df -h
+
       # Create a directory for go mod cache
       mkdir -p $(System.DefaultWorkingDirectory)/.gocache
 
       echo "-------> Building code and running tests"
       # Run `make` to build and test the code
-      docker run -v $(System.DefaultWorkingDirectory)/.gocache:/go/pkg/ -v /var/run/docker.sock:/var/run/docker.sock -v $(System.DefaultWorkingDirectory):/src --workdir /src --entrypoint /bin/bash --network="host" --env DATABRICKS_HOST=$(DATABRICKS_HOST) --env DATABRICKS_TOKEN=$(DATABRICKS_TOKEN) devcontainer -c "make test" 
+      docker run -v $(System.DefaultWorkingDirectory)/.gocache:/go/pkg/ -v /var/run/docker.sock:/var/run/docker.sock -v $(System.DefaultWorkingDirectory):/src --workdir /src --entrypoint /bin/bash --network="host" --env DATABRICKS_HOST=$(DATABRICKS_HOST) --env DATABRICKS_TOKEN=$(DATABRICKS_TOKEN) devcontainer -c "make test; make run-load-testing" 
    
       sudo chown -R $USER $(System.DefaultWorkingDirectory)
-    displayName: Build and Test
-
-  - script: docker run -v $(System.DefaultWorkingDirectory)/.gocache:/go/pkg/ -v /var/run/docker.sock:/var/run/docker.sock -v $(System.DefaultWorkingDirectory):/src --workdir /src --entrypoint /bin/bash --network="host" devcontainer -c "make run-load-testing" 
-    condition: and(succeeded(), ne(variables['Build.SourceBranch'], 'refs/heads/master'))
-    displayName: 'Run load tests'
+    condition: succeeded()
+    displayName: Unit, integration and load tests
 
   - script: |
-      echo "-------> Saving docker image"
-      docker image save -o ./.dockercache/devcontainer.tar devcontainer
-    condition: ne(variables.DOCKER_CACHE_HIT, 'true')
-    displayName: Save devcontainer image
+      # TESTING --- space check
+      df -h
+    displayName: Space check
 
   - task: PublishCodeCoverageResults@1
     inputs:
