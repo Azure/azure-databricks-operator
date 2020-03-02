@@ -301,4 +301,4 @@ deploy-cluster-for-load-testing: create-kindcluster install-prometheus create-db
 run-load-testing: deploy-cluster-for-load-testing deploy-locust port-forward
 	@echo "$(shell tput setaf 10)$(shell tput bold)Verify load tests $(shell tput sgr0)" 
 
-	go run verify_load_tests.go
+	go run verify_load_tests/main.go

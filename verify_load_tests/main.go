@@ -9,8 +9,6 @@ import (
 )
 
 func main() {
-	os.Exit(99)
-
 	client, _ := prometheus.NewClient("http://localhost:9091")
 	userCount := getQueryResult(client, "locust_user_count")
 
@@ -54,7 +52,7 @@ func getQueryResult(client *prometheus.Client, query string) float64 {
 		return 0
 	}
 
-	metric, err := resp.Data.Result[0].Values[0].Value()
+	metric, _ := resp.Data.Result[0].Values[0].Value()
 
 	return metric
 }
