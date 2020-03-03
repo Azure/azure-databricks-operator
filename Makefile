@@ -148,9 +148,11 @@ else
 CONTROLLER_GEN=$(shell which controller-gen)
 endif
 
-create-kindcluster:
+delete-kindcluster:
 	@echo "$(shell tput setaf 1)$(shell tput bold)Deleting kind cluster if running $(shell tput sgr0)"
 	-kind delete cluster --name ${KIND_CLUSTER_NAME}
+
+create-kindcluster: delete-kindcluster
 
 	@echo "$(shell tput setaf 10)$(shell tput bold)Creating kind cluster $(shell tput sgr0)"
 	kind create cluster --name ${KIND_CLUSTER_NAME} --config ./kind-cluster.yaml

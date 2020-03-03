@@ -41,8 +41,6 @@ jobs:
 
   - script: |
       set -e
-      # TESTING --- space check
-      df -h
 
       # Create dockercache directory
       mkdir -p ./.dockercache/
@@ -52,8 +50,6 @@ jobs:
     displayName: Build devcontainer image
  
   - script: |
-      # TESTING --- space check
-      df -h
       echo "-------> Saving docker image"
       docker image save -o ./.dockercache/devcontainer.tar devcontainer
     condition: and(succeeded(), ne(variables.DOCKER_CACHE_HIT, 'true'))
@@ -61,8 +57,6 @@ jobs:
 
   - script: |
       set -e
-      # TESTING --- space check
-      df -h
 
       # Create a directory for go mod cache
       mkdir -p $(System.DefaultWorkingDirectory)/.gocache
@@ -74,11 +68,6 @@ jobs:
       sudo chown -R $USER $(System.DefaultWorkingDirectory)
     condition: succeeded()
     displayName: Unit, integration and load tests
-
-  - script: |
-      # TESTING --- space check
-      df -h
-    displayName: Space check
 
   - task: PublishCodeCoverageResults@1
     inputs:
@@ -98,7 +87,6 @@ jobs:
       scriptLocation: inlineScript
       failOnStandardError: false
       inlineScript: az acr build --registry $(ACR_NAME) --image $(IMAGE_NAME) .
-
 
   - script: |
       ./bin/kustomize build config/default > $(Build.ArtifactStagingDirectory)/setup.yaml
