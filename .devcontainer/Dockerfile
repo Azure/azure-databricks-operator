@@ -5,6 +5,9 @@
 
 FROM golang:1.12.5-stretch
 
+ARG KubectlVersion=v1.16.2
+ARG HelmVersion=v3.0.3
+
 # Avoid warnings by switching to noninteractive
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -15,35 +18,6 @@ RUN apt-get update \
     && apt-get -y install git procps lsb-release \
     # Install Editor
     && apt-get install vim -y \
-    # Install gocode-gomod
-    && go get -x -d github.com/stamblerre/gocode 2>&1 \
-    && go build -o gocode-gomod github.com/stamblerre/gocode \
-    && mv gocode-gomod $GOPATH/bin/ \
-    # Install Go tools
-    && go get -u -v \
-        github.com/mdempsky/gocode \
-        github.com/uudashr/gopkgs/cmd/gopkgs \
-        github.com/ramya-rao-a/go-outline \
-        github.com/acroca/go-symbols \
-        github.com/godoctor/godoctor \
-        golang.org/x/tools/cmd/guru \
-        golang.org/x/tools/cmd/gorename \
-        github.com/rogpeppe/godef \
-        github.com/zmb3/gogetdoc \
-        github.com/haya14busa/goplay/cmd/goplay \
-        github.com/sqs/goreturns \
-        github.com/josharian/impl \
-        github.com/davidrjenni/reftools/cmd/fillstruct \
-        github.com/fatih/gomodifytags \
-        github.com/cweill/gotests/... \
-        golang.org/x/tools/cmd/goimports \
-        golang.org/x/lint/golint \
-        golang.org/x/tools/gopls \
-        github.com/alecthomas/gometalinter \
-        honnef.co/go/tools/... \
-        github.com/golangci/golangci-lint/cmd/golangci-lint \
-        github.com/mgechev/revive \
-        github.com/derekparker/delve/cmd/dlv 2>&1 \
     # Clean up
     && apt-get autoremove -y \
     && apt-get clean -y \
@@ -57,11 +31,31 @@ RUN apt-get update \
     && apt-get update \
     && apt-get install -y docker-ce-cli \
     # Install kubectl
-    && curl -sSL -o /usr/local/bin/kubectl https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl \
+    && curl -sSL -o /usr/local/bin/kubectl https://storage.googleapis.com/kubernetes-release/release/$KubectlVersion/bin/linux/amd64/kubectl \
     && chmod +x /usr/local/bin/kubectl \
     # Install Helm
-    && curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash \
+    && curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | DESIRED_VERSION=$HelmVersion bash \
     && helm repo add stable https://kubernetes-charts.storage.googleapis.com/ 
+
+
+# Enable go modules
+ENV GO111MODULE=on
+
+# Install Go tools
+RUN \
+    # --> Delve for debugging
+    go get github.com/go-delve/delve/cmd/dlv@v1.3.2 \
+    # --> Go language server
+    && go get golang.org/x/tools/gopls@v0.2.1 \
+    # --> Go symbols and outline for go to symbol support and test support 
+    && go get github.com/acroca/go-symbols@v0.1.1 && go get github.com/ramya-rao-a/go-outline@7182a932836a71948db4a81991a494751eccfe77 \
+    # --> GolangCI-lint
+    && curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sed 's/tar -/tar --no-same-owner -/g' | sh -s -- -b $(go env GOPATH)/bin \
+    # --> Install Ginkgo
+    && go get github.com/onsi/ginkgo/ginkgo@v1.11.0 \
+    # --> Install junit converter
+    && go get github.com/jstemmer/go-junit-report@v0.9.1 \
+    && rm -rf /go/src/ && rm -rf /go/pkg
 
 # Enable bash completion
 RUN apt-get update && apt install -y bash-completion && echo "source /etc/bash_completion" >> "/root/.bashrc"
@@ -74,8 +68,6 @@ RUN wget https://github.com/robbyrussell/oh-my-zsh/raw/master/tools/install.sh -
 RUN curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh| sh -s -- -b $(go env GOPATH)/bin v1.21.0
 
 ENV PATH="/usr/local/kubebuilder/bin:${PATH}"
-
-ENV GO111MODULE=on
 
 # Set the default shell to bash instead of sh
 ENV DATABRICKS_HOST ""
