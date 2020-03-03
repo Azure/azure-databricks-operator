@@ -101,3 +101,5 @@ kubectl --namespace azure-databricks-operator-system get pods
 # pull the logs
 kubectl --namespace azure-databricks-operator-system logs -f [name_of_the_operator_pod]
 ```
+
+To further aid debugging diagnostic metrics are produced by the operator. Please review [the metrics page](metrics.md) for further information
