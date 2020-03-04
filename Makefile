@@ -279,7 +279,7 @@ test-locust:
 port-forward:
 	@echo "$(shell tput setaf 10)$(shell tput bold)Set up port-forwarding $(shell tput sgr0)" 
 
-	./portforwards.sh
+	./hack/portforwards.sh
 
 create-db-mock-secret: create-namespace
 	@echo "$(shell tput setaf 10)$(shell tput bold)Creating mock api databricks secret $(shell tput sgr0)" 
@@ -303,4 +303,4 @@ deploy-cluster-for-load-testing: create-kindcluster install-prometheus create-db
 run-load-testing: deploy-cluster-for-load-testing deploy-locust port-forward
 	@echo "$(shell tput setaf 10)$(shell tput bold)Verify load tests $(shell tput sgr0)" 
 
-	go run verify_load_tests/main.go
+	go run hack/verify_load_tests/main.go
