@@ -1,2 +1,4 @@
+# During build .dockercache and .gocache download locations used to speed up the build
+# as these are large they are ignored to avoid the build copying them into docker context
 .dockercache
 .gocache
