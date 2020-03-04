@@ -83,6 +83,10 @@ jobs:
       failOnStandardError: false
       inlineScript: az acr build --registry $(ACR_NAME) --image $(IMAGE_NAME) .
 
+  - script: make run-load-testing
+    condition: and(succeeded(), ne(variables['Build.SourceBranch'], 'refs/heads/master'))
+    displayName: 'Run load tests'
+
   - script: |
       ./bin/kustomize build config/default > $(Build.ArtifactStagingDirectory)/setup.yaml
       set -x

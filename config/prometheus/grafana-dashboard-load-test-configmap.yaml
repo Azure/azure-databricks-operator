@@ -23,7 +23,7 @@ data:
       "editable": true,
       "gnetId": null,
       "graphTooltip": 1,
-      "iteration": 1576783033807,
+      "iteration": 1580822557510,
       "links": [],
       "panels": [
         {
@@ -2138,7 +2138,7 @@ data:
             "x": 0,
             "y": 54
           },
-          "id": 50,
+          "id": 53,
           "legend": {
             "avg": false,
             "current": false,
@@ -2226,7 +2226,7 @@ data:
           "dashLength": 10,
           "dashes": false,
           "datasource": null,
-          "description": "Run duration (as returned by Databricks API)",
+          "description": "Run duration (from API) and the time from Run start time (as per API) to time the operator reconciles the terminated state and the run duration (from API)",
           "fill": 1,
           "fillGradient": 0,
           "gridPos": {
@@ -2234,94 +2234,6 @@ data:
             "w": 8,
             "x": 16,
             "y": 60
-          },
-          "id": 46,
-          "legend": {
-            "avg": false,
-            "current": false,
-            "max": false,
-            "min": false,
-            "show": true,
-            "total": false,
-            "values": false
-          },
-          "lines": true,
-          "linewidth": 1,
-          "nullPointMode": "null",
-          "options": {
-            "dataLinks": []
-          },
-          "percentage": false,
-          "pointradius": 2,
-          "points": false,
-          "renderer": "flot",
-          "seriesOverrides": [],
-          "spaceLength": 10,
-          "stack": false,
-          "steppedLine": false,
-          "targets": [
-            {
-              "expr": "rate(databricks_run_duration_seconds_sum[1m])/rate(databricks_run_duration_seconds_count[1m])",
-              "legendFormat": "mean_duration-{{life_cycle_state}}",
-              "refId": "A"
-            }
-          ],
-          "thresholds": [],
-          "timeFrom": null,
-          "timeRegions": [],
-          "timeShift": null,
-          "title": "Run Duration",
-          "tooltip": {
-            "shared": true,
-            "sort": 0,
-            "value_type": "individual"
-          },
-          "type": "graph",
-          "xaxis": {
-            "buckets": null,
-            "mode": "time",
-            "name": null,
-            "show": true,
-            "values": []
-          },
-          "yaxes": [
-            {
-              "decimals": 2,
-              "format": "s",
-              "label": "",
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            },
-            {
-              "format": "short",
-              "label": null,
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            }
-          ],
-          "yaxis": {
-            "align": false,
-            "alignLevel": null
-          }
-        },
-        {
-          "aliasColors": {},
-          "bars": false,
-          "dashLength": 10,
-          "dashes": false,
-          "datasource": null,
-          "description": "Time from Run start time (as per API) to time the operator reconciles the terminated state",
-          "fill": 1,
-          "fillGradient": 0,
-          "gridPos": {
-            "h": 8,
-            "w": 8,
-            "x": 16,
-            "y": 68
           },
           "id": 48,
           "legend": {
@@ -2350,7 +2262,100 @@ data:
           "targets": [
             {
               "expr": "rate(databricks_run_time_to_detect_finished_seconds_sum[1m])/rate(databricks_run_time_to_detect_finished_seconds_count[1m])",
-              "legendFormat": "mean_time-{{life_cycle_state}}",
+              "legendFormat": "time to operator complete - {{life_cycle_state}}",
+              "refId": "A"
+            },
+            {
+              "expr": "rate(databricks_run_duration_seconds_sum[1m])/rate(databricks_run_duration_seconds_count[1m])",
+              "legendFormat": "run duration - {{life_cycle_state}}",
+              "refId": "B"
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeRegions": [],
+          "timeShift": null,
+          "title": "Run duration",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "decimals": 2,
+              "format": "s",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ],
+          "yaxis": {
+            "align": false,
+            "alignLevel": null
+          }
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": null,
+          "description": "Latency in operator.\nDefined as the difference between the time from Run start time (as per API) to time the operator reconciles the terminated state and the run duration (from API)",
+          "fill": 1,
+          "fillGradient": 0,
+          "gridPos": {
+            "h": 8,
+            "w": 8,
+            "x": 16,
+            "y": 68
+          },
+          "id": 52,
+          "legend": {
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "show": true,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 1,
+          "nullPointMode": "null",
+          "options": {
+            "dataLinks": []
+          },
+          "percentage": false,
+          "pointradius": 2,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "expr": "rate(databricks_run_time_to_detect_finished_seconds_sum[1m])/rate(databricks_run_time_to_detect_finished_seconds_count[1m]) - rate(databricks_run_duration_seconds_sum[1m])/rate(databricks_run_duration_seconds_count[1m])",
+              "legendFormat": "operator latency - {{life_cycle_state}}",
               "refId": "A"
             }
           ],
@@ -2358,7 +2363,7 @@ data:
           "timeFrom": null,
           "timeRegions": [],
           "timeShift": null,
-          "title": "Time to Run Completion",
+          "title": "Operator run latency",
           "tooltip": {
             "shared": true,
             "sort": 0,

@@ -275,6 +275,8 @@ test-locust:
 	pytest
 
 port-forward:
+	@echo "$(shell tput setaf 10)$(shell tput bold)Set up port-forwarding $(shell tput sgr0)" 
+
 	./portforwards.sh
 
 create-db-mock-secret: create-namespace
@@ -297,31 +299,6 @@ deploy-cluster-for-load-testing: create-kindcluster install-prometheus create-db
 	kubectl apply -f ./config/prometheus/grafana-dashboard-mockapi-configmap.yaml
 
 run-load-testing: deploy-cluster-for-load-testing deploy-locust port-forward
+	@echo "$(shell tput setaf 10)$(shell tput bold)Verify load tests $(shell tput sgr0)" 
 
-	##
-	# python3 ./test.py
-
-	sleep 45
-	curl localhost:9090 > promstats-locust.txt
-
-
-	go get -u github.com/ryotarai/prometheus-query
-	
-	prometheus-query -server http://localhost:9091 -query locust_user_count -start "now" -end "now" | jq .[0].values[0].value	
-	
-	# LOCUST_ARGS?="'--noweb', '-c', '25', '-r', '0.03'"
-
-	# python3 ./test.py ./promstats-lucust.txt
-	
-	# Check stats
-	# while "curl localhost:9090" prom metics "locust_user_count" < 25... wait
-
-	# get prommetrics and extract stats
-	# check against thresholds 
-
-	# pass or fail!
-
-	# prometheus-query -server http://localhost:9091 -query locust_user_count -start "now" -end "now" | jq .[0].values[0].value
-	# # LOCUST_ARGS?=,'--no-web', '-c', '25', '-r', '0.08
-
-
+	go run verify_load_tests.go

@@ -10,6 +10,7 @@ require (
 	github.com/onsi/ginkgo v1.10.3
 	github.com/onsi/gomega v1.7.0
 	github.com/prometheus/client_golang v0.9.2
+	github.com/ryotarai/prometheus-query v0.0.0-20181009101647-ea75bc6bc1b1
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/stephanos/clock v0.0.0-20161224195152-e4ec0ab5053e
 	github.com/stretchr/testify v1.4.0
