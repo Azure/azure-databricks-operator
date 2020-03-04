@@ -102,3 +102,11 @@ jobs:
     inputs:
       pathtoPublish: $(Build.ArtifactStagingDirectory)
       artifactName: drop
+
+  - script: |	
+      # TESTING --- space check	
+      df -h	      
+      docker stop `docker ps -qa`
+      docker system prune -f --volumes -a
+      df -h	
+    displayName: Clean up docker
