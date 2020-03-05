@@ -253,8 +253,6 @@ deploy-mock-api:kind-load-image-mock-api apply-manifests-mock-api
 
 kind-deploy-mock-api: create-kindcluster install-prometheus deploy-mock-api
 
-# Args passed to locust must be in CSV format as passed in "command" section of yaml doc
-LOCUST_ARGS?=,'--no-web', '-c', '25', '-r', '0.08'
 deploy-locust:
 	@echo "$(shell tput setaf 10)$(shell tput bold)Deploying Locust $(shell tput sgr0)" 
 
@@ -302,5 +300,10 @@ deploy-cluster-for-load-testing: create-kindcluster install-prometheus create-db
 
 run-load-testing: deploy-cluster-for-load-testing deploy-locust port-forward
 	@echo "$(shell tput setaf 10)$(shell tput bold)Verify load tests $(shell tput sgr0)" 
-
 	go run hack/verify_load_tests/main.go
+
+run-load-testing-auto-start: set-auto-start run-load-testing 
+
+set-auto-start:
+	# Args passed to locust must be in CSV format as passed in "command" section of yaml doc
+	$(eval LOCUST_ARGS=,'--no-web', '-c', '25', '-r', '0.08') 	

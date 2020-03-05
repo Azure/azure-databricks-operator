@@ -63,21 +63,16 @@ Tests are written using `pytest`. More information [is available here](https://d
 
 > Before proceeding make sure your container or environment is up and running
 
-1. Deploy locust to local KIND instance. Set `LOCUST_FILE` to the  the locust scenario you'd like to run from  `locust/behaviours`.
+1. Deploy load testing to local KIND instance and port-forward.
+   - Set `LOCUST_FILE` to the the locust scenario you'd like to run from `locust/behaviours`. Defaults to `"behaviours/scenario1_run_submit_delete.py"`
 
     ```bash
-    make run-load-testing LOCUST_FILE="behaviours/scenario1_run_submit_delete.py" LOCUST_ARGS=
+    make run-load-testing LOCUST_FILE="behaviours/scenario1_run_submit_delete.py"
     ```
 
-2. Once all services are up, port-forward them for access
+2. Navigate to <http://localhost:8089> to start the load test from the locust web UI
 
-    ```bash
-    make port-forward  
-    ```
-
-3. Navigate to http://localhost:8089 to start the load test from the locust web UI
-
-4. Navigate to http://localhost:8080 with the below credentials to view the Grafana dashboards
+3. Navigate to <http://localhost:8080> with the below credentials to view the Grafana dashboards
 
     ```text
     Username: admin
@@ -85,14 +80,6 @@ Tests are written using `pytest`. More information [is available here](https://d
     ```
 
 > Note: If one of these port-forwards stops working use `ps aux | grep kubectl` and look for the process id of the one thats broken then use `kill 21283` (your id in there) to stop it. Then rerun the port-forward command
-
-Good to know:
-
-- Change the load test scenario file after deploying with:
-
-    ```bash
-    locust -f behaviours/<my_locust_file>.py
-    ```
 
 #### Set error conditions
 
