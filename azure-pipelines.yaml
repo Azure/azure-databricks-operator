@@ -91,10 +91,6 @@ jobs:
       summaryFileLocation: $(System.DefaultWorkingDirectory)/**/cover.xml
       reportDirectory: $(System.DefaultWorkingDirectory)/**/cover
 
-  - script: docker build -t $(IMAGE_NAME) .  # add options to this command to meet your needs
-    condition: and(succeeded(), nq(variables['Build.SourceBranch'], 'refs/heads/master'))
-    displayName: 'Docker build'
-
   - task: AzureCLI@1
     condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
     displayName: Push to Azure Container Registry
