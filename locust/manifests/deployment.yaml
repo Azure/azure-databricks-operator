@@ -21,27 +21,31 @@ spec:
     spec:
       affinity:
         podAntiAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-          - labelSelector:
-              matchExpressions:
-                - key: control-plane
-                  operator: In
-                  values:
-                  - controller-manager
-            topologyKey: kubernetes.io/hostname
-            namespaces:
-              - azure-databricks-operator-system
-              - default
-          - labelSelector:
-              matchExpressions:
-                - key: app
-                  operator: In
-                  values:
-                  - databricks-mock-api
-            topologyKey: kubernetes.io/hostname
-            namespaces:
-              - azure-databricks-operator-system
-              - default
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100  
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                  - key: control-plane
+                    operator: In
+                    values:
+                    - controller-manager
+              topologyKey: kubernetes.io/hostname
+              namespaces:
+                - azure-databricks-operator-system
+                - default
+          - weight: 99  
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                  - key: app
+                    operator: In
+                    values:
+                    - databricks-mock-api
+              topologyKey: kubernetes.io/hostname
+              namespaces:
+                - azure-databricks-operator-system
+                - default
       containers:
       - name: loadtestrunner
         image: locust:latest

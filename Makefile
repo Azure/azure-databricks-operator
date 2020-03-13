@@ -155,7 +155,7 @@ delete-kindcluster:
 create-kindcluster: delete-kindcluster
 
 	@echo "$(shell tput setaf 10)$(shell tput bold)Creating kind cluster $(shell tput sgr0)"
-	kind create cluster --name ${KIND_CLUSTER_NAME} --config ./kind-cluster.yaml
+	kind create cluster --name ${KIND_CLUSTER_NAME}
 
 set-kindcluster: install-kind
 	make create-kindcluster
@@ -290,7 +290,7 @@ create-db-mock-secret: create-namespace
 			--from-literal=DatabricksHost="http://databricks-mock-api.databricks-mock-api:8080" \
 			--from-literal=DatabricksToken="dummy"
 
-deploy-cluster-for-load-testing: create-kindcluster install-prometheus create-db-mock-secret deploy-kindcluster deploy-mock-api 
+deploy-cluster-for-load-testing: create-kindcluster install-prometheus create-db-mock-secret deploy-kindcluster deploy-mock-api deploy-locust 
 	@echo "$(shell tput setaf 10)$(shell tput bold)Deploying grafana dashboards $(shell tput sgr0)" 
 
 	# deploy service monitor
@@ -301,11 +301,11 @@ deploy-cluster-for-load-testing: create-kindcluster install-prometheus create-db
 	kubectl apply -f ./config/prometheus/grafana-dashboard-load-test-configmap.yaml
 	kubectl apply -f ./config/prometheus/grafana-dashboard-mockapi-configmap.yaml
 
-run-load-testing: deploy-cluster-for-load-testing deploy-locust port-forward
-	@echo "$(shell tput setaf 10)$(shell tput bold)Verify load tests $(shell tput sgr0)" 
-	go run hack/verify_load_tests/main.go
+run-load-testing: deploy-cluster-for-load-testing port-forward
 
 run-load-testing-auto-start: set-auto-start run-load-testing 
+	@echo "$(shell tput setaf 10)$(shell tput bold)Verify load tests $(shell tput sgr0)" 
+	go run hack/verify_load_tests/main.go
 
 set-auto-start:
 	# Args passed to locust must be in CSV format as passed in "command" section of yaml doc

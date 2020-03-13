@@ -3,7 +3,10 @@
 # Licensed under the MIT License. See https://go.microsoft.com/fwlink/?linkid=2090316 for license information.
 #-------------------------------------------------------------------------------------------------------------
 
-FROM golang:1.12-stretch as builder
+FROM golang:1.12-alpine3.9 as builder
+
+# Install certs, git, and mercurial
+RUN apk add --no-cache ca-certificates git mercurial
 
 WORKDIR /workspace
 
