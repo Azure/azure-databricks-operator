@@ -43,13 +43,16 @@ jobs:
       # Create dockercache directory
       mkdir -p ./.dockercache/
 
-      # Copy the makefile into the container folder
+      # Copy the makefile into the devcontainer folder
       cp ./Makefile ./.devcontainer/Makefile
 
       echo "-------> Building devcontainer"
       time docker build --cache-from devcontainer:latest -t devcontainer -f ./.devcontainer/Dockerfile ./.devcontainer
       # Create a directory for go mod cache
       mkdir -p $(System.DefaultWorkingDirectory)/.gocache
+      
+      # Remove the copy of the makefile in the devcontainer folder to keep the cache key valid
+      rm ./.devcontainer/Makefile
 
       echo "-------> Building code and running tests"
       # Run `make` to build and test the code
