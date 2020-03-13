@@ -1,4 +1,4 @@
-@baseURL=http://localhost:8080/api/
+@baseURL=http://localhost:8085/api/
 # Get list of empty jobs
 # @name getJobList
 GET {{baseURL}}api/2.0/jobs/list

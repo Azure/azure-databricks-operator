@@ -1,4 +1,4 @@
-@baseURL=http://localhost:8080/api/
+@baseURL=http://localhost:8085/api/
 # Get list of empty runs
 # @name getRunList
 GET {{baseURL}}2.0/jobs/runs/list

@@ -1,4 +1,4 @@
-@baseURL=http://localhost:8080/
+@baseURL=http://localhost:8085/
 
 # Get config values
 # @name getConfig
