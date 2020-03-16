@@ -63,8 +63,8 @@ spec:
             
           resources:
             limits:
-              memory: '4G'
-              cpu: '1600m' # If running on D2v2 instance can't use 2cpu as some is reserved for system pods so use slightly less than 2
+              memory: '2G'
+              cpu: '600m' # If running on D2v2 instance can't use 2cpu as some is reserved for system pods so use slightly less than 2
           ports:
             - containerPort: 8085
               name: api
