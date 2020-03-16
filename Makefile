@@ -309,6 +309,6 @@ run-load-testing-auto-start: set-auto-start run-load-testing
 
 set-auto-start:
 	# Args passed to locust must be in CSV format as passed in "command" section of yaml doc
-	$(eval LOCUST_ARGS=,'--no-web', '-c', '25', '-r', '0.08') 	
+	$(eval LOCUST_ARGS=,'--no-web', '-c', '25', '-r', '0.08', '--run-time', '7m') 	
 
 test-local: test-locust test-mock-api run-load-testing-auto-start
