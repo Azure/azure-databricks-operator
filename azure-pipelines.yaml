@@ -35,7 +35,7 @@ jobs:
 
   - script: |
       docker info
-      docker load -i ./dockercache/devcontainer.tar
+      docker load -i ./.dockercache/devcontainer.tar
     condition: eq(variables.DOCKER_CACHE_HIT, 'true')
     displayName: Load cached devcontainer image
 
