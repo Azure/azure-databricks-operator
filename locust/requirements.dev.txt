@@ -1,0 +1,5 @@
+wheel
+pytest
+black
+flake8
+pytest-mock

@@ -14,8 +14,7 @@
 
 .env
 
-!/bin
-/bin/manager
+/bin
 cmd/manager/__debug_bin
 
 .env

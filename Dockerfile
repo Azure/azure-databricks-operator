@@ -1,5 +1,8 @@
 # Build the manager binary
-FROM golang:1.12.5 as builder
+FROM golang:1.12.5-alpine3.9 as builder
+
+# Install certs, git, and mercurial
+RUN apk add --no-cache ca-certificates git mercurial
 
 WORKDIR /workspace
 # Copy the Go Modules manifests

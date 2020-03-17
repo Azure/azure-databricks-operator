@@ -1,0 +1,33 @@
+@baseURL=http://localhost:8085/
+
+# Get config values
+# @name getConfig
+GET {{baseURL}}config
+
+###
+
+# Set config values
+# @name setConfig
+PUT {{baseURL}}config
+content-type: application/json
+
+{
+    "DATABRICKS_MOCK_API_LATENCY_MILLISECONDS_SLOW_REQUEST_MAX": 1000,
+    "DATABRICKS_MOCK_API_LATENCY_MILLISECONDS_SLOW_REQUEST_MIN": 30000,
+    "DATABRICKS_MOCK_API_LATENCY_MILLISECONDS_FAST_REQUEST_MAX": 200,
+    "DATABRICKS_MOCK_API_LATENCY_MILLISECONDS_FAST_REQUEST_MIN": 500,
+    "DATABRICKS_MOCK_API_RATE_LIMIT": 30,
+    "DATABRICKS_MOCK_API_ERROR_500_PROBABILITY": 10
+}
+
+
+###
+
+# Set config values
+# @name patchConfig
+PATCH {{baseURL}}config
+content-type: application/json
+
+{
+    "DATABRICKS_MOCK_API_ERROR_500_PROBABILITY": 10
+}

@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: databricks-mock-api
+  namespace: databricks-mock-api
+  labels:
+    app: databricks-mock-api
+spec:
+  selector:
+    app: databricks-mock-api
+  ports:
+  - port: 8080
+    targetPort: api
+    name: api
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: databricks-mockapi-servicemonitor
+  namespace: databricks-mock-api
+  labels:
+    app: databricks-mock-api
+spec:
+  selector:
+    matchLabels:
+      app: databricks-mock-api
+  namespaceSelector:
+    matchNames:
+      - databricks-mock-api 
+  endpoints:
+  - port: api
+    path: /metrics
