@@ -5,7 +5,7 @@ metadata:
     grafana_dashboard: "1"
   name: azure-databricks-operator-dashboard
 data:
-  dash.json: |-
+  operator-dash.json: |-
     {
         "annotations": {
           "list": [

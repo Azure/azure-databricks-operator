@@ -1,0 +1,70 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: databricks-mock-api
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: databricks-mock-api
+  namespace: databricks-mock-api
+spec:
+  selector:
+    matchLabels:
+      app: databricks-mock-api
+  template:
+    metadata:
+      labels:
+        app: databricks-mock-api
+    spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100  
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: control-plane
+                      operator: In
+                      values:
+                        - controller-manager
+                topologyKey: kubernetes.io/hostname
+                namespaces:
+                - azure-databricks-operator-system
+            - weight: 99  
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app
+                      operator: In
+                      values:
+                        - locust-loadtest
+                topologyKey: kubernetes.io/hostname
+      containers:
+        - name: databricks-mock-api
+          image: mockapi:latest
+          env:
+            - name: DATABRICKS_MOCK_API_LATENCY_MILLISECONDS_SLOW_REQUEST_MIN
+              value: '200'
+            - name: DATABRICKS_MOCK_API_LATENCY_MILLISECONDS_SLOW_REQUEST_MAX
+              value: '1000'
+            - name: DATABRICKS_MOCK_API_LATENCY_MILLISECONDS_FAST_REQUEST_MIN
+              value: '50'
+            - name: DATABRICKS_MOCK_API_LATENCY_MILLISECONDS_FAST_REQUEST_MAX
+              value: '200'  
+            - name: DATABRICKS_MOCK_API_RATE_LIMIT
+              value: '200'
+            - name: DATABRICKS_MOCK_API_ERROR_500_PROBABILITY
+              value: '0'
+            - name: DATABRICKS_MOCK_API_ERROR_XML_RESPONSE_PROBABILITY
+              value: '0'
+            - name: DATABRICKS_MOCK_API_ERROR_SINKHOLE_PROBABILITY
+              value: '0'
+            
+          resources:
+            limits:
+              memory: '2G'
+              cpu: '600m' # If running on D2v2 instance can't use 2cpu as some is reserved for system pods so use slightly less than 2
+          ports:
+            - containerPort: 8085
+              name: api
