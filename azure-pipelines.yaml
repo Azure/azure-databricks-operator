@@ -40,39 +40,56 @@ jobs:
     displayName: Load cached devcontainer image
 
   - script: |
+      set -e
+
       # Create dockercache directory
       mkdir -p ./.dockercache/
 
-      # Copy the makefile into the container folder
-      cp ./Makefile ./.devcontainer/Makefile
-
       echo "-------> Building devcontainer"
-      time docker build --cache-from devcontainer:latest -t devcontainer -f ./.devcontainer/Dockerfile ./.devcontainer
+      docker build --cache-from devcontainer:latest -t devcontainer -f ./.devcontainer/Dockerfile .
+    displayName: Build devcontainer image
+ 
+  - script: |
+      echo "-------> Saving docker image"
+      docker image save -o ./.dockercache/devcontainer.tar devcontainer
+    condition: and(succeeded(), ne(variables.DOCKER_CACHE_HIT, 'true'))
+    displayName: Save devcontainer image
+
+  - script: |
+      set -e
+
       # Create a directory for go mod cache
       mkdir -p $(System.DefaultWorkingDirectory)/.gocache
 
       echo "-------> Building code and running tests"
-      # Run `make` to build and test the code
-      time docker run -v $(System.DefaultWorkingDirectory)/.gocache:/go/pkg/ -v /var/run/docker.sock:/var/run/docker.sock -v $(System.DefaultWorkingDirectory):/src --workdir /src --entrypoint /bin/bash --network="host" --env DATABRICKS_HOST=$(DATABRICKS_HOST) --env DATABRICKS_TOKEN=$(DATABRICKS_TOKEN) devcontainer -c "make test" 
+      # Commands to execute in the devcontainer
+      COMMANDS="source ~/.bashrc && make test-local"
+      # Run the dev container
+      docker run -v $(System.DefaultWorkingDirectory)/.gocache:/go/pkg/ -v /var/run/docker.sock:/var/run/docker.sock -v $(System.DefaultWorkingDirectory):/src --workdir /src --entrypoint /bin/bash --network="host" devcontainer -c "$COMMANDS" 
    
       sudo chown -R $USER $(System.DefaultWorkingDirectory)
-    displayName: Build and Test
+    condition: succeeded()
+    displayName: Unit and load tests
 
   - script: |
-      echo "-------> Saving docker image"
-      time docker image save -o ./.dockercache/devcontainer.tar devcontainer
-    condition: ne(variables.DOCKER_CACHE_HIT, 'true')
-    displayName: Save devcontainer image
+      set -e
+
+      echo "-------> Run integration tests"
+      # Run `make` to build and test the code
+      docker run -v $(System.DefaultWorkingDirectory)/.gocache:/go/pkg/ -v /var/run/docker.sock:/var/run/docker.sock -v $(System.DefaultWorkingDirectory):/src --workdir /src --entrypoint /bin/bash --network="host" --env DATABRICKS_HOST=$(DATABRICKS_HOST) --env DATABRICKS_TOKEN=$(DATABRICKS_TOKEN) devcontainer -c "make test" 
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+    displayName: Integration tests
+
+  - script: |	
+      docker stop `docker ps -qa`
+      docker system prune -f --volumes -a
+    displayName: Clean up docker
 
   - task: PublishCodeCoverageResults@1
     inputs:
       codeCoverageTool: Cobertura 
       summaryFileLocation: $(System.DefaultWorkingDirectory)/**/cover.xml
       reportDirectory: $(System.DefaultWorkingDirectory)/**/cover
-
-  - script: docker build -t $(IMAGE_NAME) .  # add options to this command to meet your needs
-    condition: and(succeeded(), ne(variables['Build.SourceBranch'], 'refs/heads/master'))
-    displayName: 'Docker build'
 
   - task: AzureCLI@1
     condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
