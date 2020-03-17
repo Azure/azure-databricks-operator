@@ -2,3 +2,4 @@
 # as these are large they are ignored to avoid the build copying them into docker context
 .dockercache
 .gocache
+.git
