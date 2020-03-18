@@ -25,6 +25,9 @@ KIND_CLUSTER_NAME ?= "azure-databricks-operator"
 # Default namespace for the installation
 OPERATOR_NAMESPACE ?= "azure-databricks-operator-system"
 
+# Default namespace for the installation
+OPERATOR_REPLICA_COUNT ?= 2
+
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))
 GOBIN=$(shell go env GOPATH)/bin
@@ -97,7 +100,7 @@ create-dbrickssettings-secret:
 # Deploy controller in the configured Kubernetes cluster in ~/.kube/config
 deploy: create-namespace create-dbrickssettings-secret manifests
 	@echo "$(shell tput setaf 10)$(shell tput bold)Deploying the operator $(shell tput sgr0)" 
-	cd config/manager && kustomize edit set image controller=${IMG}
+	cd config/manager && kustomize edit set image controller=${IMG} && kustomize edit set replicas controller-manager=${OPERATOR_REPLICA_COUNT}
 	kustomize build config/default | kubectl apply -f -
 	kustomize build config/default > operatorsetup.yaml
 
@@ -127,6 +130,7 @@ docker-build:
 	docker build . -t ${IMG} ${ARGS}
 	@echo "updating kustomize image patch file for manager resource"
 	cd config/manager && kustomize edit set image controller=${IMG}
+
 # Push the docker image
 docker-push:
 	docker push ${IMG}
@@ -309,6 +313,9 @@ run-load-testing-auto-start: set-auto-start run-load-testing
 
 set-auto-start:
 	# Args passed to locust must be in CSV format as passed in "command" section of yaml doc
-	$(eval LOCUST_ARGS=,'--no-web', '-c', '25', '-r', '0.08', '--run-time', '7m') 	
+	$(eval LOCUST_ARGS=,'--no-web', '-c', '25', '-r', '0.08', '--run-time', '7m') 
+	# Set operator replica count to be 1 to be able to run the load test in the build pipeline
+	$(eval OPERATOR_REPLICA_COUNT=1) 
+
 
 test-local: test-locust test-mock-api run-load-testing-auto-start
