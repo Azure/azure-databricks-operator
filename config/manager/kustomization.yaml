@@ -5,3 +5,6 @@ kind: Kustomization
 images:
 - name: controller
   newName: IMAGE_URL
+replicas:
+- count: 2
+  name: controller-manager

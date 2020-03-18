@@ -16,12 +16,24 @@ spec:
   selector:
     matchLabels:
       control-plane: controller-manager
-  replicas: 1
+  replicas: 2
   template:
     metadata:
       labels:
         control-plane: controller-manager
     spec:
+      affinity:
+          podAntiAffinity:
+            preferredDuringSchedulingIgnoredDuringExecution: 
+            - weight: 100  
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                  - key: control-plane 
+                    operator: In 
+                    values:
+                    - controller-manager
+                topologyKey: kubernetes.io/hostname
       containers:
       - command:
         - /manager
