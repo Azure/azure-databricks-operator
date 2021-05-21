@@ -30,16 +30,22 @@ import (
 	"reflect"
 
 	databricksv1alpha1 "github.com/microsoft/azure-databricks-operator/api/v1alpha1"
-	dbmodels "github.com/xinsnake/databricks-sdk-golang/azure/models"
+	dbhttpmodels "github.com/polar-rams/databricks-sdk-golang/azure/clusters/httpmodels"
+	dbmodels "github.com/polar-rams/databricks-sdk-golang/azure/clusters/models"
+	dbjobsmodels "github.com/polar-rams/databricks-sdk-golang/azure/jobs/models"
 )
 
 func (r *DclusterReconciler) submit(instance *databricksv1alpha1.Dcluster) error {
 	r.Log.Info(fmt.Sprintf("Create cluster %s", instance.GetName()))
 
-	instance.Spec.ClusterName = instance.GetName()
+	// ClusterName field was removed from Databricks API (https://docs.databricks.com/dev-tools/api/latest/jobs.html#newcluster)
+	//instance.Spec.ClusterName = instance.GetName()
 
 	if instance.Status != nil && instance.Status.ClusterInfo != nil && instance.Status.ClusterInfo.ClusterID != "" {
-		err := r.APIClient.Clusters().PermanentDelete(instance.Status.ClusterInfo.ClusterID)
+		permanentDeleteReq := dbhttpmodels.PermanentDeleteReq{
+			ClusterID: instance.Status.ClusterInfo.ClusterID,
+		}
+		err := r.APIClient.Clusters().PermanentDelete(permanentDeleteReq)
 		if err != nil {
 			return err
 		}
@@ -88,21 +94,87 @@ func (r *DclusterReconciler) delete(instance *databricksv1alpha1.Dcluster) error
 	}
 
 	execution := NewExecution("dclusters", "delete")
-	err := r.APIClient.Clusters().PermanentDelete(instance.Status.ClusterInfo.ClusterID)
+	permanentDeleteReq := dbhttpmodels.PermanentDeleteReq{
+		ClusterID: instance.Status.ClusterInfo.ClusterID,
+	}
+	err := r.APIClient.Clusters().PermanentDelete(permanentDeleteReq)
 	execution.Finish(err)
 	return err
 }
 
 func (r *DclusterReconciler) getCluster(clusterID string) (cluster dbmodels.ClusterInfo, err error) {
 	execution := NewExecution("dclusters", "get")
-	cluster, err = r.APIClient.Clusters().Get(clusterID)
+	getReq := dbhttpmodels.GetReq{
+		ClusterID: clusterID,
+	}
+	getRes, err := r.APIClient.Clusters().Get(getReq)
 	execution.Finish(err)
+
+	cluster = mapGetRespToClusterInfo(getRes)
 	return cluster, err
 }
 
 func (r *DclusterReconciler) createCluster(instance *databricksv1alpha1.Dcluster) (cluster dbmodels.ClusterInfo, err error) {
 	execution := NewExecution("dclusters", "create")
-	cluster, err = r.APIClient.Clusters().Create(*instance.Spec)
+	createReq := mapNewClusterToCreateReq(*instance.Spec)
+	createRes, err := r.APIClient.Clusters().Create(createReq)
 	execution.Finish(err)
+
+	cluster, err = r.getCluster(createRes.ClusterID)
 	return cluster, err
+}
+
+func mapNewClusterToCreateReq(cluster dbjobsmodels.NewCluster) dbhttpmodels.CreateReq {
+	return dbhttpmodels.CreateReq{
+		NumWorkers:       cluster.NumWorkers,
+		Autoscale:        cluster.Autoscale,
+		SparkVersion:     cluster.SparkVersion,
+		SparkConf:        *cluster.SparkConf,
+		NodeTypeID:       cluster.NodeTypeID,
+		DriverNodeTypeID: cluster.DriverNodeTypeID,
+		CustomTags:       cluster.CustomTags,
+		ClusterLogConf:   cluster.ClusterLogConf,
+		InitScripts:      cluster.InitScripts,
+		SparkEnvVars:     *cluster.SparkEnvVars,
+		InstancePoolID:   cluster.InstancePoolID,
+		// ClusterName:            cluster.ClusterName,
+		// DockerImage:            cluster.DockerImage,
+		// AutoterminationMinutes: cluster.AutoterminationMinutes,
+		// IdempotencyToken:       cluster.IdempotencyToken,
+		// ApplyPolicyDefVal:      cluster.ApplyPolicyDefVal,
+		// EnableLocalDiskEncr:    cluster.EnableLocalDiskEncr,
+	}
+}
+
+func mapGetRespToClusterInfo(res dbhttpmodels.GetResp) dbmodels.ClusterInfo {
+	return dbmodels.ClusterInfo{
+		NumWorkers:             res.NumWorkers,
+		AutoScale:              &res.AutoScale,
+		ClusterID:              res.ClusterID,
+		CreatorUserName:        res.CreatorUserName,
+		Driver:                 res.Driver,
+		Executors:              &res.Executors,
+		SparkContextID:         res.SparkContextID,
+		JdbcPort:               res.JdbcPort,
+		ClusterName:            res.ClusterName,
+		SparkVersion:           res.SparkVersion,
+		SparkConf:              res.SparkConf,
+		NodeTypeID:             res.NodeTypeID,
+		DriverNodeTypeID:       res.DriverNodeTypeID,
+		ClusterLogConf:         res.ClusterLogConf,
+		InitScripts:            &res.InitScripts,
+		SparkEnvVars:           res.SparkEnvVars,
+		AutoterminationMinutes: res.AutoterminationMinutes,
+		State:                  res.State,
+		StateMessage:           res.StateMessage,
+		StartTime:              res.StartTime,
+		TerminateTime:          res.TerminateTime,
+		LastStateLossTime:      res.LastStateLossTime,
+		LastActivityTime:       res.LastActivityTime,
+		ClusterMemoryMb:        res.ClusterMemoryMb,
+		ClusterCores:           res.ClusterCores,
+		DefaultTags:            res.DefaultTags,
+		ClusterLogStatus:       res.ClusterLogStatus,
+		TerminationReason:      res.TerminationReason,
+	}
 }

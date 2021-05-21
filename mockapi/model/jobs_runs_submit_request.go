@@ -1,13 +1,14 @@
 package model
 
 import (
-	dbmodel "github.com/xinsnake/databricks-sdk-golang/azure/models"
+	dbjobsmodel "github.com/polar-rams/databricks-sdk-golang/azure/jobs/models"
+	dblibmodel "github.com/polar-rams/databricks-sdk-golang/azure/libraries/models"
 )
 
 //JobsRunsSubmitRequest represents DataBricks run submit request
 type JobsRunsSubmitRequest struct {
-	RunName      string               `json:"run_name"`
-	NewCluster   dbmodel.NewCluster   `json:"new_cluster"`
-	Libraries    []dbmodel.Library    `json:"libraries"`
-	SparkJarTask dbmodel.SparkJarTask `json:"spark_jar_task"`
+	RunName      string                   `json:"run_name"`
+	NewCluster   dbjobsmodel.NewCluster   `json:"new_cluster"`
+	Libraries    []dblibmodel.Library     `json:"libraries"`
+	SparkJarTask dbjobsmodel.SparkJarTask `json:"spark_jar_task"`
 }

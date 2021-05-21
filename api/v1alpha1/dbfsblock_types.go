@@ -29,7 +29,7 @@ import (
 	"encoding/base64"
 	"fmt"
 
-	dbmodels "github.com/xinsnake/databricks-sdk-golang/azure/models"
+	dbmodels "github.com/polar-rams/databricks-sdk-golang/azure/dbfs/models"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 

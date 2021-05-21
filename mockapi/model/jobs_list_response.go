@@ -1,7 +1,7 @@
 package model
 
 import (
-	dbmodel "github.com/xinsnake/databricks-sdk-golang/azure/models"
+	dbmodel "github.com/polar-rams/databricks-sdk-golang/azure/jobs/models"
 )
 
 // JobsListResponse represents Databricks jobs/list response object

@@ -10,7 +10,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/microsoft/azure-databricks-operator/mockapi/repository"
-	dbmodel "github.com/xinsnake/databricks-sdk-golang/azure/models"
+	dbmodel "github.com/polar-rams/databricks-sdk-golang/azure/jobs/models"
 )
 
 //CreateJob handles the job create endpoint

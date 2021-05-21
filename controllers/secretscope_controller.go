@@ -39,7 +39,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	databricksv1alpha1 "github.com/microsoft/azure-databricks-operator/api/v1alpha1"
-	dbazure "github.com/xinsnake/databricks-sdk-golang/azure"
+	dbazure "github.com/polar-rams/databricks-sdk-golang/azure"
 )
 
 // SecretScopeReconciler reconciles a SecretScope object

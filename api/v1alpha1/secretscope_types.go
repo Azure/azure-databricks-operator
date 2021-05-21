@@ -25,7 +25,7 @@ SOFTWARE.
 package v1alpha1
 
 import (
-	dbmodels "github.com/xinsnake/databricks-sdk-golang/azure/models"
+	dbmodels "github.com/polar-rams/databricks-sdk-golang/azure/secrets/models"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 

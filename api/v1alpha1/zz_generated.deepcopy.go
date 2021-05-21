@@ -29,8 +29,13 @@ SOFTWARE.
 package v1alpha1
 
 import (
-	"github.com/xinsnake/databricks-sdk-golang/azure"
-	"github.com/xinsnake/databricks-sdk-golang/azure/models"
+	clrsmodels "github.com/polar-rams/databricks-sdk-golang/azure/clusters/models"
+	dbfsmodels "github.com/polar-rams/databricks-sdk-golang/azure/dbfs/models"
+	jobshttpmodels "github.com/polar-rams/databricks-sdk-golang/azure/jobs/httpmodels"
+	"github.com/polar-rams/databricks-sdk-golang/azure/jobs/models"
+	libsmodels "github.com/polar-rams/databricks-sdk-golang/azure/libraries/models"
+	srtsmodels "github.com/polar-rams/databricks-sdk-golang/azure/secrets/models"
+	wsmodels "github.com/polar-rams/databricks-sdk-golang/azure/workspace/models"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 )
 
@@ -44,7 +49,7 @@ func (in *ClusterSpec) DeepCopyInto(out *ClusterSpec) {
 	}
 	if in.Libraries != nil {
 		in, out := &in.Libraries, &out.Libraries
-		*out = make([]models.Library, len(*in))
+		*out = make([]libsmodels.Library, len(*in))
 		for i := range *in {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
@@ -148,7 +153,7 @@ func (in *DbfsBlockStatus) DeepCopyInto(out *DbfsBlockStatus) {
 	*out = *in
 	if in.FileInfo != nil {
 		in, out := &in.FileInfo, &out.FileInfo
-		*out = new(models.FileInfo)
+		*out = new(dbfsmodels.FileInfo)
 		**out = **in
 	}
 }
@@ -203,32 +208,32 @@ func (in *DclusterInfo) DeepCopyInto(out *DclusterInfo) {
 	*out = *in
 	if in.AutoScale != nil {
 		in, out := &in.AutoScale, &out.AutoScale
-		*out = new(models.AutoScale)
+		*out = new(clrsmodels.AutoScale)
 		**out = **in
 	}
 	if in.Driver != nil {
 		in, out := &in.Driver, &out.Driver
-		*out = new(models.SparkNode)
+		*out = new(clrsmodels.SparkNode)
 		**out = **in
 	}
 	if in.Executors != nil {
 		in, out := &in.Executors, &out.Executors
-		*out = make([]models.SparkNode, len(*in))
+		*out = make([]clrsmodels.SparkNode, len(*in))
 		copy(*out, *in)
 	}
 	if in.SparkConf != nil {
 		in, out := &in.SparkConf, &out.SparkConf
-		*out = new(models.SparkConfPair)
+		*out = new(clrsmodels.SparkConfPair)
 		**out = **in
 	}
 	if in.ClusterLogConf != nil {
 		in, out := &in.ClusterLogConf, &out.ClusterLogConf
-		*out = new(models.ClusterLogConf)
+		*out = new(clrsmodels.ClusterLogConf)
 		(*in).DeepCopyInto(*out)
 	}
 	if in.InitScripts != nil {
 		in, out := &in.InitScripts, &out.InitScripts
-		*out = make([]models.InitScriptInfo, len(*in))
+		*out = make([]clrsmodels.InitScriptInfo, len(*in))
 		for i := range *in {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
@@ -242,7 +247,7 @@ func (in *DclusterInfo) DeepCopyInto(out *DclusterInfo) {
 	}
 	if in.State != nil {
 		in, out := &in.State, &out.State
-		*out = new(models.ClusterState)
+		*out = new(clrsmodels.ClusterState)
 		**out = **in
 	}
 	if in.DefaultTags != nil {
@@ -254,12 +259,12 @@ func (in *DclusterInfo) DeepCopyInto(out *DclusterInfo) {
 	}
 	if in.ClusterLogStatus != nil {
 		in, out := &in.ClusterLogStatus, &out.ClusterLogStatus
-		*out = new(models.LogSyncStatus)
+		*out = new(clrsmodels.LogSyncStatus)
 		**out = **in
 	}
 	if in.TerminationReason != nil {
 		in, out := &in.TerminationReason, &out.TerminationReason
-		*out = new(models.TerminationReason)
+		*out = new(clrsmodels.TerminationReason)
 		(*in).DeepCopyInto(*out)
 	}
 }
@@ -450,7 +455,7 @@ func (in *JobSettings) DeepCopyInto(out *JobSettings) {
 	}
 	if in.Libraries != nil {
 		in, out := &in.Libraries, &out.Libraries
-		*out = make([]models.Library, len(*in))
+		*out = make([]libsmodels.Library, len(*in))
 		for i := range *in {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
@@ -489,7 +494,7 @@ func (in *Run) DeepCopyInto(out *Run) {
 	}
 	if in.Status != nil {
 		in, out := &in.Status, &out.Status
-		*out = new(azure.JobsRunsGetOutputResponse)
+		*out = new(jobshttpmodels.RunsGetOutputResp)
 		(*in).DeepCopyInto(*out)
 	}
 }
@@ -711,7 +716,7 @@ func (in *SecretScopeStatus) DeepCopyInto(out *SecretScopeStatus) {
 	*out = *in
 	if in.SecretScope != nil {
 		in, out := &in.SecretScope, &out.SecretScope
-		*out = new(models.SecretScope)
+		*out = new(srtsmodels.SecretScope)
 		(*in).DeepCopyInto(*out)
 	}
 }
@@ -829,7 +834,7 @@ func (in *WorkspaceItemStatus) DeepCopyInto(out *WorkspaceItemStatus) {
 	*out = *in
 	if in.ObjectInfo != nil {
 		in, out := &in.ObjectInfo, &out.ObjectInfo
-		*out = new(models.ObjectInfo)
+		*out = new(wsmodels.ObjectInfo)
 		(*in).DeepCopyInto(*out)
 	}
 }

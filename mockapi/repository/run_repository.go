@@ -2,11 +2,12 @@ package repository
 
 import (
 	"fmt"
-	"github.com/microsoft/azure-databricks-operator/mockapi/model"
-	azure "github.com/xinsnake/databricks-sdk-golang/azure"
-	dbmodel "github.com/xinsnake/databricks-sdk-golang/azure/models"
 	"sync"
 	"sync/atomic"
+
+	"github.com/microsoft/azure-databricks-operator/mockapi/model"
+	dbhttpmodel "github.com/polar-rams/databricks-sdk-golang/azure/jobs/httpmodels"
+	dbmodel "github.com/polar-rams/databricks-sdk-golang/azure/jobs/models"
 )
 
 // RunRepository is a store for Run instances
@@ -35,22 +36,22 @@ func (r *RunRepository) CreateRun(runReq model.JobsRunsSubmitRequest, jobID int6
 		RunID:       newID,
 		JobID:       jobID,
 		NumberInJob: int64(runReq.NewCluster.NumWorkers),
-		State: &dbmodel.RunState{
-			LifeCycleState: &lifeCycleState,
+		State: dbmodel.RunState{
+			LifeCycleState: lifeCycleState,
 			StateMessage:   "Starting action",
 		},
-		ClusterInstance: &dbmodel.ClusterInstance{
+		ClusterInstance: dbmodel.ClusterInstance{
 			ClusterID:      "1201-my-cluster",
 			SparkContextID: "1102398-spark-context-id",
 		},
-		Task:                 &dbmodel.JobTask{NotebookTask: &dbmodel.NotebookTask{NotebookPath: "/Users/user@example.com/my-notebook"}},
-		ClusterSpec:          &dbmodel.ClusterSpec{ExistingClusterID: "1201-my-cluster"},
-		OverridingParameters: &dbmodel.RunParameters{JarParams: []string{"param1", "param2"}},
+		Task:                 dbmodel.JobTask{NotebookTask: dbmodel.NotebookTask{NotebookPath: "/Users/user@example.com/my-notebook"}},
+		ClusterSpec:          dbmodel.ClusterSpec{ExistingClusterID: "1201-my-cluster"},
+		OverridingParameters: dbmodel.RunParameters{JarParams: &[]string{"param1", "param2"}},
 		StartTime:            makeTimestamp(),
 		SetupDuration:        r.timePerRunLifeState,
 		ExecutionDuration:    r.timePerRunLifeState,
 		CleanupDuration:      r.timePerRunLifeState,
-		Trigger:              &trigger,
+		Trigger:              trigger,
 	}
 
 	r.writeLock.Lock()
@@ -71,22 +72,22 @@ func (r *RunRepository) GetRun(id int64) dbmodel.Run {
 }
 
 // GetRunOutput returns the Run output along with the run as metadata or an empty run output
-func (r *RunRepository) GetRunOutput(id int64) azure.JobsRunsGetOutputResponse {
-	return azure.JobsRunsGetOutputResponse{
+func (r *RunRepository) GetRunOutput(id int64) dbhttpmodel.RunsGetOutputResp {
+	return dbhttpmodel.RunsGetOutputResp{
 		Metadata: r.GetRun(id),
 	}
 }
 
 // GetRuns returns all Runs
-func (r *RunRepository) GetRuns() azure.JobsRunsListResponse {
+func (r *RunRepository) GetRuns() dbhttpmodel.RunsListResp {
 	arr := []dbmodel.Run{}
 	for _, run := range r.runs {
 		setRunState(&run)
 		arr = append(arr, run)
 	}
 
-	response := azure.JobsRunsListResponse{
-		Runs: arr,
+	response := dbhttpmodel.RunsListResp{
+		Runs: &arr,
 	}
 
 	return response
@@ -106,12 +107,12 @@ func (r *RunRepository) CancelRun(id int64) error {
 	if run, ok := r.runs[id]; ok {
 		setRunState(&run)
 		//If the run has already been completed, cancel becomes NOP
-		if run.State.ResultState != nil && *run.State.ResultState != "" {
+		if run.State.ResultState != "" {
 			return nil
 		}
 		resultState := dbmodel.RunResultState(dbmodel.RunResultStateCanceled)
-		run.State.ResultState = &resultState
-		*run.State.LifeCycleState = dbmodel.RunLifeCycleStateTerminated
+		run.State.ResultState = resultState
+		run.State.LifeCycleState = dbmodel.RunLifeCycleStateTerminated
 		r.runs[id] = run
 		return nil
 	}
@@ -124,21 +125,21 @@ func setRunState(run *dbmodel.Run) {
 	runFinishedTime := setupFinishedTime + run.ExecutionDuration
 	cleanupFinishedTime := runFinishedTime + run.CleanupDuration
 
-	if currentTime < setupFinishedTime || *run.State.LifeCycleState == dbmodel.RunLifeCycleStateTerminated {
+	if currentTime < setupFinishedTime || run.State.LifeCycleState == dbmodel.RunLifeCycleStateTerminated {
 		return
 	}
 
 	if currentTime < runFinishedTime {
-		*run.State.LifeCycleState = dbmodel.RunLifeCycleStateRunning
+		run.State.LifeCycleState = dbmodel.RunLifeCycleStateRunning
 		return
 	}
 
 	if currentTime < cleanupFinishedTime {
-		*run.State.LifeCycleState = dbmodel.RunLifeCycleStateTerminating
+		run.State.LifeCycleState = dbmodel.RunLifeCycleStateTerminating
 		return
 	}
 
-	*run.State.LifeCycleState = dbmodel.RunLifeCycleStateTerminated
+	run.State.LifeCycleState = dbmodel.RunLifeCycleStateTerminated
 	resultState := dbmodel.RunResultState(dbmodel.RunResultStateSuccess)
-	run.State.ResultState = &resultState
+	run.State.ResultState = resultState
 }

@@ -2,10 +2,11 @@ package repository
 
 import (
 	"fmt"
-	"github.com/microsoft/azure-databricks-operator/mockapi/model"
-	dbmodel "github.com/xinsnake/databricks-sdk-golang/azure/models"
 	"sync"
 	"sync/atomic"
+
+	"github.com/microsoft/azure-databricks-operator/mockapi/model"
+	dbmodel "github.com/polar-rams/databricks-sdk-golang/azure/jobs/models"
 )
 
 // JobRepository is a store for Job instances

@@ -29,8 +29,8 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	dbazure "github.com/xinsnake/databricks-sdk-golang/azure"
-	dbmodels "github.com/xinsnake/databricks-sdk-golang/azure/models"
+	dbazure "github.com/polar-rams/databricks-sdk-golang/azure/jobs/httpmodels"
+	dbmodels "github.com/polar-rams/databricks-sdk-golang/azure/jobs/models"
 
 	"golang.org/x/net/context"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -88,7 +88,7 @@ var _ = Describe("Run", func() {
 
 	It("should correctly handle isSubmitted", func() {
 		run := &Run{
-			Status: &dbazure.JobsRunsGetOutputResponse{
+			Status: &dbazure.RunsGetOutputResp{
 				Metadata: dbmodels.Run{
 					JobID: 23,
 				},

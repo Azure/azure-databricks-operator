@@ -31,7 +31,8 @@ import (
 	"strings"
 
 	databricksv1alpha1 "github.com/microsoft/azure-databricks-operator/api/v1alpha1"
-	dbmodels "github.com/xinsnake/databricks-sdk-golang/azure/models"
+	dbhttpmodels "github.com/polar-rams/databricks-sdk-golang/azure/jobs/httpmodels"
+	dbmodels "github.com/polar-rams/databricks-sdk-golang/azure/jobs/models"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -104,7 +105,14 @@ func (r *DjobReconciler) refresh(instance *databricksv1alpha1.Djob) error {
 	}
 
 	// Refresh job also needs to get a list of historic runs under this job
-	jobRunListResponse, err := r.APIClient.Jobs().RunsList(false, false, jobID, 0, 10)
+	runsListReq := dbhttpmodels.RunsListReq{
+		JobID:         jobID,
+		ActiveOnly:    false,
+		CompletedOnly: false,
+		Offset:        0,
+		Limit:         10,
+	}
+	jobRunListResponse, err := r.APIClient.Jobs().RunsList(runsListReq)
 	if err != nil {
 		return err
 	}
@@ -118,13 +126,13 @@ func (r *DjobReconciler) refresh(instance *databricksv1alpha1.Djob) error {
 	}
 
 	if reflect.DeepEqual(instance.Status.JobStatus, &job) &&
-		reflect.DeepEqual(instance.Status.Last10Runs, jobRunListResponse.Runs) {
+		reflect.DeepEqual(instance.Status.Last10Runs, *jobRunListResponse.Runs) {
 		return nil
 	}
 
 	instance.Status = &databricksv1alpha1.DjobStatus{
 		JobStatus:  &job,
-		Last10Runs: jobRunListResponse.Runs,
+		Last10Runs: *jobRunListResponse.Runs,
 	}
 	return r.Update(context.Background(), instance)
 }
@@ -147,21 +155,30 @@ func (r *DjobReconciler) delete(instance *databricksv1alpha1.Djob) error {
 	}
 
 	execution := NewExecution("djobs", "delete")
-	err := r.APIClient.Jobs().Delete(jobID)
+	deleteReq := dbhttpmodels.DeleteReq{
+		JobID: jobID,
+	}
+	err := r.APIClient.Jobs().Delete(deleteReq)
 	execution.Finish(err)
 	return err
 }
 
 func (r *DjobReconciler) getJob(jobID int64) (job dbmodels.Job, err error) {
 	execution := NewExecution("djobs", "get")
-	job, err = r.APIClient.Jobs().Get(jobID)
+	getReq := dbhttpmodels.GetReq{
+		JobID: jobID,
+	}
+	getRes, err := r.APIClient.Jobs().Get(getReq)
+	job = dbmodels.Job(getRes)
 	execution.Finish(err)
 	return job, err
 }
 
 func (r *DjobReconciler) createJob(jobSettings dbmodels.JobSettings) (job dbmodels.Job, err error) {
 	execution := NewExecution("djobs", "create")
-	job, err = r.APIClient.Jobs().Create(jobSettings)
+	createReq := dbhttpmodels.CreateReq(jobSettings)
+	createRes, err := r.APIClient.Jobs().Create(createReq)
 	execution.Finish(err)
+	job, err = r.getJob(createRes.JobID)
 	return job, err
 }

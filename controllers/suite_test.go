@@ -34,8 +34,8 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
-	db "github.com/xinsnake/databricks-sdk-golang"
-	dbazure "github.com/xinsnake/databricks-sdk-golang/azure"
+	db "github.com/polar-rams/databricks-sdk-golang"
+	dbazure "github.com/polar-rams/databricks-sdk-golang/azure"
 
 	databricksv1alpha1 "github.com/microsoft/azure-databricks-operator/api/v1alpha1"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -100,11 +100,8 @@ var _ = BeforeSuite(func(done Done) {
 		Fail("Missing environment variable required for tests. DATABRICKS_HOST and DATABRICKS_TOKEN must both be set.")
 	}
 
-	var apiClient dbazure.DBClient
-	apiClient.Init(db.DBClientOption{
-		Host:  host,
-		Token: token,
-	})
+	opt := db.NewDBClientOption("", "", host, token, nil, false, 0)
+	apiClient := *(dbazure.NewDBClient(opt))
 
 	err = (&SecretScopeReconciler{
 		Client:    k8sManager.GetClient(),

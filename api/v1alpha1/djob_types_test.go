@@ -30,7 +30,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	dbmodels "github.com/xinsnake/databricks-sdk-golang/azure/models"
+	dbmodels "github.com/polar-rams/databricks-sdk-golang/azure/jobs/models"
 	"golang.org/x/net/context"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"

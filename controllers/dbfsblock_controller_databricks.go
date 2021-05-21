@@ -31,6 +31,8 @@ import (
 	"time"
 
 	databricksv1alpha1 "github.com/microsoft/azure-databricks-operator/api/v1alpha1"
+	httpmodels "github.com/polar-rams/databricks-sdk-golang/azure/dbfs/httpmodels"
+	models "github.com/polar-rams/databricks-sdk-golang/azure/dbfs/models"
 )
 
 func (r *DbfsBlockReconciler) submit(instance *databricksv1alpha1.DbfsBlock) error {
@@ -43,7 +45,11 @@ func (r *DbfsBlockReconciler) submit(instance *databricksv1alpha1.DbfsBlock) err
 
 	// Open handler
 	execution := NewExecution("dbfsblocks", "create")
-	createResponse, err := r.APIClient.Dbfs().Create(instance.Spec.Path, true)
+	createReq := httpmodels.CreateReq{
+		Path:      instance.Spec.Path,
+		Overwrite: true,
+	}
+	createResponse, err := r.APIClient.Dbfs().Create(createReq)
 	execution.Finish(err)
 
 	if err != nil {
@@ -55,10 +61,16 @@ func (r *DbfsBlockReconciler) submit(instance *databricksv1alpha1.DbfsBlock) err
 	for i := 0; i < len(data); i += g {
 		execution = NewExecution("dbfsblocks", "add_block")
 
+		addBlockReq := httpmodels.AddBlockReq{
+			Handle: createResponse.Handle,
+		}
+
 		if i+g <= len(data) {
-			err = r.APIClient.Dbfs().AddBlock(createResponse.Handle, data[i:i+g])
+			addBlockReq.Data = string(data[i : i+g])
+			err = r.APIClient.Dbfs().AddBlock(addBlockReq)
 		} else {
-			err = r.APIClient.Dbfs().AddBlock(createResponse.Handle, data[i:])
+			addBlockReq.Data = string(data[i:])
+			err = r.APIClient.Dbfs().AddBlock(addBlockReq)
 		}
 
 		execution.Finish(err)
@@ -70,7 +82,10 @@ func (r *DbfsBlockReconciler) submit(instance *databricksv1alpha1.DbfsBlock) err
 
 	// Close handler
 	execution = NewExecution("dbfsblocks", "close")
-	err = r.APIClient.Dbfs().Close(createResponse.Handle)
+	closeReq := httpmodels.CloseReq{
+		Handle: createResponse.Handle,
+	}
+	err = r.APIClient.Dbfs().Close(closeReq)
 	execution.Finish(err)
 
 	if err != nil {
@@ -81,13 +96,16 @@ func (r *DbfsBlockReconciler) submit(instance *databricksv1alpha1.DbfsBlock) err
 
 	// Refresh info
 	execution = NewExecution("dbfsblocks", "get_status")
-	fileInfo, err := r.APIClient.Dbfs().GetStatus(instance.Spec.Path)
+	statusReq := httpmodels.GetStatusReq{
+		Path: instance.Spec.Path,
+	}
+	statusRes, err := r.APIClient.Dbfs().GetStatus(statusReq)
 	execution.Finish(err)
 
 	if err != nil {
 		return err
 	}
-
+	fileInfo := models.FileInfo(statusRes)
 	instance.Status = &databricksv1alpha1.DbfsBlockStatus{
 		FileInfo: &fileInfo,
 		FileHash: instance.GetHash(),
@@ -106,7 +124,11 @@ func (r *DbfsBlockReconciler) delete(instance *databricksv1alpha1.DbfsBlock) err
 	path := instance.Status.FileInfo.Path
 
 	execution := NewExecution("dbfsblocks", "delete")
-	err := r.APIClient.Dbfs().Delete(path, true)
+	deleteReq := httpmodels.DeleteReq{
+		Path:      path,
+		Recursive: true,
+	}
+	err := r.APIClient.Dbfs().Delete(deleteReq)
 	execution.Finish(err)
 	return err
 }

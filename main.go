@@ -31,8 +31,8 @@ import (
 
 	databricksv1alpha1 "github.com/microsoft/azure-databricks-operator/api/v1alpha1"
 	"github.com/microsoft/azure-databricks-operator/controllers"
-	db "github.com/xinsnake/databricks-sdk-golang"
-	dbazure "github.com/xinsnake/databricks-sdk-golang/azure"
+	db "github.com/polar-rams/databricks-sdk-golang"
+	dbazure "github.com/polar-rams/databricks-sdk-golang/azure"
 	"k8s.io/apimachinery/pkg/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
@@ -82,11 +82,9 @@ func main() {
 			setupLog.Error(err, "unable to initialize databricks api client")
 			os.Exit(1)
 		}
-		var apiClient dbazure.DBClient
-		return apiClient.Init(db.DBClientOption{
-			Host:  host,
-			Token: token,
-		})
+
+		opt := db.NewDBClientOption("", "", host, token, nil, false, 0)
+		return *(dbazure.NewDBClient(opt))
 	}()
 
 	err = (&controllers.SecretScopeReconciler{

@@ -2,15 +2,16 @@ package handler
 
 import (
 	"encoding/json"
-	"github.com/gorilla/mux"
-	"github.com/microsoft/azure-databricks-operator/mockapi/model"
-	"github.com/microsoft/azure-databricks-operator/mockapi/repository"
-	dbmodel "github.com/xinsnake/databricks-sdk-golang/azure/models"
 	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"strconv"
+
+	"github.com/gorilla/mux"
+	"github.com/microsoft/azure-databricks-operator/mockapi/model"
+	"github.com/microsoft/azure-databricks-operator/mockapi/repository"
+	dbjobsmodel "github.com/polar-rams/databricks-sdk-golang/azure/jobs/models"
 )
 
 //SubmitRun handles the runs submit endpoint
@@ -34,13 +35,13 @@ func SubmitRun(runRepo *repository.RunRepository, jobRepo *repository.JobReposit
 			return
 		}
 
-		job := dbmodel.JobSettings{
+		job := dbjobsmodel.JobSettings{
 			NewCluster:   &run.NewCluster,
-			Libraries:    run.Libraries,
+			Libraries:    &run.Libraries,
 			SparkJarTask: &run.SparkJarTask,
 		}
 
-		response := dbmodel.Run{
+		response := dbjobsmodel.Run{
 			RunID: runRepo.CreateRun(run, jobRepo.CreateJob(job)),
 		}
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")

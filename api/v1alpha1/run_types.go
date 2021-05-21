@@ -25,8 +25,8 @@ SOFTWARE.
 package v1alpha1
 
 import (
-	dbazure "github.com/xinsnake/databricks-sdk-golang/azure"
-	dbmodels "github.com/xinsnake/databricks-sdk-golang/azure/models"
+	dbazure "github.com/polar-rams/databricks-sdk-golang/azure/jobs/httpmodels"
+	dbmodels "github.com/polar-rams/databricks-sdk-golang/azure/jobs/models"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -55,8 +55,8 @@ type Run struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   *RunSpec                           `json:"spec,omitempty"`
-	Status *dbazure.JobsRunsGetOutputResponse `json:"status,omitempty"`
+	Spec   *RunSpec                   `json:"spec,omitempty"`
+	Status *dbazure.RunsGetOutputResp `json:"status,omitempty"`
 }
 
 // IsBeingDeleted returns true if a deletion timestamp is set
@@ -74,10 +74,10 @@ func (run *Run) IsSubmitted() bool {
 
 // IsTerminated return true if item is in terminal state
 func (run *Run) IsTerminated() bool {
-	if run.Status == nil || run.Status.Metadata.State == nil || run.Status.Metadata.State.LifeCycleState == nil {
+	if run.Status == nil || run.Status.Metadata.State.LifeCycleState == "" {
 		return false
 	}
-	switch *run.Status.Metadata.State.LifeCycleState {
+	switch run.Status.Metadata.State.LifeCycleState {
 	case dbmodels.RunLifeCycleStateTerminated, dbmodels.RunLifeCycleStateSkipped, dbmodels.RunLifeCycleStateInternalError:
 		return true
 	}

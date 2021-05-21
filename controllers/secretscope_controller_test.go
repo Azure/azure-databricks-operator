@@ -34,8 +34,9 @@ import (
 	databricksv1alpha1 "github.com/microsoft/azure-databricks-operator/api/v1alpha1"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	databricks "github.com/xinsnake/databricks-sdk-golang"
-	dbazure "github.com/xinsnake/databricks-sdk-golang/azure"
+	databricks "github.com/polar-rams/databricks-sdk-golang"
+	dbazure "github.com/polar-rams/databricks-sdk-golang/azure"
+	dbhttpmodels "github.com/polar-rams/databricks-sdk-golang/azure/secrets/httpmodels"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -54,7 +55,10 @@ var _ = Describe("SecretScope Controller", func() {
 		// failed test runs that don't clean up leave resources behind.
 		keys := []string{aclKeyName, secretsKeyName}
 		for _, value := range keys {
-			_ = apiClient.Secrets().DeleteSecretScope(value)
+			req := dbhttpmodels.DeleteSecretScopeReq{
+				Scope: value,
+			}
+			_ = apiClient.Secrets().DeleteSecretScope(req)
 
 			ss := &databricksv1alpha1.SecretScope{
 				ObjectMeta: metav1.ObjectMeta{
@@ -71,7 +75,10 @@ var _ = Describe("SecretScope Controller", func() {
 		// Add any teardown steps that needs to be executed after each test
 		keys := []string{aclKeyName, secretsKeyName}
 		for _, value := range keys {
-			_ = apiClient.Secrets().DeleteSecretScope(value)
+			req := dbhttpmodels.DeleteSecretScopeReq{
+				Scope: value,
+			}
+			_ = apiClient.Secrets().DeleteSecretScope(req)
 
 			ss := &databricksv1alpha1.SecretScope{
 				ObjectMeta: metav1.ObjectMeta{
@@ -362,17 +369,19 @@ var _ = Describe("SecretScope Controller", func() {
 
 	Context("Secret Scope with ACLs", func() {
 		It("Should fail if secret scope exist in Databricks", func() {
+			opt := databricks.NewDBClientOption("", "", os.Getenv("DATABRICKS_HOST"), os.Getenv("DATABRICKS_TOKEN"), nil, false, 0)
+			APIClient := dbazure.NewDBClient(opt)
 
-			var o databricks.DBClientOption
-			o.Host = os.Getenv("DATABRICKS_HOST")
-			o.Token = os.Getenv("DATABRICKS_TOKEN")
-
-			var APIClient dbazure.DBClient
-			APIClient.Init(o)
-
-			Expect(APIClient.Secrets().CreateSecretScope(aclKeyName, "users")).Should(Succeed())
+			createReq := dbhttpmodels.CreateSecretScopeReq{
+				Scope:                  aclKeyName,
+				InitialManagePrincipal: "users",
+			}
+			Expect(APIClient.Secrets().CreateSecretScope(createReq)).Should(Succeed())
 			defer func() {
-				Expect(APIClient.Secrets().DeleteSecretScope(aclKeyName)).Should(Succeed())
+				deleteReq := dbhttpmodels.DeleteSecretScopeReq{
+					Scope: aclKeyName,
+				}
+				Expect(APIClient.Secrets().DeleteSecretScope(deleteReq)).Should(Succeed())
 				time.Sleep(time.Second * 5)
 			}()
 

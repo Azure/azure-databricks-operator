@@ -2,9 +2,10 @@ package repository
 
 import (
 	"fmt"
-	"github.com/google/uuid"
-	dbmodel "github.com/xinsnake/databricks-sdk-golang/azure/models"
 	"sync"
+
+	"github.com/google/uuid"
+	dbmodel "github.com/polar-rams/databricks-sdk-golang/azure/clusters/models"
 )
 
 // ClusterRepository is a store for Cluster instances

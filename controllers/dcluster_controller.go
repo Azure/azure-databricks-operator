@@ -31,7 +31,7 @@ import (
 
 	"github.com/go-logr/logr"
 	databricksv1alpha1 "github.com/microsoft/azure-databricks-operator/api/v1alpha1"
-	dbazure "github.com/xinsnake/databricks-sdk-golang/azure"
+	dbazure "github.com/polar-rams/databricks-sdk-golang/azure"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"

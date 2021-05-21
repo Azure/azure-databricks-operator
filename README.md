@@ -34,7 +34,7 @@ The Databricks operator is useful in situations where Kubernetes hosted applicat
 The project was built using
 
 1. [Kubebuilder](https://book.kubebuilder.io/)
-2. [Golang SDK for DataBricks](https://github.com/xinsnake/databricks-sdk-golang)
+2. [Golang SDK for DataBricks](https://github.com/polar-rams/databricks-sdk-golang)
 
 ## How to use Azure Databricks operator
 

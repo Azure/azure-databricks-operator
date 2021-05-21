@@ -12,8 +12,8 @@ import (
 
 	"github.com/microsoft/azure-databricks-operator/mockapi/model"
 	"github.com/microsoft/azure-databricks-operator/mockapi/router"
+	dbmodel "github.com/polar-rams/databricks-sdk-golang/azure/jobs/models"
 	"github.com/stretchr/testify/assert"
-	dbmodel "github.com/xinsnake/databricks-sdk-golang/azure/models"
 )
 
 const jobFileLocation = "test_data/job/job_create.json"

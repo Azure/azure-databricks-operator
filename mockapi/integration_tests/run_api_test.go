@@ -11,9 +11,9 @@ import (
 	"testing"
 
 	"github.com/microsoft/azure-databricks-operator/mockapi/router"
+	azure "github.com/polar-rams/databricks-sdk-golang/azure/jobs/httpmodels"
+	dbmodel "github.com/polar-rams/databricks-sdk-golang/azure/jobs/models"
 	"github.com/stretchr/testify/assert"
-	azure "github.com/xinsnake/databricks-sdk-golang/azure"
-	dbmodel "github.com/xinsnake/databricks-sdk-golang/azure/models"
 )
 
 const runSubmitFileLocation = "test_data/run/run_submit.json"
@@ -71,7 +71,7 @@ func TestAPI_RunsSubmit_JobIsCreated(t *testing.T) {
 	assert.Equal(t, int64(1), job.JobID)
 	assert.Equal(t, "5.3.x-scala2.11", job.Settings.NewCluster.SparkVersion)
 	assert.Equal(t, "com.databricks.ComputeModels", job.Settings.SparkJarTask.MainClassName)
-	assert.Equal(t, "dbfs:/my-jar.jar", job.Settings.Libraries[0].Jar)
+	assert.Equal(t, "dbfs:/my-jar.jar", (*job.Settings.Libraries)[0].Jar)
 
 }
 
@@ -102,10 +102,10 @@ func TestAPI_RunsSubmit_Concurrently(t *testing.T) {
 	assert.Equal(t, 200, response.StatusCode)
 
 	body, _ := ioutil.ReadAll(response.Body)
-	var runsListResponse azure.JobsRunsListResponse
+	var runsListResponse azure.RunsListResp
 	_ = json.Unmarshal(body, &runsListResponse)
 	assert.Nil(t, err)
-	assert.Equal(t, numberToAdd, len(runsListResponse.Runs))
+	assert.Equal(t, numberToAdd, len(*runsListResponse.Runs))
 }
 
 func TestAPI_RunsGet(t *testing.T) {
@@ -156,7 +156,7 @@ func TestAPI_RunsGetOutput(t *testing.T) {
 	body, err := ioutil.ReadAll(response.Body)
 	assert.Nil(t, err)
 
-	var runResponse azure.JobsRunsGetOutputResponse
+	var runResponse azure.RunsGetOutputResp
 	err = json.Unmarshal(body, &runResponse)
 	assert.Nil(t, err)
 	assert.Equal(t, int64(1), runResponse.Metadata.RunID)
@@ -192,10 +192,10 @@ func TestAPI_RunsListWithTwoRuns(t *testing.T) {
 	body, err := ioutil.ReadAll(response.Body)
 	assert.Nil(t, err)
 
-	var runsListResponse azure.JobsRunsListResponse
+	var runsListResponse azure.RunsListResp
 	err = json.Unmarshal(body, &runsListResponse)
 	assert.Nil(t, err)
-	assert.Equal(t, 2, len(runsListResponse.Runs))
+	assert.Equal(t, 2, len(*runsListResponse.Runs))
 	assert.Equal(t, false, runsListResponse.HasMore)
 }
 
@@ -214,11 +214,11 @@ func TestAPI_RunsListWithEmptyList(t *testing.T) {
 	body, err := ioutil.ReadAll(response.Body)
 	assert.Nil(t, err)
 
-	var runsListResponse azure.JobsRunsListResponse
+	var runsListResponse azure.RunsListResp
 	err = json.Unmarshal(body, &runsListResponse)
 
 	assert.Nil(t, err)
-	assert.Equal(t, 0, len(runsListResponse.Runs))
+	assert.Equal(t, 0, len(*runsListResponse.Runs))
 }
 
 func TestAPI_RunsCancel(t *testing.T) {

@@ -26,28 +26,30 @@ package controllers
 
 import (
 	"context"
-	"encoding/base64"
 	"fmt"
 	"strings"
 
 	databricksv1alpha1 "github.com/microsoft/azure-databricks-operator/api/v1alpha1"
-	dbmodels "github.com/xinsnake/databricks-sdk-golang/azure/models"
+	dbhttpmodels "github.com/polar-rams/databricks-sdk-golang/azure/secrets/httpmodels"
+	dbmodels "github.com/polar-rams/databricks-sdk-golang/azure/secrets/models"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 )
 
 func (r *SecretScopeReconciler) get(scope string) (*dbmodels.SecretScope, error) {
 	execution := NewExecution("secretscopes", "list_secret_scops")
-	scopes, err := r.APIClient.Secrets().ListSecretScopes()
+	listSecretScopesRes, err := r.APIClient.Secrets().ListSecretScopes()
 	execution.Finish(err)
 	if err != nil {
 		return nil, err
 	}
 
 	matchingScope := dbmodels.SecretScope{}
-	for _, existingScope := range scopes {
-		if existingScope.Name == scope {
-			matchingScope = existingScope
+	if listSecretScopesRes.Scopes != nil {
+		for _, existingScope := range *listSecretScopesRes.Scopes {
+			if existingScope.Name == scope {
+				matchingScope = existingScope
+			}
 		}
 	}
 
@@ -62,7 +64,10 @@ func (r *SecretScopeReconciler) submitSecrets(instance *databricksv1alpha1.Secre
 	scope := instance.ObjectMeta.Name
 	namespace := instance.Namespace
 	execution := NewExecution("secretscopes", "list_secrets")
-	scopeSecrets, err := r.APIClient.Secrets().ListSecrets(scope)
+	listSecretsReq := dbhttpmodels.ListSecretsReq{
+		Scope: scope,
+	}
+	listSecretsRes, err := r.APIClient.Secrets().ListSecrets(listSecretsReq)
 	execution.Finish(err)
 	if err != nil {
 		return err
@@ -70,10 +75,14 @@ func (r *SecretScopeReconciler) submitSecrets(instance *databricksv1alpha1.Secre
 
 	// delete any existing secrets. We cannot update since we cannot inspect a secrets values
 	// therefore, we delete all then create all
-	if len(scopeSecrets) > 0 {
-		for _, existingSecret := range scopeSecrets {
+	if len(listSecretsRes.Secrets) > 0 {
+		for _, existingSecret := range listSecretsRes.Secrets {
 			execution := NewExecution("secretscopes", "delete_secret")
-			err = r.APIClient.Secrets().DeleteSecret(scope, existingSecret.Key)
+			deleteSecretReq := dbhttpmodels.DeleteSecretReq{
+				Scope: scope,
+				Key:   existingSecret.Key,
+			}
+			err = r.APIClient.Secrets().DeleteSecret(deleteSecretReq)
 			execution.Finish(err)
 			if err != nil {
 				return err
@@ -82,32 +91,25 @@ func (r *SecretScopeReconciler) submitSecrets(instance *databricksv1alpha1.Secre
 	}
 
 	for _, secret := range instance.Spec.SecretScopeSecrets {
+		putSecretReq := dbhttpmodels.PutSecretReq{
+			Scope: scope,
+			Key:   secret.Key,
+		}
 		if secret.StringValue != "" {
-			execution := NewExecution("secretscopes", "put_secret_string")
-			err = r.APIClient.Secrets().PutSecretString(secret.StringValue, scope, secret.Key)
-			execution.Finish(err)
-			if err != nil {
-				return err
-			}
+			putSecretReq.StringValue = secret.StringValue
 		} else if secret.ByteValue != "" {
-			v, err := base64.StdEncoding.DecodeString(secret.ByteValue)
-			if err != nil {
-				return err
-			}
-			execution := NewExecution("secretscopes", "put_secret")
-			err = r.APIClient.Secrets().PutSecret(v, scope, secret.Key)
-			execution.Finish(err)
-			if err != nil {
-				return err
-			}
+			putSecretReq.BytesValue = secret.ByteValue
 		} else if secret.ValueFrom != nil {
 			value, err := r.getSecretValueFrom(namespace, secret)
 			if err != nil {
 				return err
 			}
+			putSecretReq.StringValue = value
+		}
 
-			execution := NewExecution("secretscopes", "put_secret_string")
-			err = r.APIClient.Secrets().PutSecretString(value, scope, secret.Key)
+		if putSecretReq.StringValue != "" || putSecretReq.BytesValue != "" {
+			execution := NewExecution("secretscopes", "put_secret")
+			err = r.APIClient.Secrets().PutSecret(putSecretReq)
 			execution.Finish(err)
 			if err != nil {
 				return err
@@ -137,16 +139,23 @@ func (r *SecretScopeReconciler) getSecretValueFrom(namespace string, scopeSecret
 func (r *SecretScopeReconciler) submitACLs(instance *databricksv1alpha1.SecretScope) error {
 	scope := instance.ObjectMeta.Name
 	execution := NewExecution("secretscopes", "list_secret_acls")
-	scopeSecretACLs, err := r.APIClient.Secrets().ListSecretACLs(scope)
+	listSecretACLsReq := dbhttpmodels.ListSecretACLsReq{
+		Scope: scope,
+	}
+	listSecretACLsRes, err := r.APIClient.Secrets().ListSecretACLs(listSecretACLsReq)
 	execution.Finish(err)
 	if err != nil {
 		return err
 	}
 
-	if len(scopeSecretACLs) > 0 {
-		for _, existingACL := range scopeSecretACLs {
+	if len(listSecretACLsRes.Items) > 0 {
+		for _, existingACL := range listSecretACLsRes.Items {
 			execution := NewExecution("secretscopes", "delete_secret_acl")
-			err = r.APIClient.Secrets().DeleteSecretACL(scope, existingACL.Principal)
+			deleteSecretACLReq := dbhttpmodels.DeleteSecretACLReq{
+				Scope:     scope,
+				Principal: existingACL.Principal,
+			}
+			err = r.APIClient.Secrets().DeleteSecretACL(deleteSecretACLReq)
 			execution.Finish(err)
 			if err != nil {
 				return err
@@ -155,13 +164,13 @@ func (r *SecretScopeReconciler) submitACLs(instance *databricksv1alpha1.SecretSc
 	}
 
 	for _, acl := range instance.Spec.SecretScopeACLs {
-		var permission dbmodels.AclPermission
+		var permission dbmodels.ACLPermission
 		if acl.Permission == "READ" {
-			permission = dbmodels.AclPermissionRead
+			permission = dbmodels.ACLPermissionRead
 		} else if acl.Permission == "WRITE" {
-			permission = dbmodels.AclPermissionWrite
+			permission = dbmodels.ACLPermissionWrite
 		} else if acl.Permission == "MANAGE" {
-			permission = dbmodels.AclPermissionManage
+			permission = dbmodels.ACLPermissionManage
 		} else {
 			err = fmt.Errorf("Bad Permission")
 		}
@@ -171,7 +180,12 @@ func (r *SecretScopeReconciler) submitACLs(instance *databricksv1alpha1.SecretSc
 		}
 
 		execution := NewExecution("secretscopes", "put_secret_acl")
-		err = r.APIClient.Secrets().PutSecretACL(scope, acl.Principal, permission)
+		putSecretACLReq := dbhttpmodels.PutSecretACLReq{
+			Scope:      scope,
+			Principal:  acl.Principal,
+			Permission: permission,
+		}
+		err = r.APIClient.Secrets().PutSecretACL(putSecretACLReq)
 		execution.Finish(err)
 	}
 
@@ -200,7 +214,11 @@ func (r *SecretScopeReconciler) submit(instance *databricksv1alpha1.SecretScope)
 	initialManagePrincipal := instance.Spec.InitialManagePrincipal
 
 	execution := NewExecution("secretscopes", "create_secret_scope")
-	err = r.APIClient.Secrets().CreateSecretScope(scope, initialManagePrincipal)
+	createSecretScopeReq := dbhttpmodels.CreateSecretScopeReq{
+		Scope:                  scope,
+		InitialManagePrincipal: initialManagePrincipal,
+	}
+	err = r.APIClient.Secrets().CreateSecretScope(createSecretScopeReq)
 	execution.Finish(err)
 	if err != nil {
 		return
@@ -234,7 +252,10 @@ func (r *SecretScopeReconciler) delete(instance *databricksv1alpha1.SecretScope)
 	if instance.Status.SecretScope != nil {
 		scope := instance.Status.SecretScope.Name
 		execution := NewExecution("secretscopes", "delete_secret_scope")
-		err := r.APIClient.Secrets().DeleteSecretScope(scope)
+		deleteSecretScopeReq := dbhttpmodels.DeleteSecretScopeReq{
+			Scope: scope,
+		}
+		err := r.APIClient.Secrets().DeleteSecretScope(deleteSecretScopeReq)
 		execution.Finish(err)
 		if err != nil && !strings.Contains(err.Error(), "does not exist") {
 			return err

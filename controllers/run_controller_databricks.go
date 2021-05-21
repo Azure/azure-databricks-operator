@@ -31,8 +31,8 @@ import (
 	"strings"
 
 	databricksv1alpha1 "github.com/microsoft/azure-databricks-operator/api/v1alpha1"
-	"github.com/xinsnake/databricks-sdk-golang/azure"
-	dbmodels "github.com/xinsnake/databricks-sdk-golang/azure/models"
+	dbhttpmodels "github.com/polar-rams/databricks-sdk-golang/azure/jobs/httpmodels"
+	dbmodels "github.com/polar-rams/databricks-sdk-golang/azure/jobs/models"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -65,10 +65,10 @@ func (r *RunReconciler) submit(instance *databricksv1alpha1.Run) (bool, error) {
 
 	// update the run state now, in case the RunsGetOutput call below fails
 	var pendingState dbmodels.RunLifeCycleState = dbmodels.RunLifeCycleStatePending
-	run.State = &dbmodels.RunState{
-		LifeCycleState: &pendingState,
+	run.State = dbmodels.RunState{
+		LifeCycleState: pendingState,
 	}
-	instance.Status = &azure.JobsRunsGetOutputResponse{
+	instance.Status = &dbhttpmodels.RunsGetOutputResp{
 		Metadata: *run,
 	}
 
@@ -102,7 +102,7 @@ func (r *RunReconciler) refresh(instance *databricksv1alpha1.Run) error {
 				// So the Run has been deleted from Databricks. Then set k8s Run to a terminal state.
 				r.Log.Info(fmt.Sprintf("Run %s couldn't be found in Databricks", instance.GetName()))
 				runOutput = *instance.Status
-				*runOutput.Metadata.State.LifeCycleState = dbmodels.RunLifeCycleStateInternalError
+				runOutput.Metadata.State.LifeCycleState = dbmodels.RunLifeCycleStateInternalError
 				runOutput.Error = "Run couldn't be found in Databricks"
 			} else {
 				return err
@@ -147,17 +147,23 @@ func (r *RunReconciler) delete(instance *databricksv1alpha1.Run) (bool, error) {
 		return false, err
 	}
 
-	if run.State.ResultState == nil {
+	if run.State.ResultState == "" {
 		// We will not check for error when cancelling a job,
 		// if it fails just let it be
 		execution := NewExecution("runs", "cancel")
-		err := r.APIClient.Jobs().RunsCancel(runID)
+		runsCancelReq := dbhttpmodels.RunsCancelReq{
+			RunID: runID,
+		}
+		err := r.APIClient.Jobs().RunsCancel(runsCancelReq)
 		execution.Finish(err)
 		return false, nil // no error, but indicate not completed to trigger a requeue to delete once cancelled
 	}
 	// job has reached a terminated state
 	execution := NewExecution("runs", "delete")
-	err = r.APIClient.Jobs().RunsDelete(runID)
+	runsDeleteReq := dbhttpmodels.RunsDeleteReq{
+		RunID: runID,
+	}
+	err = r.APIClient.Jobs().RunsDelete(runsDeleteReq)
 	execution.Finish(err)
 
 	if err != nil {
@@ -167,13 +173,6 @@ func (r *RunReconciler) delete(instance *databricksv1alpha1.Run) (bool, error) {
 }
 
 func (r *RunReconciler) runUsingRunNow(instance *databricksv1alpha1.Run) (*dbmodels.Run, bool, error) {
-
-	runParameters := dbmodels.RunParameters{
-		JarParams:         instance.Spec.JarParams,
-		NotebookParams:    instance.Spec.NotebookParams,
-		PythonParams:      instance.Spec.PythonParams,
-		SparkSubmitParams: instance.Spec.SparkSubmitParams,
-	}
 
 	// Here we set the owner attribute
 	k8sJobNamespacedName := types.NamespacedName{Namespace: instance.GetNamespace(), Name: instance.Spec.JobName}
@@ -196,8 +195,20 @@ func (r *RunReconciler) runUsingRunNow(instance *databricksv1alpha1.Run) (*dbmod
 	}
 
 	execution := NewExecution("runs", "run_now")
-	run, err := r.APIClient.Jobs().RunNow(k8sJob.Status.JobStatus.JobID, runParameters)
+	runNowReq := dbhttpmodels.RunNowReq{
+		JobID:             k8sJob.Status.JobStatus.JobID,
+		JarParams:         instance.Spec.JarParams,
+		NotebookParams:    instance.Spec.NotebookParams,
+		PythonParams:      instance.Spec.PythonParams,
+		SparkSubmitParams: instance.Spec.SparkSubmitParams,
+	}
+	runNowRes, err := r.APIClient.Jobs().RunNow(runNowReq)
 	execution.Finish(err)
+
+	run, err := r.getRun(runNowRes.RunID)
+	if err != nil {
+		return &dbmodels.Run{RunID: runNowRes.RunID}, false, err
+	}
 	return &run, false, err
 }
 
@@ -243,36 +254,74 @@ func (r *RunReconciler) runUsingRunsSubmit(instance *databricksv1alpha1.Run) (*d
 		instance.ObjectMeta.SetOwnerReferences(references)
 	}
 
-	clusterSpec := dbmodels.ClusterSpec{
-		NewCluster:        instance.Spec.NewCluster,
-		ExistingClusterID: instance.Spec.ExistingClusterID,
-		Libraries:         instance.Spec.Libraries,
-	}
-	jobTask := dbmodels.JobTask{
-		NotebookTask:    instance.Spec.NotebookTask,
-		SparkJarTask:    instance.Spec.SparkJarTask,
-		SparkPythonTask: instance.Spec.SparkPythonTask,
-		SparkSubmitTask: instance.Spec.SparkSubmitTask,
-	}
-
 	execution := NewExecution("runs", "run_submit")
-	run, err := r.APIClient.Jobs().RunsSubmit(instance.Spec.RunName, clusterSpec, jobTask, instance.Spec.TimeoutSeconds)
+	runsSubmitReq := dbhttpmodels.RunsSubmitReq{
+		ExistingClusterID: instance.Spec.ExistingClusterID,
+		NewCluster:        instance.Spec.NewCluster,
+		NotebookTask:      &instance.Spec.NotebookTask,
+		SparkJarTask:      &instance.Spec.SparkJarTask,
+		SparkPythonTask:   &instance.Spec.SparkPythonTask,
+		SparkSubmitTask:   &instance.Spec.SparkSubmitTask,
+		RunName:           instance.Spec.RunName,
+		Libraries:         &instance.Spec.Libraries,
+		TimeoutSeconds:    instance.Spec.TimeoutSeconds,
+		// IdempotencyToken:
+	}
+	runsSubmitRes, err := r.APIClient.Jobs().RunsSubmit(runsSubmitReq)
 	execution.Finish(err)
+
+	run, err := r.getRun(runsSubmitRes.RunID)
+	if err != nil {
+		return &dbmodels.Run{RunID: runsSubmitRes.RunID}, err
+	}
 	return &run, err
 }
 
 func (r *RunReconciler) getRun(runID int64) (dbmodels.Run, error) {
 	execution := NewExecution("runs", "get")
-	runOutput, err := r.APIClient.Jobs().RunsGet(runID)
+	runsGetReq := dbhttpmodels.RunsGetReq{
+		RunID: runID,
+	}
+	runsGetRes, err := r.APIClient.Jobs().RunsGet(runsGetReq)
+	execution.Finish(err)
+
+	run := mapRunGetResp(runsGetRes)
+	return run, err
+}
+
+func (r *RunReconciler) getRunOutput(runID int64) (dbhttpmodels.RunsGetOutputResp, error) {
+	execution := NewExecution("runs", "run_get_output")
+	runsGetOutputReq := dbhttpmodels.RunsGetOutputReq{
+		RunID: runID,
+	}
+	runOutput, err := r.APIClient.Jobs().RunsGetOutput(runsGetOutputReq)
 	execution.Finish(err)
 
 	return runOutput, err
 }
 
-func (r *RunReconciler) getRunOutput(runID int64) (azure.JobsRunsGetOutputResponse, error) {
-	execution := NewExecution("runs", "run_get_output")
-	runOutput, err := r.APIClient.Jobs().RunsGetOutput(runID)
-	execution.Finish(err)
-
-	return runOutput, err
+func mapRunGetResp(res dbhttpmodels.RunsGetResp) dbmodels.Run {
+	return dbmodels.Run{
+		JobID:                res.JobID,
+		RunID:                res.RunID,
+		CreatorUserName:      res.CreatorUserName,
+		NumberInJob:          res.NumberInJob,
+		OriginalAttemptRunID: res.OriginalAttemptRunID,
+		State:                res.State,
+		Schedule:             res.Schedule,
+		Task:                 *res.Task,
+		ClusterSpec:          *res.ClusterSpec,
+		ClusterInstance:      res.ClusterInstance,
+		OverridingParameters: *res.OverridingParameters,
+		StartTime:            res.StartTime,
+		SetupDuration:        res.SetupDuration,
+		ExecutionDuration:    res.ExecutionDuration,
+		CleanupDuration:      res.CleanupDuration,
+		EndTime:              res.EndTime,
+		Trigger:              res.Trigger,
+		RunPageURL:           res.RunPageURL,
+		// RunName:              res.RunName,
+		// RunType:              res.RunType,
+		// AttemptNumber:        res.AttemptNumber,
+	}
 }

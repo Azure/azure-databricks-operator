@@ -5,9 +5,9 @@ import (
 	"time"
 
 	"github.com/microsoft/azure-databricks-operator/mockapi/model"
+	dbmodel "github.com/polar-rams/databricks-sdk-golang/azure/jobs/models"
 	mockableClock "github.com/stephanos/clock"
 	"github.com/stretchr/testify/assert"
-	dbmodel "github.com/xinsnake/databricks-sdk-golang/azure/models"
 )
 
 var testLifeCyclePeriodLength int64 = 500
@@ -39,14 +39,14 @@ func TestGetRun_LifeCycle(t *testing.T) {
 
 			//Assert
 			var lifeCycleState string
-			if run.State.LifeCycleState != nil {
-				lifeCycleState = string(*run.State.LifeCycleState)
+			if run.State.LifeCycleState != "" {
+				lifeCycleState = string(run.State.LifeCycleState)
 			}
 			assert.Equal(t, tt.expectedLifeCycleState, lifeCycleState)
 
 			var resultState string
-			if run.State.ResultState != nil {
-				resultState = string(*run.State.ResultState)
+			if run.State.ResultState != "" {
+				resultState = string(run.State.ResultState)
 			}
 			assert.Equal(t, tt.expectedResultState, resultState)
 		})
@@ -66,14 +66,14 @@ func TestGetRunOutput_LifeCycle(t *testing.T) {
 
 			//Assert
 			var lifeCycleState string
-			if response.Metadata.State.LifeCycleState != nil {
-				lifeCycleState = string(*response.Metadata.State.LifeCycleState)
+			if response.Metadata.State.LifeCycleState != "" {
+				lifeCycleState = string(response.Metadata.State.LifeCycleState)
 			}
 			assert.Equal(t, tt.expectedLifeCycleState, lifeCycleState)
 
 			var resultState string
-			if response.Metadata.State.ResultState != nil {
-				resultState = string(*response.Metadata.State.ResultState)
+			if response.Metadata.State.ResultState != "" {
+				resultState = string(response.Metadata.State.ResultState)
 			}
 			assert.Equal(t, tt.expectedResultState, resultState)
 
@@ -94,14 +94,14 @@ func TestListRun_LifeCycle(t *testing.T) {
 
 			//Assert
 			var lifeCycleState string
-			if response.Runs[0].State.LifeCycleState != nil {
-				lifeCycleState = string(*response.Runs[0].State.LifeCycleState)
+			if (*response.Runs)[0].State.LifeCycleState != "" {
+				lifeCycleState = string((*response.Runs)[0].State.LifeCycleState)
 			}
 			assert.Equal(t, tt.expectedLifeCycleState, lifeCycleState)
 
 			var resultState string
-			if response.Runs[0].State.ResultState != nil {
-				resultState = string(*response.Runs[0].State.ResultState)
+			if (*response.Runs)[0].State.ResultState != "" {
+				resultState = string((*response.Runs)[0].State.ResultState)
 			}
 			assert.Equal(t, tt.expectedResultState, resultState)
 
@@ -137,8 +137,8 @@ func TestCancelRun(t *testing.T) {
 			run := repo.GetRun(id)
 
 			var resultState string
-			if run.State.ResultState != nil {
-				resultState = string(*run.State.ResultState)
+			if run.State.ResultState != "" {
+				resultState = string(run.State.ResultState)
 			}
 			assert.Equal(t, tt.expectedResultState, resultState)
 		})

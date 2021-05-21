@@ -27,7 +27,7 @@ package v1alpha1
 import (
 	"fmt"
 
-	dbmodels "github.com/xinsnake/databricks-sdk-golang/azure/models"
+	dbmodels "github.com/polar-rams/databricks-sdk-golang/azure/clusters/models"
 )
 
 // DclusterInfo is similar to dbmodels.ClusterInfo, the reason it
@@ -71,20 +71,20 @@ func (dci *DclusterInfo) FromDataBricksClusterInfo(ci dbmodels.ClusterInfo) *Dcl
 	dci.AutoScale = ci.AutoScale
 	dci.ClusterID = ci.ClusterID
 	dci.CreatorUserName = ci.CreatorUserName
-	dci.Driver = ci.Driver
-	dci.Executors = ci.Executors
+	dci.Driver = &ci.Driver
+	dci.Executors = *ci.Executors
 	dci.SparkContextID = ci.SparkContextID
 	dci.JdbcPort = ci.JdbcPort
 	dci.ClusterName = ci.ClusterName
 	dci.SparkVersion = ci.SparkVersion
-	dci.SparkConf = ci.SparkConf
+	dci.SparkConf = &ci.SparkConf
 	dci.NodeTypeID = ci.NodeTypeID
 	dci.DriverNodeTypeID = ci.DriverNodeTypeID
-	dci.ClusterLogConf = ci.ClusterLogConf
-	dci.InitScripts = ci.InitScripts
+	dci.ClusterLogConf = &ci.ClusterLogConf
+	dci.InitScripts = *ci.InitScripts
 	dci.SparkEnvVars = ci.SparkEnvVars
 	dci.AutoterminationMinutes = ci.AutoterminationMinutes
-	dci.State = ci.State
+	dci.State = &ci.State
 	dci.StateMessage = ci.StateMessage
 	dci.StartTime = ci.StartTime
 	dci.TerminateTime = ci.TerminateTime
@@ -93,7 +93,7 @@ func (dci *DclusterInfo) FromDataBricksClusterInfo(ci dbmodels.ClusterInfo) *Dcl
 	dci.ClusterMemoryMb = ci.ClusterMemoryMb
 	dci.ClusterCores = fmt.Sprintf("%v", ci.ClusterCores)
 	dci.DefaultTags = ci.DefaultTags
-	dci.ClusterLogStatus = ci.ClusterLogStatus
-	dci.TerminationReason = ci.TerminationReason
+	dci.ClusterLogStatus = &ci.ClusterLogStatus
+	dci.TerminationReason = &ci.TerminationReason
 	return dci
 }

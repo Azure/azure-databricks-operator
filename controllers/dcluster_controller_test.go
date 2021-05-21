@@ -31,7 +31,8 @@ import (
 	databricksv1alpha1 "github.com/microsoft/azure-databricks-operator/api/v1alpha1"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	dbmodels "github.com/xinsnake/databricks-sdk-golang/azure/models"
+	dbcltrsmodels "github.com/polar-rams/databricks-sdk-golang/azure/clusters/models"
+	dbmodels "github.com/polar-rams/databricks-sdk-golang/azure/jobs/models"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 )
@@ -67,13 +68,13 @@ var _ = Describe("Dcluster Controller", func() {
 					Namespace: key.Namespace,
 				},
 				Spec: &dbmodels.NewCluster{
-					Autoscale: &dbmodels.AutoScale{
+					Autoscale: &dbcltrsmodels.AutoScale{
 						MinWorkers: 2,
 						MaxWorkers: 5,
 					},
-					AutoterminationMinutes: 10,
-					NodeTypeID:             "Standard_D3_v2",
-					SparkVersion:           "5.3.x-scala2.11",
+					// AutoterminationMinutes: 10,
+					NodeTypeID:   "Standard_D3_v2",
+					SparkVersion: "5.3.x-scala2.11",
 				},
 			}
 

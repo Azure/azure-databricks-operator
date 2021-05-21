@@ -31,7 +31,9 @@ import (
 	databricksv1alpha1 "github.com/microsoft/azure-databricks-operator/api/v1alpha1"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	dbmodels "github.com/xinsnake/databricks-sdk-golang/azure/models"
+	dbcltrsmodels "github.com/polar-rams/databricks-sdk-golang/azure/clusters/models"
+	dbmodels "github.com/polar-rams/databricks-sdk-golang/azure/jobs/models"
+	dblibsmodels "github.com/polar-rams/databricks-sdk-golang/azure/libraries/models"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 )
@@ -63,12 +65,12 @@ var _ = Describe("Run Controller", func() {
 					NodeTypeID:   "Standard_D3_v2",
 					NumWorkers:   3,
 				},
-				Libraries: []dbmodels.Library{
+				Libraries: []dblibsmodels.Library{
 					{
 						Jar: "dbfs:/my-jar.jar",
 					},
 					{
-						Maven: &dbmodels.MavenLibrary{
+						Maven: dblibsmodels.MavenLibrary{
 							Coordinates: "org.jsoup:jsoup:1.7.2",
 						},
 					},
@@ -104,7 +106,7 @@ var _ = Describe("Run Controller", func() {
 			runSpec := &databricksv1alpha1.RunSpec{
 				JobName: jobKey.Name,
 				RunParameters: &dbmodels.RunParameters{
-					JarParams: []string{"test"},
+					JarParams: &[]string{"test"},
 				},
 			}
 
@@ -159,12 +161,12 @@ var _ = Describe("Run Controller", func() {
 					NodeTypeID:   "Standard_D3_v2",
 					NumWorkers:   3,
 				},
-				Libraries: []dbmodels.Library{
+				Libraries: []dblibsmodels.Library{
 					{
 						Jar: "dbfs:/my-jar.jar",
 					},
 					{
-						Maven: &dbmodels.MavenLibrary{
+						Maven: dblibsmodels.MavenLibrary{
 							Coordinates: "org.jsoup:jsoup:1.7.2",
 						},
 					},
@@ -200,7 +202,7 @@ var _ = Describe("Run Controller", func() {
 			runSpec := &databricksv1alpha1.RunSpec{
 				JobName: jobKey.Name,
 				RunParameters: &dbmodels.RunParameters{
-					JarParams: []string{"test"},
+					JarParams: &[]string{"test"},
 				},
 			}
 
@@ -233,13 +235,13 @@ var _ = Describe("Run Controller", func() {
 					Namespace: testDclusterKey.Namespace,
 				},
 				Spec: &dbmodels.NewCluster{
-					Autoscale: &dbmodels.AutoScale{
+					Autoscale: &dbcltrsmodels.AutoScale{
 						MinWorkers: 2,
 						MaxWorkers: 3,
 					},
-					AutoterminationMinutes: 10,
-					NodeTypeID:             "Standard_D3_v2",
-					SparkVersion:           "5.3.x-scala2.11",
+					// AutoterminationMinutes: 10,
+					NodeTypeID:   "Standard_D3_v2",
+					SparkVersion: "5.3.x-scala2.11",
 				},
 			}
 
@@ -279,16 +281,16 @@ var _ = Describe("Run Controller", func() {
 			spec := databricksv1alpha1.RunSpec{
 				ClusterSpec: databricksv1alpha1.ClusterSpec{
 					ExistingClusterName: testK8sDcluster.GetName(),
-					Libraries: []dbmodels.Library{
+					Libraries: []dblibsmodels.Library{
 						{
-							Maven: &dbmodels.MavenLibrary{
+							Maven: dblibsmodels.MavenLibrary{
 								Coordinates: "org.jsoup:jsoup:1.7.2",
 							},
 						},
 					},
 				},
 				JobTask: &dbmodels.JobTask{
-					SparkJarTask: &dbmodels.SparkJarTask{
+					SparkJarTask: dbmodels.SparkJarTask{
 						MainClassName: "com.databricks.ComputeModels",
 					},
 				},
@@ -347,16 +349,16 @@ var _ = Describe("Run Controller", func() {
 			spec := databricksv1alpha1.RunSpec{
 				ClusterSpec: databricksv1alpha1.ClusterSpec{
 					ExistingClusterID: testK8sDcluster.Status.ClusterInfo.ClusterID,
-					Libraries: []dbmodels.Library{
+					Libraries: []dblibsmodels.Library{
 						{
-							Maven: &dbmodels.MavenLibrary{
+							Maven: dblibsmodels.MavenLibrary{
 								Coordinates: "org.jsoup:jsoup:1.7.2",
 							},
 						},
 					},
 				},
 				JobTask: &dbmodels.JobTask{
-					SparkJarTask: &dbmodels.SparkJarTask{
+					SparkJarTask: dbmodels.SparkJarTask{
 						MainClassName: "com.databricks.ComputeModels",
 					},
 				},
