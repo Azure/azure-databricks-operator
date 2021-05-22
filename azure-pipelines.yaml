@@ -105,6 +105,7 @@ jobs:
       set -x
       echo $(IMAGE_NAME) > $(Build.ArtifactStagingDirectory)/azure-databricks-operator.txt
       ls $(Build.ArtifactStagingDirectory)
+      cp ./config/crd/bases/* $(Build.ArtifactStagingDirectory)
     continueOnError: 'false'
     displayName: 'Prepare manifests for publish'
     condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master')) 
