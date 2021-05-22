@@ -39,7 +39,7 @@ RUN apt-get update \
     && chmod +x /usr/local/bin/kubectl \
     # Install Helm
     && curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | DESIRED_VERSION=$HelmVersion bash \
-    && helm repo add stable https://kubernetes-charts.storage.googleapis.com/ 
+    && helm repo add "stable" "https://charts.helm.sh/stable" 
 
 
 # Enable go modules
