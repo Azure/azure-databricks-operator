@@ -1,0 +1,16 @@
+domain: microsoft.com
+layout:
+- go.kubebuilder.io/v3
+projectName: kubebuilder-migration-azure-databricks-operator
+repo: github.com/polar-rams/azure-databricks-operator
+resources:
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: microsoft.com
+  group: databricks
+  kind: SecretScope
+  path: github.com/polar-rams/azure-databricks-operator/api/v1alpha2
+  version: v1alpha2
+version: "3"
